@@ -1,0 +1,224 @@
+% Author: David Paulino
+% Date: 2023-03-03
+% Description: LaTeX Template
+% Vous êtes libre de modifier/ajouter de nouvelles commandes dans le fichier ou même de nouveau packages.
+
+\documentclass[12pt]{article}
+
+% Document en français
+\usepackage[french]{babel}
+
+% Color on table
+\usepackage[table,xcdraw]{xcolor}
+
+% PGFPlots compatibility mode
+
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amscd}
+\usepackage{amstext}
+
+\usepackage{hyperref}
+% \usepackage{xcolor} % Already loaded with options
+\usepackage{fancyhdr}
+\usepackage{setspace}
+\usepackage{float}
+\usepackage{subfig}
+\usepackage{caption}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepackage{pgf}
+
+% Add references in table of contents
+\usepackage[nottoc]{tocbibind}
+
+% use the right citation style
+\usepackage[backend=biber,style=iso-authoryear]{biblatex}
+\addbibresource{bibliography.bib}
+
+% Set author and place
+% TODO: Changer les valeurs ci-dessous
+% Elle seront utilisées pour la page de titre et les en-têtes/pieds de page
+\newcommand{\authorname}{David Paulino}
+\newcommand{\place}{Genève}
+\newcommand{\fulltitle}{Le titre complet du travail de Master}
+\newcommand{\shorttitle}{Titre raccourci du travail}
+
+% On retire l'indentation des paragraphes
+\setlength{\parindent}{0pt}
+% Augmentation de l'espacement entre les sauts de ligne
+%\setlength{\parskip}{5pt} % Modifier la valeur selon vos besoins
+
+% Title
+\title{\fulltitle}
+\author{\authorname}
+\date{\today}
+
+% Header
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\lhead{\authorname}
+\rhead{\shorttitle}
+
+% Footers
+\lfoot{Page \thepage}
+\rfoot{\today}
+
+% Document
+\begin{document}
+
+\pgfplotsset{compat=1.18}
+
+% Title page
+\begin{titlepage}
+
+    \begin{figure}[h]
+        \includegraphics[width=0.3\textwidth]{img/logo_heg-ge.jpg}
+    \end{figure}
+
+    \vspace*{0.5cm}
+
+    \begin{center}
+
+        \begingroup \linespread{1,75} \selectfont
+        {\Large \fulltitle}\\[0,75cm]
+        \endgroup
+
+
+        % Make a vertical space
+
+        \vspace{1.5cm}
+
+        \textsc{\large Travail de Master réalisé en vue de \newline l’obtention du Master of Science HES-SO en Sciences de l'information par :}\\[0,50cm]
+
+        \begingroup \linespread{1,5} \selectfont
+        \textsc{\large \authorname}\\[0,50cm]
+        \endgroup
+
+
+        \vspace{1cm}
+
+
+        \textsc{\large Conseillers au travail de Master : }
+
+        \begingroup \linespread{1,5} \selectfont
+        \textsc{\large Pr Alexandros KALOUSIS}\\[0.1cm]
+        \endgroup
+
+
+        \begingroup \linespread{1,75} \selectfont
+        \textsc{\large \place, le \today}\\[0,1cm]
+
+        {\large Haute école de Gestion de Genève (HEG-GE)}\\[0,1cm]
+
+        {\large Filière Information Science}\\[0,1cm]
+        \endgroup
+
+
+
+        \begin{figure}[h]
+            \vspace{0.05cm}
+            \hspace*{12cm}\includegraphics[width=0.25\textwidth]{img/logo_hes-so.jpg}
+        \end{figure}
+
+    \end{center}
+
+
+
+    \vfill
+\end{titlepage}
+
+
+
+
+\newpage
+
+\section{Déclaration}
+% Insérer la déclaration ici
+% Il est possible que 
+Ce travail de Master est réalisé dans le cadre de l'examen final de la Haute école de gestion de Genève, en vue de l'obtention du titre de Master of Science HES-SO en Informatique de gestion.
+\newline\newline
+L'étudiant a envoyé ce document par email à l'adresse remise par son conseiller au travail de Master pour analyse par le logiciel de détection de plagiat URKUND, selon la procédure détaillée à l'URL suivante : \url{https://www.urkund.com}
+\newline\newline
+L'étudiant accepte, le cas échéant, la clause de confidentialité.
+L'utilisation des conclusions et recommendations formulées dans le travail de Master, sans préjuger de leur valeur, n'engage ni la responsabilité de l'auteur, ni celle du conseiller au travail de Master, du juré et de la HEG.
+\newline\newline
+"J'atteste avoir réalisé seul le présent travail, sans avoir utilisé des sources autres que celles citées dans la bibliographie."
+% Faire un grand saut de ligne
+\vspace{4cm}
+% Aligner le texte à droite
+\begin{flushright}
+    Fait à \place, le \today
+\end{flushright}
+
+\begin{flushright}
+    \authorname
+\end{flushright}
+\vspace{1cm}
+\begin{flushright}
+    --------------------------------
+\end{flushright}
+
+
+\newpage
+
+\section{Remerciements}
+% Insérer les remerciements ici
+La partie où on remercie les gens qui nous ont aidé à réaliser ce travail de Master.
+
+\newpage
+
+\section{Résumé}
+% Insérer le résumé ici
+Voilà le résumé de ce travail de Master. Il est important de bien résumer le travail pour que le lecteur puisse comprendre le contenu de ce travail sans avoir à le lire en entier.
+
+
+\newpage
+
+% Liste des tableaux
+\listoftables
+
+\newpage
+
+% Liste des figures
+\listoffigures
+
+\newpage
+
+% Table of contents
+\tableofcontents
+\newpage
+
+% Content
+% Ce sont des exemples de sections, vous pouvez les modifier ou les supprimer
+
+\section{Introduction}
+
+\section{État de l'art}
+\section{Méthodologie}
+\section{Résultats}
+\subsection{Sous-section des résultats}
+\subsubsection{Sous-sous-section des résultats}
+
+\section{Conclusion}
+
+
+% Bibliography
+% Il est possible d'afficher la bibliographie sous différentes formes en changeant le style
+% Différents styles possibles : https://www.overleaf.com/learn/latex/Bibtex_bibliography_styles
+% \bibliographystyle{plainurl}
+% Nom du fichier .bib
+% \bibliography{bibliography}
+
+\printbibliography
+
+\end{document}
