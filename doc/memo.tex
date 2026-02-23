@@ -49,13 +49,13 @@
 % Elle seront utilisées pour la page de titre et les en-têtes/pieds de page
 \newcommand{\authorname}{David Paulino}
 \newcommand{\place}{Genève}
-\newcommand{\fulltitle}{Le titre complet du travail de Master}
-\newcommand{\shorttitle}{Titre raccourci du travail}
+\newcommand{\fulltitle}{Exploration des concepts et des techniques d’apprentissage par renforcement : De la théorie à la pratique }
+\newcommand{\shorttitle}{Apprentissage par renforcement : théorie et pratique}
 
 % On retire l'indentation des paragraphes
 \setlength{\parindent}{0pt}
 % Augmentation de l'espacement entre les sauts de ligne
-%\setlength{\parskip}{5pt} % Modifier la valeur selon vos besoins
+\setlength{\parskip}{10pt} % Modifier la valeur selon vos besoins
 
 % Title
 \title{\fulltitle}
@@ -203,13 +203,62 @@ Voilà le résumé de ce travail de Master. Il est important de bien résumer le
 
 \section{Introduction}
 
+% Contexte général et accroche
+L'intelligence artificielle a connu des avancées spectaculaires ces dernières années, transformant de nombreux domaines allant de la reconnaissance d'images à la traduction automatique. 
+Parmi les différentes approches de l'apprentissage automatique, l'apprentissage par renforcement (Reinforcement Learning, RL) se distingue par sa capacité à permettre aux agents d'apprendre de manière autonome à travers l'interaction avec leur environnement.
+
+% Définition et caractéristiques
+L'apprentissage par renforcement, souvent abrégé en RL (Reinforcement Learning), est une branche de l'intelligence artificielle qui se concentre sur la manière dont les agents peuvent apprendre à prendre des décisions optimales dans des environnements complexes. 
+Contrairement à d'autres formes d'apprentissage automatique, où les modèles sont entraînés sur des données statiques, l'apprentissage par renforcement implique une interaction continue entre l'agent et son environnement. 
+L'agent apprend à travers des essais et des erreurs, recevant des récompenses ou des pénalités en fonction de ses actions, ce qui lui permet d'ajuster sa stratégie pour maximiser les récompenses à long terme.
+
+% Applications concrètes
+Cette approche a démontré son efficacité dans de nombreux domaines : des jeux vidéo \parencite{zaffagni_definition_2022, noauthor_openai_2018} à la robotique \parencite{tang_deep_2024}, en passant par l'optimisation des systèmes de recommandation \parencite{iftikhar_reinforcement_2024} et la gestion de ressources \parencite{mao_resource_2016}. 
+Ces succès illustrent le potentiel du RL pour résoudre des problèmes complexes où les méthodes traditionnelles atteignent leurs limites.
+
+% Problématique
+Toutefois, malgré ces avancées prometteuses, l'apprentissage par renforcement présente plusieurs défis : la nécessité d'un grand nombre d'interactions avec l'environnement \parencite{sutton_reinforcement_2014}, la difficulté de définir des fonctions de récompense appropriées dépendant de l'environnement, et la complexité de l'équilibre entre exploration et exploitation \parencite{sutton_reinforcement_2014}. 
+De plus, le passage de la théorie à la pratique soulève des questions méthodologiques et techniques importantes.
+
+% Objectifs du travail
+% =====================================================
+% A revoir potentiellement, dépendant de l'objectif réel du travail de Master
+% Est-ce que je parle du fait que l'utopie serait d'entraîner un agent sur Rocket League
+% ou Trackmania ? A voir avec le directeur de recherche
+% https://github.com/ZealanL/RLGym-PPO-Guide?tab=readme-ov-file
+% =====================================================
+Ce travail de Master vise à explorer en profondeur les concepts fondamentaux et les techniques de l'apprentissage par renforcement, en établissant un pont entre les fondements théoriques et leurs applications pratiques. Plus spécifiquement, nous nous proposons de :
+\begin{itemize}
+    \item Présenter les concepts théoriques essentiels du RL (processus de décision de Markov, méthodes de Monte Carlo, différence temporelle, etc.)
+    \item Analyser les principales méthodes et algorithmes (Q-Learning, Deep Q-Networks, Policy Gradient, etc.)
+    \item Mettre en œuvre ces techniques dans des cas pratiques pour évaluer leur performance
+    \item Identifier les bonnes pratiques et les pièges à éviter lors de l'implémentation
+\end{itemize}
+
+% Plan du document
+Ce document est structuré comme suit : la section~\ref{sec:etat-art} présente un état de l'art des techniques d'apprentissage par renforcement et de leurs applications. 
+La section~\ref{sec:methodo} décrit la méthodologie adoptée pour nos expérimentations. 
+Les résultats obtenus sont analysés dans la section~\ref{sec:resultats}. 
+Enfin, la section~\ref{sec:conclusion} conclut ce travail en synthétisant les apports et en proposant des perspectives futures.
+
+
 \section{État de l'art}
+
+\label{sec:etat-art}
+
+Cette section présente les concepts fondamentaux et les techniques principales de l'apprentissage par renforcement. 
+La majeure partie de cet état de l'art s'appuie sur les cours de David Silver \parencite{silver_lectures_2015} ainsi que sur l'ouvrage de référence de Sutton et Barto \parencite{sutton_reinforcement_2014}, qui constituent les fondements théoriques de ce domaine.
+
 \section{Méthodologie}
+\label{sec:methodo}
+
 \section{Résultats}
+\label{sec:resultats}
 \subsection{Sous-section des résultats}
 \subsubsection{Sous-sous-section des résultats}
 
 \section{Conclusion}
+\label{sec:conclusion}
 
 
 % Bibliography

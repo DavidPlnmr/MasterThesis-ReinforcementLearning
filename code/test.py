@@ -2,10 +2,13 @@ import gymnasium as gym
 from stable_baselines3 import PPO
 
 # Charger le modèle entraîné
-model = PPO.load("ppo_car_racing.zip")
+
+environment_name = "CarRacing-v3"
+
+model = PPO.load("ppo_" + environment_name.lower() + ".zip")
 
 # Créer l'environnement avec rendu
-env = gym.make("CarRacing-v3", render_mode="human")
+env = gym.make(environment_name, render_mode="human")
 
 # Reset
 obs, info = env.reset()
