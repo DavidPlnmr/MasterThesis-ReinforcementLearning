@@ -207,17 +207,18 @@ L'intelligence artificielle a connu des avancées spectaculaires ces dernières 
 Parmi les différentes approches de l'apprentissage automatique, l'apprentissage par renforcement (Reinforcement Learning, RL) se distingue par sa capacité à permettre aux agents d'apprendre de manière autonome à travers l'interaction avec leur environnement.
 
 % Définition et caractéristiques
-L'apprentissage par renforcement, souvent abrégé en RL (Reinforcement Learning), est une branche de l'intelligence artificielle qui se concentre sur la manière dont les agents peuvent apprendre à prendre des décisions optimales dans des environnements complexes. 
-Contrairement à d'autres formes d'apprentissage automatique, où les modèles sont entraînés sur des données statiques, l'apprentissage par renforcement implique une interaction continue entre l'agent et son environnement. 
-L'agent apprend à travers des essais et des erreurs, recevant des récompenses ou des pénalités en fonction de ses actions, ce qui lui permet d'ajuster sa stratégie pour maximiser les récompenses à long terme.
+L'apprentissage par renforcement, souvent abrégé en RL (Reinforcement Learning), constitue une branche de l'intelligence artificielle qui se concentre sur la manière dont les agents peuvent apprendre à prendre des décisions optimales dans des environnements complexes. 
+Contrairement à d'autres formes d'apprentissage automatique, où les modèles sont entraînés sur des données statiques, l'apprentissage par renforcement repose sur une interaction continue entre l'agent et son environnement. 
+L'agent apprend par essais et erreurs successifs, recevant des récompenses ou des pénalités en fonction de ses actions, ce qui lui permet d'ajuster progressivement sa stratégie afin de maximiser les récompenses à long terme.
 
 % Applications concrètes
 Cette approche a démontré son efficacité dans de nombreux domaines : des jeux vidéo \parencite{zaffagni_definition_2022, noauthor_openai_2018} à la robotique \parencite{tang_deep_2024}, en passant par l'optimisation des systèmes de recommandation \parencite{iftikhar_reinforcement_2024} et la gestion de ressources \parencite{mao_resource_2016}. 
 Ces succès illustrent le potentiel du RL pour résoudre des problèmes complexes où les méthodes traditionnelles atteignent leurs limites.
 
 % Problématique
-Toutefois, malgré ces avancées prometteuses, l'apprentissage par renforcement présente plusieurs défis : la nécessité d'un grand nombre d'interactions avec l'environnement \parencite{sutton_reinforcement_2014}, la difficulté de définir des fonctions de récompense appropriées dépendant de l'environnement, et la complexité de l'équilibre entre exploration et exploitation \parencite{sutton_reinforcement_2014}. 
+Toutefois, malgré ces avancées prometteuses, l'apprentissage par renforcement présente plusieurs défis majeurs : la nécessité d'un nombre considérable d'interactions avec l'environnement \parencite{sutton_reinforcement_2014}, la difficulté inhérente à la définition de fonctions de récompense appropriées selon l'environnement considéré, ainsi que la complexité de l'équilibre entre exploration et exploitation \parencite{sutton_reinforcement_2014}. 
 De plus, le passage de la théorie à la pratique soulève des questions méthodologiques et techniques importantes.
+Il convient également de noter que l'entraînement d'agents sur des environnements complexes tels que les jeux vidéo peut s'avérer particulièrement coûteux en termes de ressources computationnelles \parencite{noauthor_openai_2018}.
 
 % Objectifs du travail
 % =====================================================
@@ -226,19 +227,19 @@ De plus, le passage de la théorie à la pratique soulève des questions méthod
 % ou Trackmania ? A voir avec le directeur de recherche
 % https://github.com/ZealanL/RLGym-PPO-Guide?tab=readme-ov-file
 % =====================================================
-Ce travail de Master vise à explorer en profondeur les concepts fondamentaux et les techniques de l'apprentissage par renforcement, en établissant un pont entre les fondements théoriques et leurs applications pratiques. Plus spécifiquement, nous nous proposons de :
+Ce travail de Master vise à explorer en profondeur les concepts fondamentaux et les techniques de l'apprentissage par renforcement, en établissant un pont entre les fondements théoriques et leurs applications pratiques. Plus spécifiquement, les objectifs de cette recherche sont les suivants :
 \begin{itemize}
-    \item Présenter les concepts théoriques essentiels du RL (processus de décision de Markov, méthodes de Monte Carlo, différence temporelle, etc.)
-    \item Analyser les principales méthodes et algorithmes (Q-Learning, Deep Q-Networks, Policy Gradient, etc.)
-    \item Mettre en œuvre ces techniques dans des cas pratiques pour évaluer leur performance
-    \item Identifier les bonnes pratiques et les pièges à éviter lors de l'implémentation
+    \item Présenter de manière systématique les concepts théoriques essentiels du RL (processus de décision de Markov, méthodes de Monte Carlo, différence temporelle, etc.)
+    \item Analyser de façon critique les principales méthodes et algorithmes (Q-Learning, Deep Q-Networks, Policy Gradient, etc.)
+    \item Mettre en œuvre ces techniques dans des cas pratiques afin d'évaluer empiriquement leur performance
+    \item Identifier les bonnes pratiques méthodologiques ainsi que les écueils à éviter lors de l'implémentation
 \end{itemize}
 
 % Plan du document
 Ce document est structuré comme suit : la section~\ref{sec:etat-art} présente un état de l'art des techniques d'apprentissage par renforcement et de leurs applications. 
 La section~\ref{sec:methodo} décrit la méthodologie adoptée pour nos expérimentations. 
 Les résultats obtenus sont analysés dans la section~\ref{sec:resultats}. 
-Enfin, la section~\ref{sec:conclusion} conclut ce travail en synthétisant les apports et en proposant des perspectives futures.
+Enfin, la section~\ref{sec:conclusion} synthétise les apports de ce travail et propose des perspectives de recherche futures.
 
 
 \section{État de l'art}
@@ -247,6 +248,88 @@ Enfin, la section~\ref{sec:conclusion} conclut ce travail en synthétisant les a
 
 Cette section présente les concepts fondamentaux et les techniques principales de l'apprentissage par renforcement. 
 La majeure partie de cet état de l'art s'appuie sur les cours de David Silver \parencite{silver_lectures_2015} ainsi que sur l'ouvrage de référence de Sutton et Barto \parencite{sutton_reinforcement_2014}, qui constituent les fondements théoriques de ce domaine.
+
+\subsection{Concepts fondamentaux du RL}
+
+L'apprentissage par renforcement met en scène deux acteurs principaux qui interagissent en permanence : un \textbf{agent} (le système apprenant) et un \textbf{environnement} (le monde dans lequel il évolue) \parencite{sutton_reinforcement_2014}.
+
+Le fonctionnement peut être décrit selon le processus itératif suivant : 
+\begin{enumerate}
+    \item L'agent observe l'état courant du système (l'\textbf{état} $S_t$)
+    \item Il sélectionne une \textbf{action} $A_t$ à effectuer
+    \item L'environnement réagit en renvoyant une \textbf{récompense} $R_{t+1}$ (une valeur scalaire indiquant la qualité de l'action effectuée)
+    \item L'environnement transite vers un nouvel état $S_{t+1}$
+    \item Le cycle se répète
+\end{enumerate}
+
+La figure~\ref{fig:rl-loop} illustre cette boucle d'interaction fondamentale.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        node distance=3cm,
+        box/.style={rectangle, draw, thick, minimum width=2.5cm, minimum height=1.2cm, align=center},
+        arrow/.style={->, thick, >=stealth}
+    ]
+        % Nodes
+        \node[box, fill=blue!20] (agent) {\textbf{Agent}};
+        \node[box, fill=green!20, right of=agent, node distance=5cm] (env) {\textbf{Environnement}};
+        
+        % Arrows
+        \draw[arrow] (agent.north) -- ++(0,1) -| node[pos=0.25, above] {Action $A_t$} (env.north);
+        \draw[arrow] (env.south) -- ++(0,-1.5) -| node[pos=0.25, below, align=center] {État $S_{t+1}$\\Récompense $R_{t+1}$} (agent.south);
+        
+
+    \end{tikzpicture}
+    \caption{Boucle d'interaction agent-environnement en apprentissage par renforcement}
+    \label{fig:rl-loop}
+\end{figure}
+
+Au cours des interactions successives, l'agent accumule de l'expérience et apprend une \textbf{politique} $\pi$ : une stratégie définissant l'action à sélectionner dans chaque situation donnée. 
+À titre d'exemple, dans le contexte d'une partie d'échecs, la politique détermine le coup à jouer pour chaque configuration possible du plateau.
+
+L'objectif de l'apprentissage consiste à identifier la politique optimale, c'est-à-dire celle permettant de maximiser l'espérance des récompenses cumulées sur l'ensemble de l'horizon temporel considéré. 
+Cette subtilité est fondamentale : l'enjeu ne réside pas dans la maximisation de la récompense immédiate, mais bien dans celle des récompenses cumulées sur la totalité de la séquence.
+
+\subsection{Caractéristiques distinctives du RL}
+
+L'apprentissage par renforcement se distingue des autres paradigmes d'apprentissage automatique par plusieurs caractéristiques fondamentales \parencite{silver_lectures_2015} :
+\begin{itemize}
+    \item \textbf{Absence de supervision directe} : contrairement à l'apprentissage supervisé où chaque exemple d'entraînement est associé à une cible $y$ explicite, le RL ne dispose que d'un signal de récompense scalaire fourni par l'environnement, sans indication directe de l'action optimale à adopter.
+    
+    \item \textbf{Feedback différé} : les conséquences d'une action effectuée à l'instant $t$ peuvent ne se manifester que plusieurs pas de temps ultérieurement, rendant particulièrement ardue l'attribution du crédit (Credit Assignment Problem)\footnote{Le problème d'attribution du crédit consiste à déterminer quelles actions passées sont responsables des récompenses futures obtenues.}.
+    
+    \item \textbf{Nature séquentielle et interactive} : la dimension temporelle constitue une composante intrinsèque du problème. Les données ne sont pas indépendantes et identiquement distribuées (i.i.d), mais forment une séquence d'états, d'actions et de récompenses corrélés temporellement. Les actions de l'agent modifient l'état de l'environnement et influencent les observations et récompenses futures, créant ainsi une boucle de rétroaction continue.
+\end{itemize}
+
+% Il serait préférable ici d'indiquer toutes les définitions de manière détaillée mais 
+% plutôt sous forme de liste
+% Ça permettrait de mieux structurer la section et de rendre les concepts plus clairs pour le lecteur
+
+\subsection{Définitions des concepts clés}
+
+Afin de formaliser rigoureusement le problème d'apprentissage par renforcement, il convient de définir précisément les éléments constitutifs de cette boucle d'interaction \parencite{sutton_reinforcement_2014} :
+
+\begin{itemize}
+    \item \textbf{Pas de temps $t$} : indice temporel discret marquant la progression de la séquence d'interactions. Chaque pas de temps correspond à un cycle complet d'observation-action-récompense.
+    
+    \item \textbf{État $S_t$} : représentation complète de la situation de l'environnement à l'instant $t$. Un état doit idéalement contenir toute l'information nécessaire pour prendre une décision optimale (propriété de Markov). Par exemple, dans le jeu d'échecs, l'état correspond à la configuration complète du plateau.
+    
+    \item \textbf{Action $A_t$} : décision prise par l'agent à l'instant $t$ parmi un ensemble d'actions possibles $\mathcal{A}(s)$ dans l'état $s$. L'espace d'actions peut être discret (gauche, droite, sauter) ou continu (angle de direction, force appliquée).
+    
+    \item \textbf{Récompense $R_{t+1}$} : signal scalaire $R_{t+1} \in \mathbb{R}$ émis par l'environnement suite à l'action $A_t$ dans l'état $S_t$. Cette valeur numérique quantifie la qualité immédiate de l'action effectuée (positive pour une bonne action, négative pour une mauvaise). 
+    
+    \item \textbf{Politique $\pi$} : stratégie de décision de l'agent, qui associe à chaque état une action ou une distribution de probabilité sur les actions. 
+    \begin{itemize}
+        \item \textbf{Politique déterministe} : $\pi(s) = a$ associe une action unique à chaque état. Il s'agit d'une fonction de décision stricte et prévisible.
+        \item \textbf{Politique stochastique} : $\pi(a|s) = P(A_t = a | S_t = s)$ définit une distribution de probabilité sur les actions possibles dans chaque état. Cette approche permet d'introduire de la diversité dans les comportements de l'agent.
+    \end{itemize}
+    
+    \item \textbf{Fonction de valeur $V^\pi(s)$} : espérance du retour cumulatif (somme des récompenses futures) que l'agent peut obtenir en partant de l'état $s$ et en suivant la politique $\pi$. Cette fonction permet d'évaluer la qualité à long terme d'un état donné.
+    
+    \item \textbf{Modèle de l'environnement} : représentation (optionnelle) de la dynamique de l'environnement. Un modèle prédit l'état suivant $S_{t+1}$ et la récompense $R_{t+1}$ en fonction de l'état courant $S_t$ et de l'action choisie $A_t$. Les méthodes basées sur un modèle (model-based) utilisent cette connaissance, tandis que les méthodes sans modèle (model-free) apprennent directement à partir des interactions.
+    
+\end{itemize}
 
 \section{Méthodologie}
 \label{sec:methodo}
