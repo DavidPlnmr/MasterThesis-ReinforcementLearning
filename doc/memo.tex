@@ -40,6 +40,8 @@
 % Add references in table of contents
 \usepackage[nottoc]{tocbibind}
 
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc}
+
 % use the right citation style
 \usepackage[backend=biber,style=iso-authoryear]{biblatex}
 \addbibresource{bibliography.bib}
@@ -267,20 +269,41 @@ La figure~\ref{fig:rl-loop} illustre cette boucle d'interaction fondamentale.
 \begin{figure}[H]
     \centering
     \begin{tikzpicture}[
-        node distance=3cm,
-        box/.style={rectangle, draw, thick, minimum width=2.5cm, minimum height=1.2cm, align=center},
-        arrow/.style={->, thick, >=stealth}
-    ]
-        % Nodes
-        \node[box, fill=blue!20] (agent) {\textbf{Agent}};
-        \node[box, fill=green!20, right of=agent, node distance=5cm] (env) {\textbf{Environnement}};
-        
-        % Arrows
-        \draw[arrow] (agent.north) -- ++(0,1) -| node[pos=0.25, above] {Action $A_t$} (env.north);
-        \draw[arrow] (env.south) -- ++(0,-1.5) -| node[pos=0.25, below, align=center] {État $S_{t+1}$\\Récompense $R_{t+1}$} (agent.south);
-        
+    node distance=3.2cm and 5cm,
+    >=Stealth,
+    block/.style={draw, thick, minimum width=3.2cm, minimum height=1.2cm, align=center},
+    agent/.style={block, ellipse},
+    env/.style={block, rounded corners=2mm}
+]
 
-    \end{tikzpicture}
+    % --- Nœuds ---
+    \node[agent] (agent) {Agent};
+    \node[env, below=of agent] (env) {Environnement};
+
+    % --- Flèche Action (Droite) ---
+    \draw[->, thick] (agent.east) -- ++(1.5,0) |- (env.east) 
+        node[pos=0.5, right, align=left] {action \\ $A_t$};
+
+    % --- Flèches de retour (Gauche) ---
+
+    % 1. OBSERVATION (Boucle extérieure)
+    \draw[->, thick] ([yshift=-0.3cm]env.west) -- ++(-3.5,0) |- ([yshift=0.2cm]agent.west);
+    
+    % Label Observation (toujours à gauche de sa ligne)
+    \node[left, align=center] at ($(agent.west)+(-3.5, -2.2)$) {observation \\ $O_t$};
+    \node[below] at ($(env.west)+(-1, -0.3)$) {$O_{t+1}$};
+
+    % 2. REWARD (Boucle intérieure)
+    \draw[->, thick] ([yshift=0.3cm]env.west) -- ++(-3,0) |- ([yshift=-0.2cm]agent.west);
+    
+    % Label REWARD déplacé à DROITE de sa ligne verticale
+    \node[right, align=center] at ($(agent.west)+(-3, -2.2)$) {récompense \\ $R_t$};
+    \node[above] at ($(env.west)+(-1, 0.3)$) {$R_{t+1}$};
+
+    % --- Ligne pointillée de transition ---
+    \draw[dotted, thick] ($(env.west)+(-1.5, 0.8)$) -- ($(env.west)+(-1.5, -0.8)$);
+
+\end{tikzpicture}
     \caption{Boucle d'interaction agent-environnement en apprentissage par renforcement}
     \label{fig:rl-loop}
 \end{figure}
@@ -300,6 +323,7 @@ L'apprentissage par renforcement se distingue des autres paradigmes d'apprentiss
     \item \textbf{Feedback différé} : les conséquences d'une action effectuée à l'instant $t$ peuvent ne se manifester que plusieurs pas de temps ultérieurement, rendant particulièrement ardue l'attribution du crédit (Credit Assignment Problem)\footnote{Le problème d'attribution du crédit consiste à déterminer quelles actions passées sont responsables des récompenses futures obtenues.}.
     
     \item \textbf{Nature séquentielle et interactive} : la dimension temporelle constitue une composante intrinsèque du problème. Les données ne sont pas indépendantes et identiquement distribuées (i.i.d), mais forment une séquence d'états, d'actions et de récompenses corrélés temporellement. Les actions de l'agent modifient l'état de l'environnement et influencent les observations et récompenses futures, créant ainsi une boucle de rétroaction continue.
+    
 \end{itemize}
 
 % Il serait préférable ici d'indiquer toutes les définitions de manière détaillée mais 
@@ -313,23 +337,77 @@ Afin de formaliser rigoureusement le problème d'apprentissage par renforcement,
 \begin{itemize}
     \item \textbf{Pas de temps $t$} : indice temporel discret marquant la progression de la séquence d'interactions. Chaque pas de temps correspond à un cycle complet d'observation-action-récompense.
     
-    \item \textbf{État $S_t$} : représentation complète de la situation de l'environnement à l'instant $t$. Un état doit idéalement contenir toute l'information nécessaire pour prendre une décision optimale (propriété de Markov). Par exemple, dans le jeu d'échecs, l'état correspond à la configuration complète du plateau.
+    \item \textbf{État $S_t$ (State)} : représentation complète de la situation de l'environnement à l'instant $t$. Un état doit idéalement contenir toute l'information nécessaire pour prendre une décision optimale (propriété de Markov). Par exemple, dans le jeu d'échecs, l'état correspond à la configuration complète du plateau.
+    \begin{itemize}
+        \item L'état $S_t$ est représenté comme une fonction de l'historique complet des interactions passées : $S_t = f(H_t)$\footnote{$H_t = \{O_0, A_0, R_1, \dots, O_{t-1}, A_{t-1}, R_t\}$.}
+    \end{itemize}
     
     \item \textbf{Action $A_t$} : décision prise par l'agent à l'instant $t$ parmi un ensemble d'actions possibles $\mathcal{A}(s)$ dans l'état $s$. L'espace d'actions peut être discret (gauche, droite, sauter) ou continu (angle de direction, force appliquée).
     
-    \item \textbf{Récompense $R_{t+1}$} : signal scalaire $R_{t+1} \in \mathbb{R}$ émis par l'environnement suite à l'action $A_t$ dans l'état $S_t$. Cette valeur numérique quantifie la qualité immédiate de l'action effectuée (positive pour une bonne action, négative pour une mauvaise). 
+    \item \textbf{Récompense $R_{t+1}$ (Reward)} : signal scalaire $R_{t+1} \in \mathbb{R}$ émis par l'environnement suite à l'action $A_t$ dans l'état $S_t$. Cette valeur numérique quantifie la qualité immédiate de l'action effectuée (positive pour une bonne action, négative pour une mauvaise). 
     
-    \item \textbf{Politique $\pi$} : stratégie de décision de l'agent, qui associe à chaque état une action ou une distribution de probabilité sur les actions. 
+    \item \textbf{Politique $\pi$ (Policy)} : stratégie de décision de l'agent, qui associe à chaque état une action ou une distribution de probabilité sur les actions. 
     \begin{itemize}
         \item \textbf{Politique déterministe} : $\pi(s) = a$ associe une action unique à chaque état. Il s'agit d'une fonction de décision stricte et prévisible.
         \item \textbf{Politique stochastique} : $\pi(a|s) = P(A_t = a | S_t = s)$ définit une distribution de probabilité sur les actions possibles dans chaque état. Cette approche permet d'introduire de la diversité dans les comportements de l'agent.
     \end{itemize}
     
-    \item \textbf{Fonction de valeur $V^\pi(s)$} : espérance du retour cumulatif (somme des récompenses futures) que l'agent peut obtenir en partant de l'état $s$ et en suivant la politique $\pi$. Cette fonction permet d'évaluer la qualité à long terme d'un état donné.
+    \item \textbf{Fonction de valeur $V^\pi(s)$ (Value function)} : espérance du retour cumulatif (somme des récompenses futures) que l'agent peut obtenir en partant de l'état $s$ et en suivant la politique $\pi$. Cette fonction permet d'évaluer la qualité à long terme d'un état donné.
     
     \item \textbf{Modèle de l'environnement} : représentation (optionnelle) de la dynamique de l'environnement. Un modèle prédit l'état suivant $S_{t+1}$ et la récompense $R_{t+1}$ en fonction de l'état courant $S_t$ et de l'action choisie $A_t$. Les méthodes basées sur un modèle (model-based) utilisent cette connaissance, tandis que les méthodes sans modèle (model-free) apprennent directement à partir des interactions.
     
 \end{itemize}
+
+% \subsection{Exploration et exploitation}
+
+% Le Reinforcement Learning est caractérisé par un apprentissage dit "trial-and-error", où l'agent doit constamment faire face à un dilemme fondamental : celui de l'\textbf{exploration} versus l'\textbf{exploitation} \parencite{sutton_reinforcement_2014}.
+% \begin{itemize}
+%     \item \textbf{Exploitation} : consiste à choisir l'action qui maximise la récompense immédiate ou la valeur estimée à long terme, en se basant sur les connaissances actuelles de l'agent. 
+%     \item \textbf{Exploration} : implique de sélectionner des actions moins connues ou potentiellement suboptimales afin de découvrir de nouvelles stratégies et d'améliorer la compréhension de l'environnement.
+% \end{itemize}
+
+% L'équilibre entre ces deux aspects est crucial pour le succès de l'apprentissage.
+
+% La stratégie la plus connue pour gérer ce dilemme est la stratégie $\epsilon$-greedy, qui consiste à choisir l'action optimale avec une probabilité de $1-\epsilon$ et à explorer une action aléatoire avec une probabilité de $\epsilon$.
+% \begin{equation}
+%     \pi(a|s) = \begin{cases}
+%         1 - \epsilon + \frac{\epsilon}{|\mathcal{A}(s)|} & \text{si } a = \arg\max_{a'} Q(s, a') \\
+%         \frac{\epsilon}{|\mathcal{A}(s)|} & \text{sinon}
+%     \end{cases}
+% \end{equation}
+
+\subsection{Processus décisionnel de Markov}
+
+\subsubsection{Propriété de Markov}
+
+Un concept central en apprentissage par renforcement est la \textbf{propriété de Markov}, qui stipule que l'état $S_t$ doit contenir toute l'information nécessaire pour prédire les récompenses futures et les transitions d'état, indépendamment de l'historique complet des interactions passées.
+La propriété de Markov est formalisée par l'équation \ref{eq:markov-property-simple} :
+\begin{equation}
+    P(S_{t+1} | S_t ) = P(S_{t+1} | S_1, \dots, S_t) = P(S_{t+1} | H_t)
+    \label{eq:markov-property-simple}
+\end{equation}
+Cela signifie que la probabilité de transition vers le prochain état $S_{t+1}$ dépend uniquement de l'état courant $S_t$ et est indépendante de tous les états précédents ou de l'historique complet $H_t$.
+Si l'environnement satisfait cette propriété, $S_t$ contient toute l'information nécessaire pour déterminer la dynamique future. 
+En pratique, on cherche à construire des représentations d'état qui respectent cette propriété afin de faciliter l'apprentissage de politiques efficaces.
+
+\subsubsection{Matrice de transition d'état}
+Dans un environnement de Markov, la dynamique de l'environnement peut être décrite par une matrice de transition d'état $P$, où chaque élément $P_{s,s'}$ représente la probabilité de transition de l'état $s$ vers l'état $s'$ suite à une action donnée.
+Cette matrice permet de modéliser la dynamique de l'environnement et de calculer les valeurs d'état et d'action nécessaires pour l'apprentissage de la politique optimale.
+\begin{equation}
+    P_{s,s'} = P(S_{t+1} = s' | S_t = s, A_t = a)
+\end{equation}
+
+Une matrice existe pour chaque action possible dans l'environnement, ce qui permet de modéliser la dynamique de manière complète.
+La dite matrice est représentable également tel que sur l'équation \ref{eq:transition-matrix} :
+\begin{equation}
+    P^a = \begin{bmatrix}
+        P_{s_1,s_1} & P_{s_1,s_2} & \dots & P_{s_1,s_n} \\
+        P_{s_2,s_1} & P_{s_2,s_2} & \dots & P_{s_2,s_n} \\
+        \vdots & \vdots & \ddots & \vdots \\
+        P_{s_n,s_1} & P_{s  _n,s_2} & \dots & P_{s_n,s_n}
+    \end{bmatrix}
+    \label{eq:transition-matrix}
+\end{equation}
 
 \section{Méthodologie}
 \label{sec:methodo}
