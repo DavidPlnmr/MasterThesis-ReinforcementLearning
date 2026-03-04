@@ -204,126 +204,125 @@ Voilà le résumé de ce travail de Master. Il est important de bien résumer le
 
 \section{Introduction}
 
-% Contexte général et accroche
-L'intelligence artificielle a connu des avancées spectaculaires ces dernières années, transformant de nombreux domaines allant de la reconnaissance d'images à la traduction automatique. 
-Parmi les différentes approches de l'apprentissage automatique, l'apprentissage par renforcement (Reinforcement Learning, RL) se distingue par sa capacité à permettre aux agents d'apprendre de manière autonome à travers l'interaction avec leur environnement.
+\section{Introduction}
 
-% Définition et caractéristiques
-L'apprentissage par renforcement, souvent abrégé en RL (Reinforcement Learning), constitue une branche de l'intelligence artificielle qui se concentre sur la manière dont les agents peuvent apprendre à prendre des décisions optimales dans des environnements complexes. 
-Contrairement à d'autres formes d'apprentissage automatique, où les modèles sont entraînés sur des données statiques, l'apprentissage par renforcement repose sur une interaction continue entre l'agent et son environnement. 
-L'agent apprend par essais et erreurs successifs, recevant des récompenses ou des pénalités en fonction de ses actions, ce qui lui permet d'ajuster progressivement sa stratégie afin de maximiser les récompenses à long terme.
+L'intelligence artificielle a connu des avancées spectaculaires ces dernières années, transformant de nombreux domaines allant de la vision par ordinateur au traitement automatique des langues. 
+Parmi les différents paradigmes de l'apprentissage automatique, l'apprentissage par renforcement (Reinforcement Learning, RL) se distingue par sa capacité à permettre à des agents d'apprendre de manière autonome par interaction directe avec leur environnement.
 
-% Applications concrètes
-Cette approche a démontré son efficacité dans de nombreux domaines : des jeux vidéo \parencite{zaffagni_definition_2022, noauthor_openai_2018} à la robotique \parencite{tang_deep_2024}, en passant par l'optimisation des systèmes de recommandation \parencite{iftikhar_reinforcement_2024} et la gestion de ressources \parencite{mao_resource_2016}. 
-Ces succès illustrent le potentiel du RL pour résoudre des problèmes complexes où les méthodes traditionnelles atteignent leurs limites.
+L'apprentissage par renforcement constitue une branche de l'intelligence artificielle focalisée sur la prise de décision séquentielle. 
+Contrairement à l'apprentissage supervisé, où les modèles sont entraînés sur des données étiquetées, le RL repose sur un processus d'apprentissage par essais et erreurs. 
+L'agent ajuste sa stratégie — ou \textit{politique} — en fonction d'un signal de récompense scalaire, avec pour objectif ultime de maximiser les bénéfices cumulés sur le long terme.
 
-% Problématique
-Toutefois, malgré ces avancées prometteuses, l'apprentissage par renforcement présente plusieurs défis majeurs : la nécessité d'un nombre considérable d'interactions avec l'environnement \parencite{sutton_reinforcement_2014}, la difficulté inhérente à la définition de fonctions de récompense appropriées selon l'environnement considéré, ainsi que la complexité de l'équilibre entre exploration et exploitation \parencite{sutton_reinforcement_2014}. 
-De plus, le passage de la théorie à la pratique soulève des questions méthodologiques et techniques importantes.
-Il convient également de noter que l'entraînement d'agents sur des environnements complexes tels que les jeux vidéo peut s'avérer particulièrement coûteux en termes de ressources computationnelles \parencite{noauthor_openai_2018}.
+Cette approche a démontré son efficacité dans des domaines variés : de la maîtrise de jeux complexes \parencite{zaffagniDefinitionAlphaGoQuest2022,OpenAIFive2018} à la robotique de précision \parencite{tangDeepReinforcementLearning2024}, en passant par l'optimisation des systèmes de recommandation \parencite{iftikharReinforcementLearningRecommender2024}. 
+Ces succès illustrent le potentiel du RL pour résoudre des problèmes de contrôle et d'optimisation là où les méthodes traditionnelles ou supervisées atteignent leurs limites.
 
-% Objectifs du travail
-% =====================================================
-% A revoir potentiellement, dépendant de l'objectif réel du travail de Master
-% Est-ce que je parle du fait que l'utopie serait d'entraîner un agent sur Rocket League
-% ou Trackmania ? A voir avec le directeur de recherche
-% https://github.com/ZealanL/RLGym-PPO-Guide?tab=readme-ov-file
-% =====================================================
-Ce travail de Master vise à explorer en profondeur les concepts fondamentaux et les techniques de l'apprentissage par renforcement, en établissant un pont entre les fondements théoriques et leurs applications pratiques. Plus spécifiquement, les objectifs de cette recherche sont les suivants :
-\begin{itemize}
-    \item Présenter de manière systématique les concepts théoriques essentiels du RL (processus de décision de Markov, méthodes de Monte Carlo, différence temporelle, etc.)
-    \item Analyser de façon critique les principales méthodes et algorithmes (Q-Learning, Deep Q-Networks, Policy Gradient, etc.)
-    \item Mettre en œuvre ces techniques dans des cas pratiques afin d'évaluer empiriquement leur performance
-    \item Identifier les bonnes pratiques méthodologiques ainsi que les écueils à éviter lors de l'implémentation
-\end{itemize}
-
-% Plan du document
-Ce document est structuré comme suit : la section~\ref{sec:etat-art} présente un état de l'art des techniques d'apprentissage par renforcement et de leurs applications. 
-La section~\ref{sec:methodo} décrit la méthodologie adoptée pour nos expérimentations. 
-Les résultats obtenus sont analysés dans la section~\ref{sec:resultats}. 
-Enfin, la section~\ref{sec:conclusion} synthétise les apports de ce travail et propose des perspectives de recherche futures.
-
+Toutefois, le passage de la théorie à la pratique soulève des défis majeurs. L'efficacité en termes d'échantillonnage (\textit{sample efficiency}), la conception de fonctions de récompense alignées sur les objectifs réels, ainsi que l'équilibre délicat entre exploration et exploitation constituent des verrous scientifiques et techniques importants \parencite{suttonReinforcementLearningIntroduction2015}.
 
 \section{État de l'art}
-
 \label{sec:etat-art}
 
-Cette section présente les concepts fondamentaux et les techniques principales de l'apprentissage par renforcement. 
-La majeure partie de cet état de l'art s'appuie sur les cours de David Silver \parencite{silver_lectures_2015} ainsi que sur l'ouvrage de référence de Sutton et Barto \parencite{sutton_reinforcement_2014}, qui constituent les fondements théoriques de ce domaine.
+Cette section présente les fondements théoriques de l'apprentissage par renforcement, en s'appuyant principalement sur les travaux de \textcite{suttonReinforcementLearningIntroduction2015} et les leçons de \textcite{silverLecturesReinforcementLearning2015}.
 
-\subsection{Concepts fondamentaux du RL}
+\subsection{Le paradigme Agent-Environnement}
 
-L'apprentissage par renforcement met en scène deux acteurs principaux qui interagissent en permanence : un \textbf{agent} (le système apprenant) et un \textbf{environnement} (le monde dans lequel il évolue) \parencite{sutton_reinforcement_2014}.
+Le cadre fondamental du RL repose sur une boucle d'interaction continue entre deux entités (voir Figure~\ref{fig:rl-loop}) : 
+\begin{itemize}
+    \item \textbf{L'agent} : l'entité décisionnelle qui apprend et agit.
+    \item \textbf{L'environnement} : le monde extérieur avec lequel l'agent interagit.
+\end{itemize}
 
-Le fonctionnement peut être décrit selon le processus itératif suivant : 
+À chaque pas de temps discret $t$, l'interaction suit la séquence suivante :
 \begin{enumerate}
-    \item L'agent observe l'état courant du système (l'\textbf{état} $S_t$)
-    \item Il sélectionne une \textbf{action} $A_t$ à effectuer
-    \item L'environnement réagit en renvoyant une \textbf{récompense} $R_{t+1}$ (une valeur scalaire indiquant la qualité de l'action effectuée)
-    \item L'environnement transite vers un nouvel état $S_{t+1}$
-    \item Le cycle se répète
+    \item L'agent reçoit une \textbf{observation} $O_t$ et une \textbf{récompense} $R_t$.
+    \item L'agent sélectionne une \textbf{action} $A_t$ en fonction de sa politique actuelle.
+    \item L'environnement réagit à cette action, transite vers un nouvel état et génère une nouvelle récompense $R_{t+1}$ ainsi qu'une nouvelle observation $O_{t+1}$.
 \end{enumerate}
 
-La figure~\ref{fig:rl-loop} illustre cette boucle d'interaction fondamentale.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+node distance=3.2cm and 5cm,
+>=Stealth,
+block/.style={draw, thick, minimum width=3.2cm, minimum height=1.2cm, align=center},
+agent/.style={block, ellipse},
+env/.style={block, rounded corners=2mm}
+]
+
+% --- Nœuds ---
+\node[agent] (agent) {Agent};
+\node[env, below=of agent] (env) {Environnement};
+
+% --- Flèche Action (Droite) ---
+\draw[->, thick] (agent.east) -- ++(1.5,0) |- (env.east)
+node[pos=0.5, right, align=left] {action \\ $A_t$};
+
+% --- Flèches de retour (Gauche) ---
+
+% 1. OBSERVATION (Boucle extérieure)
+\draw[->, thick] ([yshift=-0.3cm]env.west) -- ++(-3.5,0) |- ([yshift=0.2cm]agent.west);
+% Label Observation (toujours à gauche de sa ligne)
+\node[left, align=center] at ($(agent.west)+(-3.5, -2.2)$) {observation \\ $O_t$};
+\node[below] at ($(env.west)+(-1, -0.3)$) {$O_{t+1}$};
+
+% 2. REWARD (Boucle intérieure)
+\draw[->, thick] ([yshift=0.3cm]env.west) -- ++(-3,0) |- ([yshift=-0.2cm]agent.west);
+% Label REWARD déplacé à DROITE de sa ligne verticale
+\node[right, align=center] at ($(agent.west)+(-3, -2.2)$) {récompense \\ $R_t$};
+\node[above] at ($(env.west)+(-1, 0.3)$) {$R_{t+1}$};
+
+% --- Ligne pointillée de transition ---
+\draw[dotted, thick] ($(env.west)+(-1.5, 0.8)$) -- ($(env.west)+(-1.5, -0.8)$);
+
+\end{tikzpicture}
+\caption{Boucle d'interaction agent-environnement en apprentissage par renforcement}
+\label{fig:rl-loop}
+\end{figure}
+
+
+\subsubsection{Exemple illustratif : Cliff Walking}
+
+Pour illustrer ces mécanismes, nous utiliserons l'environnement \textit{Cliff Walking} (voir Figure~\ref{fig:cliff-walking}).
+
+Dans ce scénario, un agent doit naviguer sur une grille de $4 \times 12$ cases, d'un point de départ (en bas à gauche) vers une destination cible (en bas à droite). Entre ces deux points se situe une falaise (\textit{cliff}). 
+Le système de récompenses est conçu pour guider l'apprentissage de l'agent de la manière suivante :
+\begin{itemize}
+    \item Une pénalité de $-1$ est attribuée pour chaque déplacement effectué, afin d'inciter l'agent à trouver le chemin le plus court.
+    \item Une pénalité majeure de $-100$ est infligée si l'agent tombe dans la falaise. Dans ce cas, l'agent est instantanément replacé au point de départ pour recommencer sa tentative.
+\end{itemize}
+
+L'épisode\footnote{Un épisode correspond à une séquence complète d'interactions, commençant au point de départ et se terminant lorsque l'agent atteint une condition de fin (ici, la destination ou la chute).} s'achève lorsque l'agent atteint la destination ou tombe dans la falaise.
+
+Cet exemple met en évidence le dilemme de l'agent : il doit apprendre une stratégie qui minimise le nombre de pas tout en restant à une distance sécuritaire de la falaise. Une politique trop risquée (longer le bord) pourrait maximiser les gains mais présente un risque élevé de pénalité massive, tandis qu'une politique prudente (faire un détour par le haut) est plus sûre mais plus coûteuse en termes de récompenses par pas.
 
 \begin{figure}[H]
     \centering
-    \begin{tikzpicture}[
-    node distance=3.2cm and 5cm,
-    >=Stealth,
-    block/.style={draw, thick, minimum width=3.2cm, minimum height=1.2cm, align=center},
-    agent/.style={block, ellipse},
-    env/.style={block, rounded corners=2mm}
-]
-
-    % --- Nœuds ---
-    \node[agent] (agent) {Agent};
-    \node[env, below=of agent] (env) {Environnement};
-
-    % --- Flèche Action (Droite) ---
-    \draw[->, thick] (agent.east) -- ++(1.5,0) |- (env.east) 
-        node[pos=0.5, right, align=left] {action \\ $A_t$};
-
-    % --- Flèches de retour (Gauche) ---
-
-    % 1. OBSERVATION (Boucle extérieure)
-    \draw[->, thick] ([yshift=-0.3cm]env.west) -- ++(-3.5,0) |- ([yshift=0.2cm]agent.west);
-    
-    % Label Observation (toujours à gauche de sa ligne)
-    \node[left, align=center] at ($(agent.west)+(-3.5, -2.2)$) {observation \\ $O_t$};
-    \node[below] at ($(env.west)+(-1, -0.3)$) {$O_{t+1}$};
-
-    % 2. REWARD (Boucle intérieure)
-    \draw[->, thick] ([yshift=0.3cm]env.west) -- ++(-3,0) |- ([yshift=-0.2cm]agent.west);
-    
-    % Label REWARD déplacé à DROITE de sa ligne verticale
-    \node[right, align=center] at ($(agent.west)+(-3, -2.2)$) {récompense \\ $R_t$};
-    \node[above] at ($(env.west)+(-1, 0.3)$) {$R_{t+1}$};
-
-    % --- Ligne pointillée de transition ---
-    \draw[dotted, thick] ($(env.west)+(-1.5, 0.8)$) -- ($(env.west)+(-1.5, -0.8)$);
-
-\end{tikzpicture}
-    \caption{Boucle d'interaction agent-environnement en apprentissage par renforcement}
-    \label{fig:rl-loop}
+    \includegraphics[width=0.7\textwidth]{img/cliff_walking.png}
+    \caption{Environnement de Cliff Walking : l'agent doit atteindre la cible en évitant la falaise.}
+    \label{fig:cliff-walking}
 \end{figure}
 
-Au cours des interactions successives, l'agent accumule de l'expérience et apprend une \textbf{politique} $\pi$ : une stratégie définissant l'action à sélectionner dans chaque situation donnée. 
-À titre d'exemple, dans le contexte d'une partie d'échecs, la politique détermine le coup à jouer pour chaque configuration possible du plateau.
+\subsection{Distinction entre État et Historique}
 
-L'objectif de l'apprentissage consiste à identifier la politique optimale, c'est-à-dire celle permettant de maximiser l'espérance des récompenses cumulées sur l'ensemble de l'horizon temporel considéré. 
-Cette subtilité est fondamentale : l'enjeu ne réside pas dans la maximisation de la récompense immédiate, mais bien dans celle des récompenses cumulées sur la totalité de la séquence.
+Il est crucial de distinguer la perception de l'agent de la réalité de l'environnement.
+L'\textbf{historique} $H_t$ est la séquence complète des observations, actions et récompenses jusqu'au temps $t$ :
+\begin{equation}
+    H_t = O_0, A_0, R_1, O_1, \dots, A_{t-1}, R_t, O_t
+\end{equation}
 
-\subsection{Caractéristiques distinctives du RL}
-
-L'apprentissage par renforcement se distingue des autres paradigmes d'apprentissage automatique par plusieurs caractéristiques fondamentales \parencite{silver_lectures_2015} :
+L'\textbf{état} est l'information utilisée pour déterminer ce qui se passera ensuite. On distingue généralement trois types d'états :
 \begin{itemize}
-    \item \textbf{Absence de supervision directe} : contrairement à l'apprentissage supervisé où chaque exemple d'entraînement est associé à une cible $y$ explicite, le RL ne dispose que d'un signal de récompense scalaire fourni par l'environnement, sans indication directe de l'action optimale à adopter.
-    
-    \item \textbf{Feedback différé} : les conséquences d'une action effectuée à l'instant $t$ peuvent ne se manifester que plusieurs pas de temps ultérieurement, rendant particulièrement ardue l'attribution du crédit (Credit Assignment Problem)\footnote{Le problème d'attribution du crédit consiste à déterminer quelles actions passées sont responsables des récompenses futures obtenues.}.
-    
-    \item \textbf{Nature séquentielle et interactive} : la dimension temporelle constitue une composante intrinsèque du problème. Les données ne sont pas indépendantes et identiquement distribuées (i.i.d), mais forment une séquence d'états, d'actions et de récompenses corrélés temporellement. Les actions de l'agent modifient l'état de l'environnement et influencent les observations et récompenses futures, créant ainsi une boucle de rétroaction continue.
-    
+    \item \textbf{L'état de l'environnement} ($S_t^e$) : la configuration interne complète de l'environnement. Il est souvent invisible pour l'agent (ex: les cartes restantes dans le sabot au poker).
+    \item \textbf{L'état de l'agent} ($S_t^a$) : la représentation interne que l'agent utilise pour choisir son action. C'est une fonction de l'historique : $S_t^a = f(H_t)$.
+    \item \textbf{L'état d'information (ou état de Markov)} : un état qui contient toute l'information utile de l'historique.
+\end{itemize}
+
+\subsection{Caractéristiques distinctives}
+
+Le RL se différencie des autres approches par trois aspects fondamentaux :
+\begin{itemize}
+    \item \textbf{Absence de superviseur} : il n'y a pas d'expert pour indiquer l'action optimale ; seul un signal de récompense (souvent parcimonieux) guide l'agent.
+    \item \textbf{Feedback différé} : une action prise à l'instant $t$ peut n'avoir un impact sur la récompense qu'à l'instant $t+100$. C'est le problème de l'assignation de crédit (\textit{Credit Assignment Problem}).
+    \item \textbf{Temps et séquentialité} : contrairement au \textit{deep learning} classique, les données ne sont pas indépendantes et identiquement distribuées (i.i.d.). Les actions de l'agent influencent directement les données qu'il recevra ultérieurement.
 \end{itemize}
 
 % Il serait préférable ici d'indiquer toutes les définitions de manière détaillée mais 
@@ -332,15 +331,13 @@ L'apprentissage par renforcement se distingue des autres paradigmes d'apprentiss
 
 \subsection{Définitions des concepts clés}
 
-Afin de formaliser rigoureusement le problème d'apprentissage par renforcement, il convient de définir précisément les éléments constitutifs de cette boucle d'interaction \parencite{sutton_reinforcement_2014} :
+Afin de formaliser rigoureusement le problème d'apprentissage par renforcement, il convient de définir précisément les éléments constitutifs de cette boucle d'interaction \parencite{suttonReinforcementLearningIntroduction2015} :
 
 \begin{itemize}
     \item \textbf{Pas de temps $t$} : indice temporel discret marquant la progression de la séquence d'interactions. Chaque pas de temps correspond à un cycle complet d'observation-action-récompense.
     
     \item \textbf{État $S_t$ (State)} : représentation complète de la situation de l'environnement à l'instant $t$. Un état doit idéalement contenir toute l'information nécessaire pour prendre une décision optimale (propriété de Markov). Par exemple, dans le jeu d'échecs, l'état correspond à la configuration complète du plateau.
-    \begin{itemize}
-        \item L'état $S_t$ est représenté comme une fonction de l'historique complet des interactions passées : $S_t = f(H_t)$\footnote{$H_t = \{O_0, A_0, R_1, \dots, O_{t-1}, A_{t-1}, R_t\}$.}
-    \end{itemize}
+    
     
     \item \textbf{Action $A_t$} : décision prise par l'agent à l'instant $t$ parmi un ensemble d'actions possibles $\mathcal{A}(s)$ dans l'état $s$. L'espace d'actions peut être discret (gauche, droite, sauter) ou continu (angle de direction, force appliquée).
     
@@ -360,7 +357,7 @@ Afin de formaliser rigoureusement le problème d'apprentissage par renforcement,
 
 % \subsection{Exploration et exploitation}
 
-% Le Reinforcement Learning est caractérisé par un apprentissage dit "trial-and-error", où l'agent doit constamment faire face à un dilemme fondamental : celui de l'\textbf{exploration} versus l'\textbf{exploitation} \parencite{sutton_reinforcement_2014}.
+% Le Reinforcement Learning est caractérisé par un apprentissage dit "trial-and-error", où l'agent doit constamment faire face à un dilemme fondamental : celui de l'\textbf{exploration} versus l'\textbf{exploitation} \parencite{sutton_reinforcement_2015}.
 % \begin{itemize}
 %     \item \textbf{Exploitation} : consiste à choisir l'action qui maximise la récompense immédiate ou la valeur estimée à long terme, en se basant sur les connaissances actuelles de l'agent. 
 %     \item \textbf{Exploration} : implique de sélectionner des actions moins connues ou potentiellement suboptimales afin de découvrir de nouvelles stratégies et d'améliorer la compréhension de l'environnement.
@@ -376,7 +373,7 @@ Afin de formaliser rigoureusement le problème d'apprentissage par renforcement,
 %     \end{cases}
 % \end{equation}
 
-\subsection{Processus décisionnel de Markov}
+\subsection{Processus décisionnel de Markov (MDP)}
 
 \subsubsection{Propriété de Markov}
 
@@ -400,14 +397,125 @@ Cette matrice permet de modéliser la dynamique de l'environnement et de calcule
 Une matrice existe pour chaque action possible dans l'environnement, ce qui permet de modéliser la dynamique de manière complète.
 La dite matrice est représentable également tel que sur l'équation \ref{eq:transition-matrix} :
 \begin{equation}
-    P^a = \begin{bmatrix}
-        P_{s_1,s_1} & P_{s_1,s_2} & \dots & P_{s_1,s_n} \\
-        P_{s_2,s_1} & P_{s_2,s_2} & \dots & P_{s_2,s_n} \\
+    \mathcal{P}^a = \begin{bmatrix}
+        \mathcal{P}_{s_1,s_1} & \mathcal{P}_{s_1,s_2} & \dots & \mathcal{P}_{s_1,s_n} \\
+        \mathcal{P}_{s_2,s_1} & \mathcal{P}_{s_2,s_2} & \dots & \mathcal{P}_{s_2,s_n} \\
         \vdots & \vdots & \ddots & \vdots \\
-        P_{s_n,s_1} & P_{s  _n,s_2} & \dots & P_{s_n,s_n}
+        \mathcal{P}_{s_n,s_1} & \mathcal{P}_{s_n,s_2} & \dots & \mathcal{P}_{s_n,s_n}
     \end{bmatrix}
     \label{eq:transition-matrix}
 \end{equation}
+
+\subsubsection{Processus de Markov}
+Un processus de Markov (Markov Process, MP) est un modèle mathématique qui décrit un système évoluant dans le temps selon la propriété de Markov.
+Il s'agit d'un processus aléatoire sans mémoire régi sous forme de tuple $(\mathcal{S}, \mathcal{P})$ :
+\begin{itemize}
+    \item $\mathcal{S}$ est l'ensemble des états possibles
+    \item $\mathcal{P}$ est la matrice de transition d'état
+\end{itemize}
+
+
+\subsubsection{Processus de récompense de Markov (MRP)}
+Il est important de comprendre le processus de récompense de Markov, qui est une extension du processus de Markov (Markov Process, MP) en y intégrant un signal de récompense.
+Le MRP est donc un tuple $(\mathcal{S}, \mathcal{P}, \mathcal{R}, \gamma)$ :
+\begin{itemize}
+    \item $\mathcal{S}$ est l'ensemble des états possibles.
+    \item $\mathcal{P}$ est la matrice de transition d'état.
+    \item $\mathcal{R}$ est une fonction de récompense qui associe à chaque état une récompense scalaire.
+    \item $\gamma$ est le facteur d'actualisation $\gamma \in [0, 1]$.
+\end{itemize}
+
+
+\subsubsection{Retour}
+Le \textbf{retour} (Return) est défini comme la somme des récompenses futures obtenues à partir d'un état donné, en suivant une politique spécifique.
+Il est généralement noté $G_t$ et est formulé de la manière suivante (éq. \ref{eq:return}):
+\begin{equation}
+    G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \dots = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1}
+    \label{eq:return}
+\end{equation}
+
+
+Le paramètre $\gamma \in [0, 1]$ représente le facteur d'actualisation (ou \textit{discount factor}). 
+Il agit comme une pondération définissant l'importance relative des récompenses futures vis-à-vis des gains immédiats.
+Ainsi, une valeur de $\gamma$ tendant vers 0 indique que l'agent adopte une vision à court terme, tandis qu'un $\gamma$ s'approchant de 1 traduit une stratégie orientée vers le long terme, l'agent valorisant davantage les récompenses cumulées. 
+
+L'utilisation d'un facteur d'actualisation est particulièrement importante dans un MDP ou un MRP. 
+Tout d'abord, il permet d'empêcher que le retour soit infini s'il existe des cycles dans l'environnement qui génèrent des récompenses positives de manière répétée.
+Ensuite, il reflète la réalité selon laquelle les récompenses futures sont souvent moins certaines que les récompenses immédiates, ce qui incite l'agent à privilégier les gains à court terme tout en tenant compte des bénéfices à long terme.
+Enfin, il respecte la physiologie humaine, où les individus ont tendance à préférer des récompenses immédiates plutôt que des récompenses futures, même si ces dernières sont plus importantes.
+
+\subsubsection{Fonction de valeur (Value function)}
+La fonction de valeur de l'état d'un MRP est l'ésperance du retour en démarrant de l'état $s$ et en suivant la politique $\pi$.
+Elle est notée $V^\pi(s)$ et est définie par l'équation \ref{eq:value-function} :
+\begin{equation}
+    V^\pi(s) = \mathbb{E}_\pi [G_t | S_t = s] = \mathbb{E}_\pi \left[ \sum_{k=0}^{\infty} \gamma^k R_{t+k+1} \middle| S_t = s \right]
+    \label{eq:value-function}
+\end{equation}
+
+Grâce à cette compréhension, on peut se pencher maintenant sur les équations de Bellman, qui sont fondamentales pour l'apprentissage de la politique optimale dans un MDP ou un MRP.
+
+\subsubsection{Equation de Bellman}
+L'équation de Bellman est une relation récursive qui exprime la fonction de valeur d'un état en fonction des récompenses immédiates et des valeurs des états suivants. 
+Elle est formulée comme suit :
+
+\begin{equation}
+\begin{aligned}
+V^\pi(s) &= \mathbb{E}^\pi \left[ G_t \middle| S_t = s \right]    \\
+&= \mathbb{E}^\pi \left[ R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \dots \middle| S_t = s \right] \\
+&= \mathbb{E}^\pi \left[ R_{t+1} + \gamma (R_{t+2} + \gamma R_{t+3} + \dots) \middle| S_t = s \right] \\
+&= \mathbb{E}^\pi \left[ R_{t+1} + \gamma G_{t+1} \middle| S_t = s \right] \\
+&= \mathbb{E}^\pi \left[ R_{t+1} + \gamma V^\pi(S_{t+1}) \middle| S_t = s \right]
+\end{aligned}    
+\end{equation}
+
+La décomposition de l'équation de Bellman met en évidence la nature récursive de la fonction de valeur, où la valeur d'un état est exprimée en fonction de la récompense immédiate et de la valeur des états suivants.
+Cette relation est fondamentale pour les algorithmes d'apprentissage par renforcement, car elle permet de mettre à jour les estimations de la fonction de valeur à partir des expériences accumulées par l'agent.
+
+
+\subsubsection{Processus de décision de Markov (MDP)}
+
+Un processus de décision de Markov (MDP) est un processus de récompense de Markov incluant des décisions. C'est l'environnement formel dans lequel l'apprentissage par renforcement opère. Il est défini par le quintuplet $(\mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R}, \gamma)$ :
+\begin{itemize}
+    \item $\mathcal{S}$ est l'ensemble des états possibles.
+    \item $\mathcal{A}$ est l'ensemble des actions possibles.
+    \item $\mathcal{P}$ est la matrice de probabilité de transition : $\mathcal{P}_{ss'}^a = \mathbb{P}[S_{t+1}=s' | S_t=s, A_t=a]$.
+    \item $\mathcal{R}$ est la fonction de récompense : $\mathcal{R}_s^a = \mathbb{E}[R_{t+1} | S_t=s, A_t=a]$.
+    \item $\gamma$ est le facteur d'actualisation $\gamma \in [0, 1]$.
+\end{itemize}
+
+Dans ce cadre, la politique $\pi$ ne dépend plus seulement de l'état, mais guide le choix de l'action. On note $\pi(a|s) = \mathbb{P}[A_t=a | S_t=s]$.
+
+\subsubsection{Fonction de valeur d'action ($Q$-function)}
+
+Alors que la fonction de valeur d'état $V^\pi(s)$ évalue la qualité d'un état, la fonction de valeur d'action $Q^\pi(s, a)$ (Action-Value Function) évalue la qualité d'une action spécifique prise dans un état donné, en suivant ensuite la politique $\pi$. Elle est définie par l'équation \ref{eq:q-function} :
+
+\begin{equation}
+    Q^\pi(s, a) = \mathbb{E}_\pi [G_t | S_t = s, A_t = a]
+    \label{eq:q-function}
+\end{equation}
+
+Cette fonction $Q$ est cruciale car elle permet à l'agent de comparer directement les actions possibles entre elles sans nécessairement connaître la dynamique du modèle (les probabilités de transition $\mathcal{P}$).
+
+\subsubsection{Équations d'optimalité de Bellman}
+
+L'objectif ultime de l'agent est de trouver la politique optimale $\pi^*$ qui maximise le retour attendu. Cela nous amène aux fonctions de valeur optimales :
+\begin{itemize}
+    \item $V^*(s) = \max_\pi V^\pi(s)$
+    \item $Q^*(s, a) = \max_\pi Q^\pi(s, a)$
+\end{itemize}
+
+
+Contrairement aux équations de Bellman classiques qui sont linéaires, les équations d'optimalité de Bellman sont non-linéaires car elles impliquent l'opérateur $\max$. Pour la fonction de valeur d'état, l'équation s'écrit :
+\begin{equation}
+    V^*(s) = \max_{a \in \mathcal{A}} \left( \mathcal{R}_s^a + \gamma \sum_{s' \in \mathcal{S}} \mathcal{P}_{ss'}^a V^*(s') \right)
+\end{equation}
+
+Et pour la fonction $Q$ :
+\begin{equation}
+    Q^*(s, a) = \mathcal{R}_s^a + \gamma \sum_{s' \in \mathcal{S}} \mathcal{P}_{ss'}^a \max_{a'} Q^*(s', a')
+\end{equation}
+
+La résolution de ces équations constitue le cœur du problème de l'apprentissage par renforcement. Si l'agent connaît $Q^*(s, a)$, la politique optimale est simplement d'agir de manière "greedy" (avide) en choisissant systématiquement l'action $a$ qui maximise $Q^*(s, a)$.
 
 \section{Méthodologie}
 \label{sec:methodo}
