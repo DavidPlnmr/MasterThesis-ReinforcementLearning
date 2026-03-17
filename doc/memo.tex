@@ -54,6 +54,9 @@
 \newcommand{\fulltitle}{Exploration des concepts et des techniques d’apprentissage par renforcement : De la théorie à la pratique }
 \newcommand{\shorttitle}{Apprentissage par renforcement : théorie et pratique}
 
+% Commande pour les titres de paragraphe visuellement distincts
+\newcommand{\myparagraph}[1]{\medskip\noindent\textbf{#1}\par\smallskip}
+
 % On retire l'indentation des paragraphes
 \setlength{\parindent}{0pt}
 % Augmentation de l'espacement entre les sauts de ligne
@@ -210,6 +213,8 @@ Contrairement à l'apprentissage supervisé, le RL repose sur un processus d'ess
 Cette approche a prouvé son efficacité dans la maîtrise de jeux complexes \parencite{zaffagniDefinitionAlphaGoQuest2022,OpenAIFive2018}, la robotique \parencite{tangDeepReinforcementLearning2024} ou encore l'optimisation de recommandations \parencite{iftikharReinforcementLearningRecommender2024}. 
 Néanmoins, son application pratique soulève des défis majeurs, tels que l'efficacité d'échantillonnage (\textit{sample efficiency}), la conception des fonctions de récompense et l'équilibre entre exploration et exploitation.
 
+\newpage
+
 \section{État de l'art}
 \label{sec:etat-art}
 
@@ -318,173 +323,71 @@ Ce modèle vise à optimiser un \textbf{retour cumulé} $G_t$, somme des récomp
 \end{equation}
 
 
+\subsection{Model-Based}
 
-\subsection{Policy Evaluation}
+Pour comprendre les méthodes d'apprentissage par renforcement, il est essentiel de distinguer les approches \textit{model-based} et \textit{model-free}. Les premières reposent sur la connaissance explicite des dynamiques de l'environnement ($\mathcal{P}$ et $\mathcal{R}$), tandis que les secondes apprennent directement à partir des interactions sans modéliser ces dynamiques.
+En connaissant les dynamiques du système, ces méthodes permettent de planifier efficacement les actions futures, en évaluant les conséquences de chaque décision avant de l'exécuter.
+Ainsi, l'agent n'a pas besoin d'apprendre par essais et erreurs, mais peut calculer la meilleure stratégie à partir de sa compréhension du monde.
 
-L'évaluation d'une politique (Policy Evaluation) consiste à déterminer la fonction de valeur $V^\pi$ pour une politique $\pi$ donnée. 
-En d'autres termes, il s'agit d'estimer l'espérance du retour cumulé que l'agent obtiendra à partir de chaque état s'il suit rigoureusement la stratégie définie par $\pi$.
-Cela permet de quantifier la qualité de la politique actuelle.
+\subsubsection{Policy Evaluation et Policy Iteration}
 
-\subsubsection{Principe de la mise à jour itérative}
+La \textit{Policy Iteration} alterne deux opérations complémentaires :
+\begin{enumerate}
+    \item \textbf{Policy Evaluation} : estimer la qualité de la politique courante $\pi$ via $V^\pi$.
+    \item \textbf{Policy Improvement} : construire une politique améliorée en choisissant, dans chaque état, l'action la plus prometteuse selon cette estimation. C'est l'idée de la règle \textit{greedy}.
+\end{enumerate}
 
-Le calcul direct de $V^\pi(s)$ via l'équation d'espérance de Bellman s'avère complexe car la valeur d'un état est définie de manière récursive en fonction de la valeur de ses successeurs, lesquelles sont initialement inconnues. Pour passer outre cette récursivité, le problème est traité comme une règle de mise à jour itérative. 
+L'idée centrale est simple : \textbf{évaluer puis améliorer}, jusqu'à stabilisation de la politique.
+Ce processus itératif garantit la convergence vers une politique optimale $\pi^*$, pour laquelle $V^{\pi^*} \geq V^\pi$ pour toute politique $\pi$ \parencite{silverLecturesReinforcementLearning2015}.
 
-L'algorithme débute par une initialisation arbitraire de la fonction de valeur, par exemple $V_0(s) = 0$ pour tout $s \in \mathcal{S}$. 
-À chaque itération $k$, on calcule une nouvelle estimation $V_{k+1}$ en appliquant l'opérateur de Bellman sur l'ensemble des états :
+\myparagraph{Rôle de la Policy Evaluation}
+
+Évaluer une politique revient à estimer l'espérance du retour cumulé si l'agent suit toujours $\pi$. Cette estimation se fait itérativement à partir d'une initialisation (par exemple $V_0(s)=0$) :
 
 \begin{equation}
     V_{k+1}(s) = \sum_{a \in \mathcal{A}} \pi(a|s) \left[ \mathcal{R}_s^a + \gamma \sum_{s' \in \mathcal{S}} \mathcal{P}_{ss'}^a V_k(s') \right]
 \end{equation}
 
-Cette opération permet de remonter l'information des récompenses immédiates et des valeurs futures estimées vers l'état actuel. 
+Chaque itération propage l'information de récompense dans l'espace d'états. En théorie, $V_k \to V^\pi$ lorsque $k \to \infty$.
 
-\begin{figure}[htp]
-    \centering
-    \begin{tikzpicture}[scale=1]
-        % Style pour les chiffres
-        \tikzset{val/.style={font=\small, inner sep=2pt}}
-        % Style pour les terminaux
-        \tikzset{term/.style={fill=gray!20}}
+\myparagraph{Utilisation d'une approximation en pratique}
 
-        % --- GRILLE k=0 ---
-        \begin{scope}
-            \draw[step=1cm, black, thin] (0,0) grid (4,4);
-            \node[val, term, minimum size=1cm] at (0.5,3.5) {0};
-            \node[val, term, minimum size=1cm] at (3.5,0.5) {0};
-            \foreach \x in {0.5,1.5,2.5,3.5}
-                \foreach \y in {0.5,1.5,2.5,3.5}
-                    \node[val] at (\x,\y) {0.0};
-            \node[val, term, minimum size=1cm] at (0.5,3.5) {0};
-            \node[val, term, minimum size=1cm] at (3.5,0.5) {0};
-            \node[below=0.5cm] at (2,0) {\textbf{$k=0$}};
-        \end{scope}
+En pratique, l'objectif n'est pas seulement d'estimer parfaitement $V^\pi$, mais de trouver une meilleure politique. 
+Or, quelques itérations d'évaluation donnent souvent une approximation déjà suffisante pour orienter correctement l'étape \textit{greedy}. 
 
-        % --- FLÈCHE ---
-        \draw[->, >=stealth, thick] (4.2,2) -- (4.8,2);
-
-        % --- GRILLE k=1 ---
-        \begin{scope}[xshift=5cm]
-            \draw[step=1cm, black, thin] (0,0) grid (4,4);
-            \node[val, term, minimum size=1cm] at (0.5,3.5) {0};
-            \node[val, term, minimum size=1cm] at (3.5,0.5) {0};
-            % On remplit manuellement pour éviter les bugs de boucle
-            \foreach \x in {0.5,1.5,2.5,3.5}
-                \foreach \y in {0.5,1.5,2.5,3.5}
-                    \node[val] at (\x,\y) {-1.0};
-            % On ré-écrase les terminaux pour la clarté
-            \node[val, term, minimum size=1cm] at (0.5,3.5) {0};
-            \node[val, term, minimum size=1cm] at (3.5,0.5) {0};
-            \node[below=0.5cm] at (2,0) {\textbf{$k=1$}};
-        \end{scope}
-
-        % --- FLÈCHE ---
-        \draw[->, >=stealth, thick] (9.2,2) -- (9.8,2);
-
-        % --- GRILLE k=2 ---
-        \begin{scope}[xshift=10cm]
-            \draw[step=1cm, black, thin] (0,0) grid (4,4);
-            \node[val, term, minimum size=1cm] at (0.5,3.5) {0};
-            \node[val, term, minimum size=1cm] at (3.5,0.5) {0};
-            
-            % Valeurs calculées (arrondies)
-            \node[val] at (1.5,3.5) {-1.7}; \node[val] at (2.5,3.5) {-2.0}; \node[val] at (3.5,3.5) {-2.0};
-            \node[val] at (0.5,2.5) {-1.7}; \node[val] at (1.5,2.5) {-2.0}; \node[val] at (2.5,2.5) {-2.0}; \node[val] at (3.5,2.5) {-2.0};
-            \node[val] at (0.5,1.5) {-2.0}; \node[val] at (1.5,1.5) {-2.0}; \node[val] at (2.5,1.5) {-2.0}; \node[val] at (3.5,1.5) {-1.7};
-            \node[val] at (0.5,0.5) {-2.0}; \node[val] at (1.5,0.5) {-2.0}; \node[val] at (2.5,0.5) {-1.7};
-            
-            \node[below=0.5cm] at (2,0) {\textbf{$k=2$}};
-        \end{scope}
-
-    \end{tikzpicture}
-    \caption{Itérations de l'évaluation de politique dans un monde de grille $4 \times 4$. Les états terminaux sont grisés. Inspiré de \textcite{silverLecturesReinforcementLearning2015}.}
-    \label{fig:policy-evaluation}
-\end{figure}
-
-Dans la figure \ref{fig:policy-evaluation}, la récompense est de $-1$ pour chaque transition et les actions possibles sont les quatre directions cardinales.
-Au départ ($k=0$), la fonction de valeur est initialisée à zéro pour tous les états. 
-Après la première itération ($k=1$), tous les états hormis les terminaux prennent une valeur de $-1$ car ils reçoivent une récompense immédiate de $-1$, tandis que les états terminaux restent à zéro car ils ne génèrent pas de récompense.
-À la deuxième itération ($k=2$), les valeurs commencent à se propager vers l'intérieur de la grille, avec des valeurs plus négatives à mesure que l'on s'éloigne des états terminaux. 
-Cela nous permet de savoir que les états plus proches des terminaux sont plus "précieux" (moins négatifs) que ceux plus éloignés, ce qui guide l'agent vers les terminaux, maximisant ainsi les récompenses à long terme.
-
-
-
-\subsubsection{Convergence et limites de l'itération}
-
-Il est mathématiquement démontré que la suite de fonctions $\{V_k\}$ converge vers la valeur réelle $V^\pi$ lorsque $k \to \infty$. 
-Toutefois, dans une perspective de contrôle, il n'est pas toujours nécessaire d'atteindre une convergence parfaite. 
-Comme le souligne \textcite{silverLecturesReinforcementLearning2015}, dès que la fonction de valeur est suffisamment précise pour que la politique \textit{greedy} associée devienne stable, l'évaluation peut être interrompue pour passer à la phase d'amélioration via une définition d'une nouvelle politique.
-
-
-\subsection{Policy Iteration}
-
-L'algorithme d'itération de la politique est un processus itératif permettant de découvrir la politique optimale $\pi^*$ en alternant entre deux phases distinctes : l'évaluation et l'amélioration.
-
-\subsubsection{Le cycle Évaluation-Amélioration}
-
-Le principe repose sur une suite de politiques $\pi_0, \pi_1, \pi_2, \dots$ et de fonctions de valeur associées $v_{\pi_0}, v_{\pi_1}, v_{\pi_2}, \dots$ :
-
-\begin{enumerate}
-    \item \textbf{Évaluation (E)} : Pour une politique $\pi$ donnée, on calcule sa fonction de valeur $v_\pi(s)$ par l'application itérative de l'équation d'espérance de Bellman.
-    \item \textbf{Amélioration (I)} : On construit une nouvelle politique $\pi'$ en agissant de manière \textit{greedy} par rapport à l'estimation actuelle $v_\pi$ :
-    \begin{equation}
-        \pi'(s) = \arg\max_{a \in \mathcal{A}} q_\pi(s, a)
-    \end{equation}
-\end{enumerate}
-
-Ce cycle se répète jusqu'à ce que la politique ne subisse plus de modifications, signalant que la politique optimale a été atteinte.
-
-
-
-\subsubsection{Le théorème d'amélioration de la politique}
-
-La validité de cet algorithme repose sur le \textbf{théorème d'amélioration de la politique}. Pour une politique déterministe $a = \pi(s)$, nous cherchons à savoir s'il est bénéfique de changer l'action dans un état $s$.
-
-En choisissant une action $a$ différente de $\pi(s)$ puis en suivant à nouveau $\pi$ par la suite, la valeur obtenue est définie par $q_\pi(s, a)$. Si cette valeur est supérieure à $v_\pi(s)$, alors la nouvelle politique est globalement meilleure. Formellement, l'amélioration locale sur une étape est définie par :
+On améliore alors la politique avec :
 \begin{equation}
-    q_\pi(s, \pi'(s)) = \max_{a \in \mathcal{A}} q_\pi(s, a) \ge q_\pi(s, \pi(s)) = v_\pi(s)
+    \pi'(s) = \arg\max_{a \in \mathcal{A}} q_\pi(s, a)
+\end{equation}
+
+Si cette politique change, on recommence l'itération \emph{évaluation et amélioration} ; sinon, on s'arrête. Cette logique correspond à l'\textbf{itération de la politique modifiée} : on remplace une évaluation exacte par une évaluation partielle (nombre fixe d'itérations ou seuil $\epsilon$), ce qui réduit fortement le coût de calcul sans perdre l'intuition de l'algorithme.
+
+\subsubsection{Value Iteration}
+
+La \textit{Value Iteration} cherche directement la valeur optimale $V^*$, sans stocker de politique explicite pendant l'apprentissage. Elle fusionne donc l'évaluation et l'amélioration en une seule mise à jour basée sur l'opérateur \textbf{maximum}.
+
+\myparagraph{Principe de mise à jour}
+
+\begin{equation}
+    V_{k+1}(s) = \max_{a \in \mathcal{A}} \left[ \mathcal{R}_s^a + \gamma \sum_{s' \in \mathcal{S}} \mathcal{P}_{ss'}^a V_k(s') \right]
+\end{equation}
+
+À chaque itération, la valeur d'un état est réévaluée en supposant l'action future la plus favorable. 
+En pratique, on arrête lorsque les variations deviennent faibles (par exemple $\max_s |V_{k+1}(s)-V_k(s)|<\epsilon$), ce qui donne une approximation suffisante pour décider.
+
+\myparagraph{Lien avec la Policy Iteration et extraction de $\pi^*$}
+
+La \textit{Value Iteration} peut être vue comme une \textit{Modified Policy Iteration}, où l'évaluation de politique est réduite à une seule mise à jour avant amélioration. Une fois $V$ stabilisée, on extrait la politique optimale par une règle \textit{greedy} :
+\begin{equation}
+    \pi^*(s) = \arg\max_{a \in \mathcal{A}} \left[ \mathcal{R}_s^a + \gamma \sum_{s' \in \mathcal{S}} \mathcal{P}_{ss'}^a V^*(s') \right]
 \end{equation}
 
 
-
-Pour démontrer que cette amélioration locale garantit une amélioration globale de la fonction de valeur ($v_{\pi'} \ge v_\pi$), on procède par expansion récursive de l'espérance sous la nouvelle politique $\pi'$ :
-
-\begin{equation}
-\begin{aligned} 
-    v_\pi(s) &\le q_\pi(s, \pi'(s)) \\ 
-    &= \mathbb{E}_{\pi'} [R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s] \\ 
-    &\le \mathbb{E}_{\pi'} [R_{t+1} + \gamma q_\pi(S_{t+1}, \pi'(S_{t+1})) \mid S_t = s] \\ 
-    &\le \mathbb{E}_{\pi'} [R_{t+1} + \gamma R_{t+2} + \gamma^2 q_\pi(S_{t+2}, \pi'(S_{t+2})) \mid S_t = s] \\ 
-    &\le \mathbb{E}_{\pi'} [R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \dots \mid S_t = s] = v_{\pi'}(s) 
-\end{aligned}
-\end{equation}
-
-Cette chaîne d'inégalités prouve que si l'on suit $\pi'$ pour une étape, puis $\pi$ pour toujours, on obtient un résultat supérieur ou égal. Par extension, suivre $\pi'$ indéfiniment est nécessairement plus performant.
-
-\subsubsection{Convergence et Optimalité}
-
-Le processus s'arrête lorsque l'amélioration ne produit plus de changement. 
-À ce stade stable, la politique $\pi$ et la politique améliorée $\pi'$ sont identiques, ce qui implique :
-\begin{equation}
-    v_\pi(s) = \max_{a \in \mathcal{A}} q_\pi(s, a)
-\end{equation}
-
-Cette expression correspond à l'\textbf{équation d'optimalité de Bellman}. 
-Dès lors, $v_\pi$ est la fonction de valeur optimale $v_*(s)$, et $\pi$ est la politique optimale $\pi^*$. 
-
-
-\subsubsection{Itération de la politique modifiée (Modified Policy Iteration)}
-
-Dans la version classique, la phase d'évaluation nécessite une convergence parfaite de $v_\pi$ ($k \to \infty$). 
-Cependant, la politique devient souvent stable bien avant que les valeurs $v_\pi$ ne soient calculées avec précision. 
-En pratique, il est peu pertinent de poursuivre l'évaluation jusqu'à la convergence complète, surtout dans les environnements complexes où cela peut être coûteux en temps de calcul.
-
-L'\textbf{itération de la politique modifiée} consiste à interrompre l'évaluation prématurément selon deux critères :
-\begin{itemize}
-    \item \textbf{Nombre d'étapes fixe} : Arrêter le calcul de $v_\pi$ après $k$ itérations (ex: $k=3$).
-    \item \textbf{Seuil de précision $\epsilon$} : Stopper dès que $\max_s |V_{k+1}(s) - V_k(s)| < \epsilon$.
-\end{itemize}
-
-\subsection{Value Iteration}
+\subsection{Model-Free}
+L'utilisation réel du RL se fait souvent dans des environnements complexes où les dynamiques sont inconnues ou difficiles à modéliser.
+On ne connaît donc pas les fonctions de transition $\mathcal{P}$ ni de récompense $\mathcal{R}$, ce qui rend les méthodes \textit{model-based} inapplicables.
+Les méthodes \textit{model-free} apprennent directement à partir des expériences d'interaction, en estimant les fonctions de valeur ou en optimisant la politique sans modéliser explicitement l'environnement.
+C'est concrètement ce que \textcite{silverLecturesReinforcementLearning2015} appelle \textit{learning} plutôt que \textit{planning}\footnote{Lié aux méthodes \textit{model-based}}.
 
 
 \section{Méthodologie}
