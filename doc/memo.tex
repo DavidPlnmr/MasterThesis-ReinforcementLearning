@@ -204,19 +204,11 @@ Voilà le résumé de ce travail de Master. Il est important de bien résumer le
 
 \section{Introduction}
 
-\section{Introduction}
+Parmi les paradigmes de l'apprentissage automatique, l'apprentissage par renforcement (\textit{Reinforcement Learning}, RL) se distingue par sa capacité à former des agents autonomes via l'interaction directe avec leur environnement \parencite{suttonReinforcementLearningIntroduction2015}.
+Contrairement à l'apprentissage supervisé, le RL repose sur un processus d'essais et erreurs : l'agent ajuste sa \textit{politique} de décision en fonction d'un signal de récompense, avec pour objectif de maximiser ses bénéfices cumulés.
 
-L'intelligence artificielle a connu des avancées spectaculaires ces dernières années, transformant de nombreux domaines allant de la vision par ordinateur au traitement automatique des langues. 
-Parmi les différents paradigmes de l'apprentissage automatique, l'apprentissage par renforcement (Reinforcement Learning, RL) se distingue par sa capacité à permettre à des agents d'apprendre de manière autonome par interaction directe avec leur environnement.
-
-L'apprentissage par renforcement constitue une branche de l'intelligence artificielle focalisée sur la prise de décision séquentielle. 
-Contrairement à l'apprentissage supervisé, où les modèles sont entraînés sur des données étiquetées, le RL repose sur un processus d'apprentissage par essais et erreurs. 
-L'agent ajuste sa stratégie — ou \textit{politique} — en fonction d'un signal de récompense scalaire, avec pour objectif ultime de maximiser les bénéfices cumulés sur le long terme.
-
-Cette approche a démontré son efficacité dans des domaines variés : de la maîtrise de jeux complexes \parencite{zaffagniDefinitionAlphaGoQuest2022,OpenAIFive2018} à la robotique de précision \parencite{tangDeepReinforcementLearning2024}, en passant par l'optimisation des systèmes de recommandation \parencite{iftikharReinforcementLearningRecommender2024}. 
-Ces succès illustrent le potentiel du RL pour résoudre des problèmes de contrôle et d'optimisation là où les méthodes traditionnelles ou supervisées atteignent leurs limites.
-
-Toutefois, le passage de la théorie à la pratique soulève des défis majeurs. L'efficacité en termes d'échantillonnage (\textit{sample efficiency}), la conception de fonctions de récompense alignées sur les objectifs réels, ainsi que l'équilibre délicat entre exploration et exploitation constituent des verrous scientifiques et techniques importants \parencite{suttonReinforcementLearningIntroduction2015}.
+Cette approche a prouvé son efficacité dans la maîtrise de jeux complexes \parencite{zaffagniDefinitionAlphaGoQuest2022,OpenAIFive2018}, la robotique \parencite{tangDeepReinforcementLearning2024} ou encore l'optimisation de recommandations \parencite{iftikharReinforcementLearningRecommender2024}. 
+Néanmoins, son application pratique soulève des défis majeurs, tels que l'efficacité d'échantillonnage (\textit{sample efficiency}), la conception des fonctions de récompense et l'équilibre entre exploration et exploitation.
 
 \section{État de l'art}
 \label{sec:etat-art}
@@ -279,243 +271,221 @@ node[pos=0.5, right, align=left] {action \\ $A_t$};
 \end{figure}
 
 
-\subsubsection{Exemple illustratif : Cliff Walking}
+\subsubsection{Exemple : Cliff Walking}
 
-Pour illustrer ces mécanismes, nous utiliserons l'environnement \textit{Cliff Walking} (voir Figure~\ref{fig:cliff-walking}).
-
-Dans ce scénario, un agent doit naviguer sur une grille de $4 \times 12$ cases, d'un point de départ (en bas à gauche) vers une destination cible (en bas à droite). Entre ces deux points se situe une falaise (\textit{cliff}). 
-Le système de récompenses est conçu pour guider l'apprentissage de l'agent de la manière suivante :
-\begin{itemize}
-    \item Une pénalité de $-1$ est attribuée pour chaque déplacement effectué, afin d'inciter l'agent à trouver le chemin le plus court.
-    \item Une pénalité majeure de $-100$ est infligée si l'agent tombe dans la falaise. Dans ce cas, l'agent est instantanément replacé au point de départ pour recommencer sa tentative.
-\end{itemize}
-
-L'épisode\footnote{Un épisode correspond à une séquence complète d'interactions, commençant au point de départ et se terminant lorsque l'agent atteint une condition de fin (ici, la destination ou la chute).} s'achève lorsque l'agent atteint la destination ou tombe dans la falaise.
-
-Cet exemple met en évidence le dilemme de l'agent : il doit apprendre une stratégie qui minimise le nombre de pas tout en restant à une distance sécuritaire de la falaise. Une politique trop risquée (longer le bord) pourrait maximiser les gains mais présente un risque élevé de pénalité massive, tandis qu'une politique prudente (faire un détour par le haut) est plus sûre mais plus coûteuse en termes de récompenses par pas.
+L'environnement \textit{Cliff Walking}\footnote{\url{https://gymnasium.farama.org/environments/toy_text/cliff_walking/}} (Figure~\ref{fig:cliff-walking}) illustre ces mécanismes.
+L'agent navigue sur une grille pour atteindre une cible en évitant une falaise.
+Il reçoit une récompense de $-1$ par pas parcouru (pour inciter à la rapidité) et de $-100$ avec retour au départ s'il tombe.
+Cet exemple met en évidence un compromis classique : l'agent doit équilibrer de la minimisation de la distance pénalisante tout en évitant un risque majeur.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.7\textwidth]{img/cliff_walking.png}
-    \caption{Environnement de Cliff Walking : l'agent doit atteindre la cible en évitant la falaise.}
+    \includegraphics[width=0.6\textwidth]{img/cliff_walking.png}
+    \caption{Environnement Cliff Walking.}
     \label{fig:cliff-walking}
 \end{figure}
 
-\subsection{Distinction entre État et Historique}
+\subsection{Spécificités et Concepts Clés}
 
-Il est crucial de distinguer la perception de l'agent de la réalité de l'environnement.
-L'\textbf{historique} $H_t$ est la séquence complète des observations, actions et récompenses jusqu'au temps $t$ :
-\begin{equation}
-    H_t = O_0, A_0, R_1, O_1, \dots, A_{t-1}, R_t, O_t
-\end{equation}
+Le RL se caractérise par l'absence d'expert superviseur (seul le signal de récompense compte), des \textit{feedbacks} souvent différés soulignant le problème de l'assignation de crédit, et des données fortement corrélées temporellement (non i.i.d.).
 
-L'\textbf{état} est l'information utilisée pour déterminer ce qui se passera ensuite. On distingue généralement trois types d'états :
-\begin{itemize}
-    \item \textbf{L'état de l'environnement} ($S_t^e$) : la configuration interne complète de l'environnement. Il est souvent invisible pour l'agent (ex: les cartes restantes dans le sabot au poker).
-    \item \textbf{L'état de l'agent} ($S_t^a$) : la représentation interne que l'agent utilise pour choisir son action. C'est une fonction de l'historique : $S_t^a = f(H_t)$.
-    \item \textbf{L'état d'information (ou état de Markov)} : un état qui contient toute l'information utile de l'historique.
-\end{itemize}
-
-\subsection{Caractéristiques distinctives}
-
-Le RL se différencie des autres approches par trois aspects fondamentaux :
-\begin{itemize}
-    \item \textbf{Absence de superviseur} : il n'y a pas d'expert pour indiquer l'action optimale ; seul un signal de récompense (souvent parcimonieux) guide l'agent.
-    \item \textbf{Feedback différé} : une action prise à l'instant $t$ peut n'avoir un impact sur la récompense qu'à l'instant $t+100$. C'est le problème de l'assignation de crédit (\textit{Credit Assignment Problem}).
-    \item \textbf{Temps et séquentialité} : contrairement au \textit{deep learning} classique, les données ne sont pas indépendantes et identiquement distribuées (i.i.d.). Les actions de l'agent influencent directement les données qu'il recevra ultérieurement.
-\end{itemize}
-
-% Il serait préférable ici d'indiquer toutes les définitions de manière détaillée mais 
-% plutôt sous forme de liste
-% Ça permettrait de mieux structurer la section et de rendre les concepts plus clairs pour le lecteur
-
-\subsection{Définitions des concepts clés}
-
-Afin de formaliser rigoureusement le problème d'apprentissage par renforcement, il convient de définir précisément les éléments constitutifs de cette boucle d'interaction \parencite{suttonReinforcementLearningIntroduction2015} :
+Afin de formaliser ce problème, nous définissons les éléments fondamentaux de la boucle d'interaction \parencite{suttonReinforcementLearningIntroduction2015} :
 
 \begin{itemize}
-    \item \textbf{Pas de temps $t$} : indice temporel discret marquant la progression de la séquence d'interactions. Chaque pas de temps correspond à un cycle complet d'observation-action-récompense.
-    
-    \item \textbf{État $S_t$ (State)} : représentation complète de la situation de l'environnement à l'instant $t$. Un état doit idéalement contenir toute l'information nécessaire pour prendre une décision optimale (propriété de Markov). Par exemple, dans le jeu d'échecs, l'état correspond à la configuration complète du plateau.
-    
-    
-    \item \textbf{Action $A_t$} : décision prise par l'agent à l'instant $t$ parmi un ensemble d'actions possibles $\mathcal{A}(s)$ dans l'état $s$. L'espace d'actions peut être discret (gauche, droite, sauter) ou continu (angle de direction, force appliquée).
-    
-    \item \textbf{Récompense $R_{t+1}$ (Reward)} : signal scalaire $R_{t+1} \in \mathbb{R}$ émis par l'environnement suite à l'action $A_t$ dans l'état $S_t$. Cette valeur numérique quantifie la qualité immédiate de l'action effectuée (positive pour une bonne action, négative pour une mauvaise). 
-    
-    \item \textbf{Politique $\pi$ (Policy)} : stratégie de décision de l'agent, qui associe à chaque état une action ou une distribution de probabilité sur les actions. 
-    \begin{itemize}
-        \item \textbf{Politique déterministe} : $\pi(s) = a$ associe une action unique à chaque état. Il s'agit d'une fonction de décision stricte et prévisible.
-        \item \textbf{Politique stochastique} : $\pi(a|s) = P(A_t = a | S_t = s)$ définit une distribution de probabilité sur les actions possibles dans chaque état. Cette approche permet d'introduire de la diversité dans les comportements de l'agent.
-    \end{itemize}
-    
-    \item \textbf{Fonction de valeur $V^\pi(s)$ (Value function)} : espérance du retour cumulatif (somme des récompenses futures) que l'agent peut obtenir en partant de l'état $s$ et en suivant la politique $\pi$. Cette fonction permet d'évaluer la qualité à long terme d'un état donné.
-    
-    \item \textbf{Modèle de l'environnement} : représentation (optionnelle) de la dynamique de l'environnement. Un modèle prédit l'état suivant $S_{t+1}$ et la récompense $R_{t+1}$ en fonction de l'état courant $S_t$ et de l'action choisie $A_t$. Les méthodes basées sur un modèle (model-based) utilisent cette connaissance, tandis que les méthodes sans modèle (model-free) apprennent directement à partir des interactions.
-    
+    \item \textbf{Historique et État ($S_t$)} : L'historique regroupe les observations, actions et récompenses passées. L'état $S_t$ est l'information retenue par l'agent à l'instant $t$ pour dicter son comportement futur. (idéalement porteur de la \textit{propriété de Markov}).
+    \item \textbf{Action ($A_t$)} : Décision prise par l'agent dans un état donné, pouvant appartenir à un espace discret ou continu.
+    \item \textbf{Récompense ($R_{t+1}$)} : Signal scalaire émis par l'environnement quantifiant la validité immédiate de l'action effectuée.
+    \item \textbf{Politique ($\pi$)} : Stratégie propre à l'agent. Elle peut être déterministe ($a = \pi(s)$) ou stochastique ($\pi(a|s) = P(A_t = a | S_t = s)$).
+    \item \textbf{Fonction de valeur ($V^\pi, Q^\pi$)} : Mesure l'espérance des retours cumulatifs (les gains sur le long terme) à partir d'un état ou d'une paire état-action.
 \end{itemize}
-
-% \subsection{Exploration et exploitation}
-
-% Le Reinforcement Learning est caractérisé par un apprentissage dit "trial-and-error", où l'agent doit constamment faire face à un dilemme fondamental : celui de l'\textbf{exploration} versus l'\textbf{exploitation} \parencite{sutton_reinforcement_2015}.
-% \begin{itemize}
-%     \item \textbf{Exploitation} : consiste à choisir l'action qui maximise la récompense immédiate ou la valeur estimée à long terme, en se basant sur les connaissances actuelles de l'agent. 
-%     \item \textbf{Exploration} : implique de sélectionner des actions moins connues ou potentiellement suboptimales afin de découvrir de nouvelles stratégies et d'améliorer la compréhension de l'environnement.
-% \end{itemize}
-
-% L'équilibre entre ces deux aspects est crucial pour le succès de l'apprentissage.
-
-% La stratégie la plus connue pour gérer ce dilemme est la stratégie $\epsilon$-greedy, qui consiste à choisir l'action optimale avec une probabilité de $1-\epsilon$ et à explorer une action aléatoire avec une probabilité de $\epsilon$.
-% \begin{equation}
-%     \pi(a|s) = \begin{cases}
-%         1 - \epsilon + \frac{\epsilon}{|\mathcal{A}(s)|} & \text{si } a = \arg\max_{a'} Q(s, a') \\
-%         \frac{\epsilon}{|\mathcal{A}(s)|} & \text{sinon}
-%     \end{cases}
-% \end{equation}
 
 \subsection{Processus décisionnel de Markov (MDP)}
 
-\subsubsection{Propriété de Markov}
+L'environnement d'apprentissage est formellement modélisé par un Processus Décisionnel de Markov (MDP). Ce cadre mathématique repose sur la \textbf{propriété de Markov} : l'état $S_t$ suffit à prédire la dynamique du système, indépendamment de toute l'histoire passée ($P(S_{t+1}|S_t) = P(S_{t+1}|H_t)$).
 
-Un concept central en apprentissage par renforcement est la \textbf{propriété de Markov}, qui stipule que l'état $S_t$ doit contenir toute l'information nécessaire pour prédire les récompenses futures et les transitions d'état, indépendamment de l'historique complet des interactions passées.
-La propriété de Markov est formalisée par l'équation \ref{eq:markov-property-simple} :
-\begin{equation}
-    P(S_{t+1} | S_t ) = P(S_{t+1} | S_1, \dots, S_t) = P(S_{t+1} | H_t)
-    \label{eq:markov-property-simple}
-\end{equation}
-Cela signifie que la probabilité de transition vers le prochain état $S_{t+1}$ dépend uniquement de l'état courant $S_t$ et est indépendante de tous les états précédents ou de l'historique complet $H_t$.
-Si l'environnement satisfait cette propriété, $S_t$ contient toute l'information nécessaire pour déterminer la dynamique future. 
-En pratique, on cherche à construire des représentations d'état qui respectent cette propriété afin de faciliter l'apprentissage de politiques efficaces.
-
-\subsubsection{Matrice de transition d'état}
-Dans un environnement de Markov, la dynamique de l'environnement peut être décrite par une matrice de transition d'état $P$, où chaque élément $P_{s,s'}$ représente la probabilité de transition de l'état $s$ vers l'état $s'$ suite à une action donnée.
-Cette matrice permet de modéliser la dynamique de l'environnement et de calculer les valeurs d'état et d'action nécessaires pour l'apprentissage de la politique optimale.
-\begin{equation}
-    P_{s,s'} = P(S_{t+1} = s' | S_t = s, A_t = a)
-\end{equation}
-
-Une matrice existe pour chaque action possible dans l'environnement, ce qui permet de modéliser la dynamique de manière complète.
-La dite matrice est représentable également tel que sur l'équation \ref{eq:transition-matrix} :
-\begin{equation}
-    \mathcal{P}^a = \begin{bmatrix}
-        \mathcal{P}_{s_1,s_1} & \mathcal{P}_{s_1,s_2} & \dots & \mathcal{P}_{s_1,s_n} \\
-        \mathcal{P}_{s_2,s_1} & \mathcal{P}_{s_2,s_2} & \dots & \mathcal{P}_{s_2,s_n} \\
-        \vdots & \vdots & \ddots & \vdots \\
-        \mathcal{P}_{s_n,s_1} & \mathcal{P}_{s_n,s_2} & \dots & \mathcal{P}_{s_n,s_n}
-    \end{bmatrix}
-    \label{eq:transition-matrix}
-\end{equation}
-
-\subsubsection{Processus de Markov}
-Un processus de Markov (Markov Process, MP) est un modèle mathématique qui décrit un système évoluant dans le temps selon la propriété de Markov.
-Il s'agit d'un processus aléatoire sans mémoire régi sous forme de tuple $(\mathcal{S}, \mathcal{P})$ :
+Un MDP est défini par le quintuplet $(\mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R}, \gamma)$ :
 \begin{itemize}
-    \item $\mathcal{S}$ est l'ensemble des états possibles
-    \item $\mathcal{P}$ est la matrice de transition d'état
+    \item $\mathcal{S}$ et $\mathcal{A}$ : les ensembles d'états et d'actions possibles.
+    \item $\mathcal{P}_{ss'}^a = \mathbb{P}[S_{t+1}=s' | S_t=s, A_t=a]$ : la probabilité de transition d'un état $s$ à un état $s'$ sous l'action $a$.
+    \item $\mathcal{R}_s^a = \mathbb{E}[R_{t+1} | S_t=s, A_t=a]$ : la récompense espérée pour l'action $a$ dans l'état $s$.
+    \item $\gamma \in [0, 1]$ : le facteur d'actualisation (\textit{discount factor}), où un $\gamma$ proche de 0 induit un agent myope aux gains immédiats, tandis qu'un $\gamma$ proche de 1 privilégie le long terme.
 \end{itemize}
 
-
-\subsubsection{Processus de récompense de Markov (MRP)}
-Il est important de comprendre le processus de récompense de Markov, qui est une extension du processus de Markov (Markov Process, MP) en y intégrant un signal de récompense.
-Le MRP est donc un tuple $(\mathcal{S}, \mathcal{P}, \mathcal{R}, \gamma)$ :
-\begin{itemize}
-    \item $\mathcal{S}$ est l'ensemble des états possibles.
-    \item $\mathcal{P}$ est la matrice de transition d'état.
-    \item $\mathcal{R}$ est une fonction de récompense qui associe à chaque état une récompense scalaire.
-    \item $\gamma$ est le facteur d'actualisation $\gamma \in [0, 1]$.
-\end{itemize}
-
-
-\subsubsection{Retour}
-Le \textbf{retour} (Return) est défini comme la somme des récompenses futures obtenues à partir d'un état donné, en suivant une politique spécifique.
-Il est généralement noté $G_t$ et est formulé de la manière suivante (éq. \ref{eq:return}):
+Ce modèle vise à optimiser un \textbf{retour cumulé} $G_t$, somme des récompenses actualisées :
 \begin{equation}
-    G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \dots = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1}
+    G_t = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1}
     \label{eq:return}
 \end{equation}
 
 
-Le paramètre $\gamma \in [0, 1]$ représente le facteur d'actualisation (ou \textit{discount factor}). 
-Il agit comme une pondération définissant l'importance relative des récompenses futures vis-à-vis des gains immédiats.
-Ainsi, une valeur de $\gamma$ tendant vers 0 indique que l'agent adopte une vision à court terme, tandis qu'un $\gamma$ s'approchant de 1 traduit une stratégie orientée vers le long terme, l'agent valorisant davantage les récompenses cumulées. 
 
-L'utilisation d'un facteur d'actualisation est particulièrement importante dans un MDP ou un MRP. 
-Tout d'abord, il permet d'empêcher que le retour soit infini s'il existe des cycles dans l'environnement qui génèrent des récompenses positives de manière répétée.
-Ensuite, il reflète la réalité selon laquelle les récompenses futures sont souvent moins certaines que les récompenses immédiates, ce qui incite l'agent à privilégier les gains à court terme tout en tenant compte des bénéfices à long terme.
-Enfin, il respecte la physiologie humaine, où les individus ont tendance à préférer des récompenses immédiates plutôt que des récompenses futures, même si ces dernières sont plus importantes.
+\subsection{Policy Evaluation}
 
-\subsubsection{Fonction de valeur (Value function)}
-La fonction de valeur de l'état d'un MRP est l'ésperance du retour en démarrant de l'état $s$ et en suivant la politique $\pi$.
-Elle est notée $V^\pi(s)$ et est définie par l'équation \ref{eq:value-function} :
-\begin{equation}
-    V^\pi(s) = \mathbb{E}_\pi [G_t | S_t = s] = \mathbb{E}_\pi \left[ \sum_{k=0}^{\infty} \gamma^k R_{t+k+1} \middle| S_t = s \right]
-    \label{eq:value-function}
-\end{equation}
+L'évaluation d'une politique (Policy Evaluation) consiste à déterminer la fonction de valeur $V^\pi$ pour une politique $\pi$ donnée. 
+En d'autres termes, il s'agit d'estimer l'espérance du retour cumulé que l'agent obtiendra à partir de chaque état s'il suit rigoureusement la stratégie définie par $\pi$.
+Cela permet de quantifier la qualité de la politique actuelle.
 
-Grâce à cette compréhension, on peut se pencher maintenant sur les équations de Bellman, qui sont fondamentales pour l'apprentissage de la politique optimale dans un MDP ou un MRP.
+\subsubsection{Principe de la mise à jour itérative}
 
-\subsubsection{Equation de Bellman}
-L'équation de Bellman est une relation récursive qui exprime la fonction de valeur d'un état en fonction des récompenses immédiates et des valeurs des états suivants. 
-Elle est formulée comme suit :
+Le calcul direct de $V^\pi(s)$ via l'équation d'espérance de Bellman s'avère complexe car la valeur d'un état est définie de manière récursive en fonction de la valeur de ses successeurs, lesquelles sont initialement inconnues. Pour passer outre cette récursivité, le problème est traité comme une règle de mise à jour itérative. 
+
+L'algorithme débute par une initialisation arbitraire de la fonction de valeur, par exemple $V_0(s) = 0$ pour tout $s \in \mathcal{S}$. 
+À chaque itération $k$, on calcule une nouvelle estimation $V_{k+1}$ en appliquant l'opérateur de Bellman sur l'ensemble des états :
 
 \begin{equation}
-\begin{aligned}
-V^\pi(s) &= \mathbb{E}^\pi \left[ G_t \middle| S_t = s \right]    \\
-&= \mathbb{E}^\pi \left[ R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \dots \middle| S_t = s \right] \\
-&= \mathbb{E}^\pi \left[ R_{t+1} + \gamma (R_{t+2} + \gamma R_{t+3} + \dots) \middle| S_t = s \right] \\
-&= \mathbb{E}^\pi \left[ R_{t+1} + \gamma G_{t+1} \middle| S_t = s \right] \\
-&= \mathbb{E}^\pi \left[ R_{t+1} + \gamma V^\pi(S_{t+1}) \middle| S_t = s \right]
-\end{aligned}    
+    V_{k+1}(s) = \sum_{a \in \mathcal{A}} \pi(a|s) \left[ \mathcal{R}_s^a + \gamma \sum_{s' \in \mathcal{S}} \mathcal{P}_{ss'}^a V_k(s') \right]
 \end{equation}
 
-La décomposition de l'équation de Bellman met en évidence la nature récursive de la fonction de valeur, où la valeur d'un état est exprimée en fonction de la récompense immédiate et de la valeur des états suivants.
-Cette relation est fondamentale pour les algorithmes d'apprentissage par renforcement, car elle permet de mettre à jour les estimations de la fonction de valeur à partir des expériences accumulées par l'agent.
+Cette opération permet de remonter l'information des récompenses immédiates et des valeurs futures estimées vers l'état actuel. 
+
+\begin{figure}[htp]
+    \centering
+    \begin{tikzpicture}[scale=1]
+        % Style pour les chiffres
+        \tikzset{val/.style={font=\small, inner sep=2pt}}
+        % Style pour les terminaux
+        \tikzset{term/.style={fill=gray!20}}
+
+        % --- GRILLE k=0 ---
+        \begin{scope}
+            \draw[step=1cm, black, thin] (0,0) grid (4,4);
+            \node[val, term, minimum size=1cm] at (0.5,3.5) {0};
+            \node[val, term, minimum size=1cm] at (3.5,0.5) {0};
+            \foreach \x in {0.5,1.5,2.5,3.5}
+                \foreach \y in {0.5,1.5,2.5,3.5}
+                    \node[val] at (\x,\y) {0.0};
+            \node[val, term, minimum size=1cm] at (0.5,3.5) {0};
+            \node[val, term, minimum size=1cm] at (3.5,0.5) {0};
+            \node[below=0.5cm] at (2,0) {\textbf{$k=0$}};
+        \end{scope}
+
+        % --- FLÈCHE ---
+        \draw[->, >=stealth, thick] (4.2,2) -- (4.8,2);
+
+        % --- GRILLE k=1 ---
+        \begin{scope}[xshift=5cm]
+            \draw[step=1cm, black, thin] (0,0) grid (4,4);
+            \node[val, term, minimum size=1cm] at (0.5,3.5) {0};
+            \node[val, term, minimum size=1cm] at (3.5,0.5) {0};
+            % On remplit manuellement pour éviter les bugs de boucle
+            \foreach \x in {0.5,1.5,2.5,3.5}
+                \foreach \y in {0.5,1.5,2.5,3.5}
+                    \node[val] at (\x,\y) {-1.0};
+            % On ré-écrase les terminaux pour la clarté
+            \node[val, term, minimum size=1cm] at (0.5,3.5) {0};
+            \node[val, term, minimum size=1cm] at (3.5,0.5) {0};
+            \node[below=0.5cm] at (2,0) {\textbf{$k=1$}};
+        \end{scope}
+
+        % --- FLÈCHE ---
+        \draw[->, >=stealth, thick] (9.2,2) -- (9.8,2);
+
+        % --- GRILLE k=2 ---
+        \begin{scope}[xshift=10cm]
+            \draw[step=1cm, black, thin] (0,0) grid (4,4);
+            \node[val, term, minimum size=1cm] at (0.5,3.5) {0};
+            \node[val, term, minimum size=1cm] at (3.5,0.5) {0};
+            
+            % Valeurs calculées (arrondies)
+            \node[val] at (1.5,3.5) {-1.7}; \node[val] at (2.5,3.5) {-2.0}; \node[val] at (3.5,3.5) {-2.0};
+            \node[val] at (0.5,2.5) {-1.7}; \node[val] at (1.5,2.5) {-2.0}; \node[val] at (2.5,2.5) {-2.0}; \node[val] at (3.5,2.5) {-2.0};
+            \node[val] at (0.5,1.5) {-2.0}; \node[val] at (1.5,1.5) {-2.0}; \node[val] at (2.5,1.5) {-2.0}; \node[val] at (3.5,1.5) {-1.7};
+            \node[val] at (0.5,0.5) {-2.0}; \node[val] at (1.5,0.5) {-2.0}; \node[val] at (2.5,0.5) {-1.7};
+            
+            \node[below=0.5cm] at (2,0) {\textbf{$k=2$}};
+        \end{scope}
+
+    \end{tikzpicture}
+    \caption{Itérations de l'évaluation de politique dans un monde de grille $4 \times 4$. Les états terminaux sont grisés. Inspiré de \textcite{silverLecturesReinforcementLearning2015}.}
+    \label{fig:policy-evaluation}
+\end{figure}
+
+Dans la figure \ref{fig:policy-evaluation}, la récompense est de $-1$ pour chaque transition et les actions possibles sont les quatre directions cardinales.
+Au départ ($k=0$), la fonction de valeur est initialisée à zéro pour tous les états. 
+Après la première itération ($k=1$), tous les états hormis les terminaux prennent une valeur de $-1$ car ils reçoivent une récompense immédiate de $-1$, tandis que les états terminaux restent à zéro car ils ne génèrent pas de récompense.
+À la deuxième itération ($k=2$), les valeurs commencent à se propager vers l'intérieur de la grille, avec des valeurs plus négatives à mesure que l'on s'éloigne des états terminaux. 
+Cela nous permet de savoir que les états plus proches des terminaux sont plus "précieux" (moins négatifs) que ceux plus éloignés, ce qui guide l'agent vers les terminaux, maximisant ainsi les récompenses à long terme.
 
 
-\subsubsection{Processus de décision de Markov (MDP)}
 
-Un processus de décision de Markov (MDP) est un processus de récompense de Markov incluant des décisions. C'est l'environnement formel dans lequel l'apprentissage par renforcement opère. Il est défini par le quintuplet $(\mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R}, \gamma)$ :
+\subsubsection{Convergence et limites de l'itération}
+
+Il est mathématiquement démontré que la suite de fonctions $\{V_k\}$ converge vers la valeur réelle $V^\pi$ lorsque $k \to \infty$. 
+Toutefois, dans une perspective de contrôle, il n'est pas toujours nécessaire d'atteindre une convergence parfaite. 
+Comme le souligne \textcite{silverLecturesReinforcementLearning2015}, dès que la fonction de valeur est suffisamment précise pour que la politique \textit{greedy} associée devienne stable, l'évaluation peut être interrompue pour passer à la phase d'amélioration via une définition d'une nouvelle politique.
+
+
+\subsection{Policy Iteration}
+
+L'algorithme d'itération de la politique est un processus itératif permettant de découvrir la politique optimale $\pi^*$ en alternant entre deux phases distinctes : l'évaluation et l'amélioration.
+
+\subsubsection{Le cycle Évaluation-Amélioration}
+
+Le principe repose sur une suite de politiques $\pi_0, \pi_1, \pi_2, \dots$ et de fonctions de valeur associées $v_{\pi_0}, v_{\pi_1}, v_{\pi_2}, \dots$ :
+
+\begin{enumerate}
+    \item \textbf{Évaluation (E)} : Pour une politique $\pi$ donnée, on calcule sa fonction de valeur $v_\pi(s)$ par l'application itérative de l'équation d'espérance de Bellman.
+    \item \textbf{Amélioration (I)} : On construit une nouvelle politique $\pi'$ en agissant de manière \textit{greedy} par rapport à l'estimation actuelle $v_\pi$ :
+    \begin{equation}
+        \pi'(s) = \arg\max_{a \in \mathcal{A}} q_\pi(s, a)
+    \end{equation}
+\end{enumerate}
+
+Ce cycle se répète jusqu'à ce que la politique ne subisse plus de modifications, signalant que la politique optimale a été atteinte.
+
+
+
+\subsubsection{Le théorème d'amélioration de la politique}
+
+La validité de cet algorithme repose sur le \textbf{théorème d'amélioration de la politique}. Pour une politique déterministe $a = \pi(s)$, nous cherchons à savoir s'il est bénéfique de changer l'action dans un état $s$.
+
+En choisissant une action $a$ différente de $\pi(s)$ puis en suivant à nouveau $\pi$ par la suite, la valeur obtenue est définie par $q_\pi(s, a)$. Si cette valeur est supérieure à $v_\pi(s)$, alors la nouvelle politique est globalement meilleure. Formellement, l'amélioration locale sur une étape est définie par :
+\begin{equation}
+    q_\pi(s, \pi'(s)) = \max_{a \in \mathcal{A}} q_\pi(s, a) \ge q_\pi(s, \pi(s)) = v_\pi(s)
+\end{equation}
+
+
+
+Pour démontrer que cette amélioration locale garantit une amélioration globale de la fonction de valeur ($v_{\pi'} \ge v_\pi$), on procède par expansion récursive de l'espérance sous la nouvelle politique $\pi'$ :
+
+\begin{equation}
+\begin{aligned} 
+    v_\pi(s) &\le q_\pi(s, \pi'(s)) \\ 
+    &= \mathbb{E}_{\pi'} [R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s] \\ 
+    &\le \mathbb{E}_{\pi'} [R_{t+1} + \gamma q_\pi(S_{t+1}, \pi'(S_{t+1})) \mid S_t = s] \\ 
+    &\le \mathbb{E}_{\pi'} [R_{t+1} + \gamma R_{t+2} + \gamma^2 q_\pi(S_{t+2}, \pi'(S_{t+2})) \mid S_t = s] \\ 
+    &\le \mathbb{E}_{\pi'} [R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \dots \mid S_t = s] = v_{\pi'}(s) 
+\end{aligned}
+\end{equation}
+
+Cette chaîne d'inégalités prouve que si l'on suit $\pi'$ pour une étape, puis $\pi$ pour toujours, on obtient un résultat supérieur ou égal. Par extension, suivre $\pi'$ indéfiniment est nécessairement plus performant.
+
+\subsubsection{Convergence et Optimalité}
+
+Le processus s'arrête lorsque l'amélioration ne produit plus de changement. 
+À ce stade stable, la politique $\pi$ et la politique améliorée $\pi'$ sont identiques, ce qui implique :
+\begin{equation}
+    v_\pi(s) = \max_{a \in \mathcal{A}} q_\pi(s, a)
+\end{equation}
+
+Cette expression correspond à l'\textbf{équation d'optimalité de Bellman}. 
+Dès lors, $v_\pi$ est la fonction de valeur optimale $v_*(s)$, et $\pi$ est la politique optimale $\pi^*$. 
+
+
+\subsubsection{Itération de la politique modifiée (Modified Policy Iteration)}
+
+Dans la version classique, la phase d'évaluation nécessite une convergence parfaite de $v_\pi$ ($k \to \infty$). 
+Cependant, la politique devient souvent stable bien avant que les valeurs $v_\pi$ ne soient calculées avec précision. 
+En pratique, il est peu pertinent de poursuivre l'évaluation jusqu'à la convergence complète, surtout dans les environnements complexes où cela peut être coûteux en temps de calcul.
+
+L'\textbf{itération de la politique modifiée} consiste à interrompre l'évaluation prématurément selon deux critères :
 \begin{itemize}
-    \item $\mathcal{S}$ est l'ensemble des états possibles.
-    \item $\mathcal{A}$ est l'ensemble des actions possibles.
-    \item $\mathcal{P}$ est la matrice de probabilité de transition : $\mathcal{P}_{ss'}^a = \mathbb{P}[S_{t+1}=s' | S_t=s, A_t=a]$.
-    \item $\mathcal{R}$ est la fonction de récompense : $\mathcal{R}_s^a = \mathbb{E}[R_{t+1} | S_t=s, A_t=a]$.
-    \item $\gamma$ est le facteur d'actualisation $\gamma \in [0, 1]$.
+    \item \textbf{Nombre d'étapes fixe} : Arrêter le calcul de $v_\pi$ après $k$ itérations (ex: $k=3$).
+    \item \textbf{Seuil de précision $\epsilon$} : Stopper dès que $\max_s |V_{k+1}(s) - V_k(s)| < \epsilon$.
 \end{itemize}
 
-Dans ce cadre, la politique $\pi$ ne dépend plus seulement de l'état, mais guide le choix de l'action. On note $\pi(a|s) = \mathbb{P}[A_t=a | S_t=s]$.
+\subsection{Value Iteration}
 
-\subsubsection{Fonction de valeur d'action ($Q$-function)}
-
-Alors que la fonction de valeur d'état $V^\pi(s)$ évalue la qualité d'un état, la fonction de valeur d'action $Q^\pi(s, a)$ (Action-Value Function) évalue la qualité d'une action spécifique prise dans un état donné, en suivant ensuite la politique $\pi$. Elle est définie par l'équation \ref{eq:q-function} :
-
-\begin{equation}
-    Q^\pi(s, a) = \mathbb{E}_\pi [G_t | S_t = s, A_t = a]
-    \label{eq:q-function}
-\end{equation}
-
-Cette fonction $Q$ est cruciale car elle permet à l'agent de comparer directement les actions possibles entre elles sans nécessairement connaître la dynamique du modèle (les probabilités de transition $\mathcal{P}$).
-
-\subsubsection{Équations d'optimalité de Bellman}
-
-L'objectif ultime de l'agent est de trouver la politique optimale $\pi^*$ qui maximise le retour attendu. Cela nous amène aux fonctions de valeur optimales :
-\begin{itemize}
-    \item $V^*(s) = \max_\pi V^\pi(s)$
-    \item $Q^*(s, a) = \max_\pi Q^\pi(s, a)$
-\end{itemize}
-
-
-Contrairement aux équations de Bellman classiques qui sont linéaires, les équations d'optimalité de Bellman sont non-linéaires car elles impliquent l'opérateur $\max$. Pour la fonction de valeur d'état, l'équation s'écrit :
-\begin{equation}
-    V^*(s) = \max_{a \in \mathcal{A}} \left( \mathcal{R}_s^a + \gamma \sum_{s' \in \mathcal{S}} \mathcal{P}_{ss'}^a V^*(s') \right)
-\end{equation}
-
-Et pour la fonction $Q$ :
-\begin{equation}
-    Q^*(s, a) = \mathcal{R}_s^a + \gamma \sum_{s' \in \mathcal{S}} \mathcal{P}_{ss'}^a \max_{a'} Q^*(s', a')
-\end{equation}
-
-La résolution de ces équations constitue le cœur du problème de l'apprentissage par renforcement. Si l'agent connaît $Q^*(s, a)$, la politique optimale est simplement d'agir de manière "greedy" (avide) en choisissant systématiquement l'action $a$ qui maximise $Q^*(s, a)$.
 
 \section{Méthodologie}
 \label{sec:methodo}
