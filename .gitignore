@@ -278,9 +278,6 @@ pythontex-files-*/
 *.ttt
 *.fff
 
-# titletoc
-*.toc
-
 # Latexian
 TSWLatexianTemp*
 
