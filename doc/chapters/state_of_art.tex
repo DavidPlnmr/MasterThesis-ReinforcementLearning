@@ -246,4 +246,44 @@ Si cette méthode présente l'avantage d'être très robuste (ses estimations so
 
 \subsubsection{Temporal-Difference (TD)}
 
-Les méthodes des différences temporelles (TD) surmontent la lenteur et la variance propres à l'attente de la fin de l'épisode imposée par Monte-Carlo en incluant l'idée du \textit{bootstrapping}\footnote{Principe consistant à mettre à jour l'estimation d'un état ($V(S_t)$) en se basant en partie sur l'estimation de l'état suivant ($V(S_{t+1})$), au lieu d'attendre la récompense finale. Cette dynamique est visuellement introduite par la Figure \ref{fig:policy-eval-grid} de la partie \ref{sec:model-based}} \parencite{suttonReinforcementLearningIntroduction2015,silverLecturesReinforcementLearning2015}. Combinant l'inférence tirée de l'expérience et le raccourci prédictif cher à l'itération des valeurs, les stratégies d'apprentissage par TD n'attendent plus la fin du processus pour opérer une mise à jour d'un état mais s'ajustent à chaque pas et représentent désormais la référence des agents d'aujourd'hui.
+Les méthodes des différences temporelles (TD) combinent les forces des méthodes de Monte-Carlo et de la programmation dynamique. À l'instar de Monte-Carlo, elles apprennent directement à partir de l'expérience brute, sans nécessiter de modèle de transition ($\mathcal{P}$). Cependant, à l'instar de la programmation dynamique, elles s'affranchissent de l'attente de la fin de l'épisode en utilisant le \textit{bootstrapping}\footnote{Principe consistant à mettre à jour l'estimation d'un état en se basant sur l'estimation de l'état suivant, plutôt que sur le retour final réel.} \parencite{suttonReinforcementLearningIntroduction2015}.
+
+Pour illustrer cette nuance, \textcite{silverLecturesReinforcementLearning2015} propose l'analogie du trajet en voiture. Imaginons un conducteur estimant arriver chez lui à 18h30. À 18h15, il se retrouve bloqué dans un embouteillage. Une approche Monte-Carlo obligerait le conducteur à attendre d'être effectivement garé chez lui pour constater son retard et ajuster ses prévisions futures. À l'inverse, l'approche TD permet au conducteur de "bootstrapper" : dès qu'il voit le bouchon, il actualise instantanément son estimation ("le trajet prendra finalement 50 minutes") sans avoir besoin de terminer sa route.
+
+Mathématiquement, le mécanisme le plus simple, le TD(0), remplace le gain réel $G_t$ par une \textbf{cible estimée} (\textit{TD target}) composée de la récompense immédiate et de la valeur de l'état suivant :
+
+\begin{equation}
+    V(S_t) \leftarrow V(S_t) + \alpha \big( \underbrace{R_{t+1} + \gamma V(S_{t+1})}_{\text{TD target}} - V(S_t) \big)
+\end{equation}
+
+La différence entre cette cible et l'estimation actuelle est nommée \textbf{erreur TD} ($\delta_t = R_{t+1} + \gamma V(S_{t+1}) - V(S_t)$). Contrairement à Monte-Carlo, le TD(0) peut fonctionner dans des environnements continus ou cycliques car il apprend à chaque pas.
+
+Par nature, le TD(0) ne regarde qu'un seul pas dans le futur avant de consulter son estimation. On peut toutefois généraliser ce concept en enregistrant $n$ étapes de récompenses réelles avant de "bootstrapper" sur l'état $S_{t+n}$. On obtient alors le \textbf{retour à $n$ pas} (\textit{n-step return}) :
+
+\begin{equation}
+    G_t^{(n)} = R_{t+1} + \gamma R_{t+2} + \dots + \gamma^{n-1}R_{t+n} + \gamma^nV(S_{t+n})
+\end{equation}
+
+Si $n=1$, l'approche équivaut au TD(0). Si $n \to \infty$, elle rejoint la méthode de Monte-Carlo. Le choix de $n$ devient alors un curseur permettant de modifier l'horizon de prédiction de l'agent.
+
+Cependant, plutôt que de choisir arbitrairement ce nombre de pas $n$, l'algorithme $TD(\lambda)$ propose une synthèse en unifiant simultanément tous les horizons possibles ($n=1, 2, \dots, \infty$). Ce mélange est réalisé via une moyenne pondérée par un paramètre $\lambda \in [0, 1]$, définissant ainsi le \textbf{$\lambda$-return} ($G_t^\lambda$) :
+
+\begin{equation}
+    G_t^\lambda = (1-\lambda) \sum^\infty_{n=1} \lambda^{n-1}G_t^{(n)}
+\end{equation}
+
+Bien que le $G_t^\lambda$ offre une cible robuste, il souffre du même défaut que Monte-Carlo : il regarde vers le futur et nécessite d'attendre la fin de l'épisode pour être calculé (approche dite \textit{Forward View}). Pour rendre l'apprentissage possible en temps réel, on adopte une approche \textit{Backward View} s'appuyant sur les \textbf{traces d'éligibilité} $E_t(s)$ \parencite{silverLecturesReinforcementLearning2015}.
+
+L'équivalence mathématique entre ces deux visions permet de ne plus utiliser directement le $\lambda$-return dans la mise à jour, mais de propager l'erreur TD locale ($\delta_t$) vers le passé. Chaque état visité laisse une "empreinte" qui s'estompe avec le temps selon le facteur $\lambda$. La mise à jour de la trace d'éligibilité pour chaque état $s$ à chaque pas de temps $t$ s'écrit ainsi :
+
+\begin{equation}
+    E_t(s) = \gamma\lambda E_{t-1}(s) + 1(S_t = s)
+\end{equation}
+
+Ainsi, à chaque pas de temps, la fonction de valeur de \textbf{tous les états} est ajustée proportionnellement à leur responsabilité dans l'erreur courante :
+
+\begin{equation}
+    V(s) \leftarrow V(s) + \alpha \delta_t E_t(s)
+\end{equation}
+
+Cette mécanique est particulièrement efficace : dans un jeu vidéo, si un agent saute sur plusieurs plateformes avant de tomber dans un piège, le $TD(\lambda)$ permettra de baisser instantanément la valeur de toutes les plateformes de la séquence (beaucoup pour la dernière, un peu moins pour les précédentes) au prorata de leur responsabilité dans l'issue finale.
