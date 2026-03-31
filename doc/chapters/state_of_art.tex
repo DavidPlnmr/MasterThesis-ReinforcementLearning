@@ -274,7 +274,7 @@ Cependant, plutôt que de choisir arbitrairement ce nombre de pas $n$, l'algorit
 
 Bien que le $G_t^\lambda$ offre une cible robuste, il souffre du même défaut que Monte-Carlo : il regarde vers le futur et nécessite d'attendre la fin de l'épisode pour être calculé (approche dite \textit{Forward View}). Pour rendre l'apprentissage possible en temps réel, on adopte une approche \textit{Backward View} s'appuyant sur les \textbf{traces d'éligibilité} $E_t(s)$ \parencite{silverLecturesReinforcementLearning2015}.
 
-L'équivalence mathématique entre ces deux visions permet de ne plus utiliser directement le $\lambda$-return dans la mise à jour, mais de propager l'erreur TD locale ($\delta_t$) vers le passé. Chaque état visité laisse une "empreinte" qui s'estompe avec le temps selon le facteur $\lambda$. La mise à jour de la trace d'éligibilité pour chaque état $s$ à chaque pas de temps $t$ s'écrit ainsi :
+L'équivalence mathématique entre ces deux visions permet de ne plus utiliser directement le $\lambda$-return dans la mise à jour, mais de propager l'erreur TD locale ($\delta_t$) vers le passé. Chaque état visité laisse une "empreinte" qui s'estompe avec le temps selon le facteur $\lambda$\footnote{Le paramètre $\lambda$ contrôle la persistance de la trace : une valeur proche de 0 restreint la mise à jour aux états les plus immédiats (approche "myope"), tandis qu'une valeur proche de 1 maintient l'empreinte des états anciens plus longtemps.}. La mise à jour de la trace d'éligibilité pour chaque état $s$ à chaque pas de temps $t$ s'écrit ainsi :
 
 \begin{equation}
     E_t(s) = \gamma\lambda E_{t-1}(s) + 1(S_t = s)
@@ -287,3 +287,49 @@ Ainsi, à chaque pas de temps, la fonction de valeur de \textbf{tous les états}
 \end{equation}
 
 Cette mécanique est particulièrement efficace : dans un jeu vidéo, si un agent saute sur plusieurs plateformes avant de tomber dans un piège, le $TD(\lambda)$ permettra de baisser instantanément la valeur de toutes les plateformes de la séquence (beaucoup pour la dernière, un peu moins pour les précédentes) au prorata de leur responsabilité dans l'issue finale.
+
+\subsection{Apprentissage en environnement inconnu}
+
+Le passage de l'évaluation à l'optimisation consiste à améliorer la politique de l'agent sans connaissance préalable de la dynamique de l'environnement. Dans ce contexte \textit{model-free}, l'utilisation de la fonction de valeur d'état $V(s)$ s'avère insuffisante : pour choisir l'action optimale, l'agent aurait besoin de connaître les probabilités de transition $\mathcal{P}$. Par conséquent, les algorithmes de contrôle se basent sur la fonction action-valeur $Q(s,a)$, permettant d'identifier directement l'action maximisant le gain attendu \parencite{silverLecturesReinforcementLearning2015}.
+
+\subsubsection{On-Policy vs Off-Policy}
+
+Deux paradigmes fondamentaux s'opposent dans l'apprentissage sans modèle : 
+\begin{itemize}
+    \item \textbf{On-Policy} : L'idée est d'apprendre "sur le tas". L'agent évalue et optimise la politique $\pi$ qu'il est en train d'exécuter. Les expériences utilisées pour la mise à jour reflètent directement ses propres décisions, incluant ses tentatives d'exploration.
+    \item \textbf{Off-Policy} : L'idée est d'apprendre en observant une autre politique. L'agent procède à l'optimisation d'une politique cible $\pi$ (généralement la politique optimale) à partir d'expériences générées par une politique de comportement $\mu$ distincte. Cela permet de séparer l'exploration de l'évaluation finale \parencite{suttonReinforcementLearningIntroduction2015}.
+\end{itemize}
+
+\subsubsection{Le dilemme Exploration-Exploitation}
+
+Pour garantir la convergence vers une solution idéale, l'agent ne peut se contenter d'être \textit{greedy} dès le départ, au risque de rester piégé dans un optimum local. Il doit arbitrer entre l'exploitation de ses connaissances actuelles (issues de l'évaluation) et l'exploration de nouvelles stratégies. La méthode la plus répandue est la stratégie \textbf{$\epsilon$-greedy} :
+
+\begin{equation}
+\pi(a|s) = 
+\begin{cases} 
+1 - \epsilon + \frac{\epsilon}{m} & \text{si } a = \text{argmax}_{a \in \mathcal{A}} Q(s,a) \\
+\frac{\epsilon}{m} & \text{sinon}
+\end{cases}
+\end{equation}
+
+
+
+En pratique, on utilise un \textit{scheduler} pour réduire progressivement la valeur de $\epsilon$ au fil du temps. Cette décroissance permet de satisfaire les conditions \textbf{GLIE}\footnote{\textit{Greedy in the Limit with Infinite Exploration}} : l'agent explore massivement au début, puis stabilise son comportement vers une politique déterministe optimale une fois l'espace état-action suffisamment parcouru. Cependant, un \textit{epsilon} qui descendrait trop vite à 0 créerait un manque d'exploration, empêchant l'agent de découvrir l'intégralité des récompenses et biaisant l'optimisation.
+
+\subsubsection{SARSA}
+
+L'algorithme SARSA est une méthode d'optimisation \textbf{On-Policy}. Il met à jour la fonction $Q$ en utilisant la récompense immédiate et l'évaluation de l'action suivante ($A'$) effectivement choisie par la politique actuelle de l'agent. Son nom illustre d'ailleurs la séquence $(S, A, R, S', A')$ utilisée pour la mise à jour :
+\begin{equation}
+Q(S,A) \leftarrow Q(S,A) + \alpha \big( R + \gamma Q(S',A') - Q(S,A) \big)
+\end{equation}
+
+Parce qu'il inclut l'action réelle $A'$ de l'agent (et donc les erreurs potentielles liées à l'exploration) dans son calcul, SARSA réalise une optimisation "prudente". Il évalue les zones de l'environnement en tenant compte du fait qu'un mouvement aléatoire dû à $\epsilon$ pourrait entraîner une chute brutale de la récompense \parencite{silverLecturesReinforcementLearning2015}.
+
+\subsubsection{Q-Learning}
+
+À l'inverse, le Q-Learning est une méthode d'optimisation \textbf{Off-Policy}. Il s'affranchit de l'action réellement choisie par l'agent pour la mise à jour en utilisant l'opérateur \textit{maximum}. Il optimise directement la valeur de la politique optimale, indépendamment du comportement exploratoire :
+\begin{equation}
+Q(S,A) \leftarrow Q(S,A) + \alpha \big( R + \gamma \max_{a'} Q(S',a') - Q(S,A) \big)
+\end{equation}
+
+Ici, par rapport à SARSA, la mise à jour se base sur l'évaluation de la meilleure action possible ($\max$), sans tenir compte de l'action $A_{t+1}$ réellement effectuée par l'agent. Cette approche permet de converger vers la fonction d'optimalité de Bellman et de converger vers la politique optimale même si l'agent continue d'explorer activement son environnement.
