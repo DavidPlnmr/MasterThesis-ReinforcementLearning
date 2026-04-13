@@ -61,7 +61,7 @@ node[pos=0.5, right, align=left] {action \\ $A_t$};
 L'environnement \textit{Cliff Walking}\footnote{\url{https://gymnasium.farama.org/environments/toy_text/cliff_walking/}} (Figure~\ref{fig:cliff-walking}) illustre ces mécanismes.
 L'agent navigue sur une grille pour atteindre une cible en évitant une falaise.
 Il reçoit une récompense de $-1$ par pas parcouru (pour inciter à la rapidité) et de $-100$ avec retour au départ s'il tombe.
-Cet exemple met en évidence un compromis classique : l'agent doit équilibrer de la minimisation de la distance pénalisante tout en évitant un risque majeur.
+Cet exemple met en évidence un compromis classique : l'agent doit équilibrer la minimisation de la distance pénalisante tout en évitant un risque majeur.
 
 \begin{figure}[H]
     \centering
@@ -86,7 +86,7 @@ Afin de formaliser ce problème, voici les cinq composantes fondamentales de la 
 
 \subsection{Processus Décisionnel de Markov (MDP)}
 
-L'environnement d'apprentissage dans sa globalité est formellement modélisé par un Processus Décisionnel de Markov (MDP). Ce puissant cadre mathématique repose sur la \textbf{propriété de Markov} : l'état actuel $S_t$ contient toutes les informations nécessaires et suffisantes pour extrapoler le comportement futur. La prédiction de l'état suivant dépend ainsi uniquement de l'état présent, indépendamment de toute l'historique de navigation passée ($P(S_{t+1}|S_t) = P(S_{t+1}|H_t)$).
+L'environnement d'apprentissage dans sa globalité est formellement modélisé par un Processus Décisionnel de Markov (MDP). Ce puissant cadre mathématique repose sur la \textbf{propriété de Markov} : l'état actuel $S_t$ contient toutes les informations nécessaires et suffisantes pour extrapoler le comportement futur. La prédiction de l'état suivant dépend ainsi uniquement de l'état présent, indépendamment de tout l'historique de navigation passée ($P(S_{t+1}|S_t) = P(S_{t+1}|H_t)$).
 
 Un MDP se décrit classiquement par le système $(\mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R}, \gamma)$ :
 \begin{itemize}
@@ -102,7 +102,7 @@ L'agent vise in fine à maximiser son \textbf{retour cumulé} global $G_t$, expr
     \label{eq:return}
 \end{equation}
 
-Pour l'exemple du labyrinthe, on pourrait imaginer une récompense $\mathcal{R}$ de -1 par étape de déplacement (pour pénaliser le temps perdu) et de +10 en trouvant la sortie, chaque caséte constituant un état $\mathcal{S}$, et les pas (G, D, H, B) constituant les actions $\mathcal{A}$. Le facteur $\gamma$ garantit alors que l'agent privilégiera mathématiquement un chemin court et rapide vers la sortie plutôt qu'une errance prolongée.
+Pour l'exemple du labyrinthe, on pourrait imaginer une récompense $\mathcal{R}$ de -1 par étape de déplacement (pour pénaliser le temps perdu) et de +10 en trouvant la sortie, chaque case constituant un état $\mathcal{S}$, et les pas (G, D, H, B) constituant les actions $\mathcal{A}$. Le facteur $\gamma$ garantit alors que l'agent privilégiera mathématiquement un chemin court et rapide vers la sortie plutôt qu'une errance prolongée.
 
 
 \subsection{Model-Based}
@@ -264,6 +264,8 @@ Par nature, le TD(0) ne regarde qu'un seul pas dans le futur avant de consulter 
     G_t^{(n)} = R_{t+1} + \gamma R_{t+2} + \dots + \gamma^{n-1}R_{t+n} + \gamma^nV(S_{t+n})
 \end{equation}
 
+\noindent Il convient de noter que le terme de \textit{bootstrapping} $\gamma^n V(S_{t+n})$ n'est valide que si l'épisode n'est pas terminé avant l'étape $t+n$. Si l'épisode se termine à $t+k$ avec $k < n$, ce terme disparaît et le retour se réduit à la somme réelle des récompenses obtenues, ce qui équivaut à l'estimateur de Monte-Carlo.
+
 Si $n=1$, l'approche équivaut au TD(0). Si $n \to \infty$, elle rejoint la méthode de Monte-Carlo. Le choix de $n$ devient alors un curseur permettant de modifier l'horizon de prédiction de l'agent.
 
 Cependant, plutôt que de choisir arbitrairement ce nombre de pas $n$, l'algorithme $TD(\lambda)$ propose une synthèse en unifiant simultanément tous les horizons possibles ($n=1, 2, \dots, \infty$). Ce mélange est réalisé via une moyenne pondérée par un paramètre $\lambda \in [0, 1]$, définissant ainsi le \textbf{$\lambda$-return} ($G_t^\lambda$) :
@@ -332,4 +334,143 @@ Parce qu'il inclut l'action réelle $A'$ de l'agent (et donc les erreurs potenti
 Q(S,A) \leftarrow Q(S,A) + \alpha \big( R + \gamma \max_{a'} Q(S',a') - Q(S,A) \big)
 \end{equation}
 
-Ici, par rapport à SARSA, la mise à jour se base sur l'évaluation de la meilleure action possible ($\max$), sans tenir compte de l'action $A_{t+1}$ réellement effectuée par l'agent. Cette approche permet de converger vers la fonction d'optimalité de Bellman et de converger vers la politique optimale même si l'agent continue d'explorer activement son environnement.
+Ici, par rapport à SARSA, la mise à jour se base sur l'évaluation de la meilleure action possible ($\max$), sans tenir compte de l'action $A_{t+1}$ réellement effectuée par l'agent. Cette approche permet ainsi de converger vers la politique optimale via l'équation d'optimalité de Bellman, même si l'agent continue d'explorer activement son environnement.
+
+
+\subsection{Du RL Tabulaire au Deep RL}
+
+Les méthodes tabulaires présentées précédemment, bien que robustes, se heurtent à la \textit{malédiction de la dimensionnalité}. Dans des environnements complexes (qu'il s'agisse de flux de pixels ou de vecteurs d'états continus), le nombre de paires $(s, a)$ devient trop vaste pour être stocké ou exploré exhaustivement. 
+
+Pour surmonter cette limite, l'\textbf{approximation de fonction} est une idée centrale. L'objectif n'est plus de maintenir un tableau de valeurs exactes, mais d'apprendre une fonction paramétrée $\hat{q}(s, a, \mathbf{w}) \approx q_\pi(s, a)$\footnote{$\textbf{w}$ étant un réseau de neurones}, capable de généraliser les connaissances acquises vers des états jamais rencontrés.
+
+\subsubsection{Le défi de la stabilité : la Triade Mortelle}
+
+Le \textit{Deep Reinforcement Learning} (DRL) exploite la puissance des réseaux de neurones profonds comme approximateurs de fonction universels. Cependant, l'intégration de ces réseaux dans une boucle d'optimisation \textit{model-free} est intrinsèquement instable. Cette instabilité est théorisée par la \textbf{Triade Mortelle} (\textit{Deadly Triad}) \parencite{suttonReinforcementLearningIntroduction2015}, qui survient lorsque trois éléments sont réunis :
+\begin{itemize}
+    \item \textbf{L'approximation de fonction} (utilisation de réseaux de neurones) ;
+    \item \textbf{Le bootstrapping} (mise à jour d'estimations basées sur d'autres estimations) ;
+    \item \textbf{L'apprentissage Off-Policy} (utilisation de données issues de politiques antérieures).
+\end{itemize}
+
+Sous ces conditions, la convergence des algorithmes est menacée par une forte corrélation temporelle des données et une cible de calcul mouvante (le réseau tente de rattraper une valeur qu'il modifie lui-même).
+
+\subsubsection{Deep Q-Network}
+
+L'algorithme \textbf{Deep Q-Network (DQN)} \parencite{mnihHumanlevelControlDeep2015} a marqué l'avènement du DRL en proposant deux solutions techniques majeures pour briser cette triade et stabiliser l'optimisation :
+
+\begin{enumerate}
+    \item \textbf{Experience Replay} : Au lieu d'apprendre de manière séquentielle sur la donnée immédiate, l'agent stocke ses transitions $(s, a, r, s')$ dans un tampon mémoire (\textit{Replay Buffer}). Il échantillonne ensuite aléatoirement des "mini-batchs" d'expériences passées pour s'entraîner. Cela casse la corrélation temporelle des trajectoires et rend l'apprentissage plus stable en se rapprochant des conditions \textit{i.i.d.} (indépendantes et identiquement distribuées) de l'apprentissage supervisé.
+    \item \textbf{Target Network} : Pour éviter que la cible de mise à jour ne change à chaque itération, DQN utilise deux réseaux distincts. Un réseau "online" (paramétré par $\mathbf{w}$) qui est optimisé activement, et un réseau "cible" (\textit{target}, paramétré par $\mathbf{w}^-$) dont les poids sont gelés et périodiquement synchronisés avec le premier.
+\end{enumerate}
+
+L'apprentissage s'effectue en minimisant l'erreur quadratique moyenne entre la prédiction du réseau online et la cible fournie par le réseau target via une étape de descente de gradient. La fonction de perte (\textit{loss}) s'écrit formellement :
+\begin{equation}
+    L(\mathbf{w}) = \mathbb{E}_{(s,a,r,s') \sim \text{Replay}} \left[ \Big(r + \gamma \max_{a'} \hat{q}(s', a', \mathbf{w}^-) - \hat{q}(s, a, \mathbf{w})\Big)^2 \right]
+\end{equation}
+
+Cette architecture permet de converger efficacement dans des environnements à large espace d'états (comme le traitement d'images/pixels de jeux vidéo). 
+Il est toutefois fondamental de retenir que l'algorithme DQN est intrinsèquement restreint aux \textbf{espaces d'actions discrets}. En effet, le calcul de la cible repose sur l'évaluation de la meilleure action future via l'opérateur $\max_{a'} \hat{q}(s', a')$. Si l'espace des actions était continu, rechercher algorithmiquement le maximum global d'une fonction neuronale hautement non linéaire à chaque itération et pour chaque transition représenterait un coût informatique colossal et prohibitoire.
+
+Pour pallier cette limitation, DDPG (\textit{Deep Deterministic Policy Gradient}) \parencite{lillicrapContinuousControlDeep2015} étend les principes de DQN aux espaces continus en apprenant simultanément une politique déterministe (l'\textit{Acteur}) et une fonction de valeur (le \textit{Critique}), supprimant ainsi la nécessité de l'opérateur $\max$. DDPG constitue la fondation architecturale directe de SAC, qui en corrige les principaux problèmes de stabilité et d'exploration, comme détaillé dans la section suivante.
+
+
+
+\subsection{Méthodes Actor-Critic}
+
+Pour pallier l'incompatibilité de l'algorithme DQN avec les espaces d'actions continus (comme les couples moteurs de la robotique ou le pilotage de véhicules), une approche radicalement différente est exploitée : le \textbf{Gradient de Politique} (\textit{Policy Gradient}).
+
+L'idée est de s'affranchir de la recherche de la valeur maximale des actions pour dicter le comportement. On y optimise plutôt directement les paramètres $\theta$ d'une politique stochastique $\pi_\theta(a|s)$ par montée de gradient, dans l'optique de maximiser le retour algorithmique attendu $J(\theta) = \mathbb{E}_{\pi_\theta}[G_t]$.
+
+\subsubsection{Architecture Actor-Critic}
+
+Les méthodes modernes de l'état de l'art fusionnent l'apprentissage de la fonction de valeur et l'optimisation directe de la politique dans une architecture hybride nommée \textbf{Actor-Critic} \parencite{suttonReinforcementLearningIntroduction2015} :
+\begin{itemize}
+    \item \textbf{L'Acteur} ($\pi_\theta(a|s)$) : Un réseau de neurones constituant la politique. Il décide quelle action entreprendre.
+    \item \textbf{Le Critique} ($V_w(s)$ ou $Q_w(s,a)$) : Un second réseau agissant en tant qu'évaluateur. Il calcule l'\textbf{avantage} estimé d'une action, défini comme $\hat{A}(s,a) = Q(s,a) - V(s)$, qui traduit si l'action choisie s'est avérée meilleure ou pire que ce qui était attendu en moyenne pour cet état. Soustraire $V(s)$ joue ici le rôle de \textbf{baseline} : ce résultat fondamental, établi par \textcite{williamsSimpleStatisticalGradientfollowing1992}, démontre qu'une baseline ne biaise pas l'estimation du gradient de politique tout en réduisant significativement sa variance. Sans cette soustraction, le signal de mise à jour de l'Acteur serait extrêmement bruité, rendant l'apprentissage instable. Le Critique offre ainsi un signal qualitatif clair et à faible variance pour guider la mise à jour de l'Acteur.
+\end{itemize}
+
+L'avantage majeur de ce duo est qu'il paramètre intrinsèquement très bien la nature des actions (discrètes ou continues). Pour un problème \textit{discret}, la couche de sortie de l'Acteur applique une fonction \textit{Softmax} définissant la probabilité de tirer chaque action de la liste. Pour un espace \textit{continu}, l'Acteur va générer non pas des actions brutes, mais les paramètres statistiques d'une loi de distribution continue (typiquement la moyenne $\mu$ et l'écart-type $\sigma$ d'une variable gaussienne), au sein de laquelle l'action réelle sera piochée aléatoirement.
+
+\subsubsection{Proximal Policy Optimization (PPO)}
+
+L'algorithme \textbf{PPO} \parencite{schulmanProximalPolicyOptimization2017} est devenu un standard industriel pour son équilibre entre simplicité et grande robustesse. 
+En pratique, PPO est quasi-systématiquement combiné avec l'estimateur \textbf{GAE} (\textit{Generalized Advantage Estimation}) \parencite{schulmanHighDimensionalContinuousControl2018}, qui généralise le retour à $n$ pas pour l'estimation de l'avantage. Plutôt que de choisir un horizon fixe $n$, GAE calcule une moyenne géométrique pondérée de tous les retours possibles, contrôlée par un paramètre $\lambda_{GAE} \in [0,1]$ :
+
+\begin{equation}
+    \hat{A}_t^{GAE(\gamma, \lambda_{GAE})} = \sum_{l=0}^{\infty} (\gamma \lambda_{GAE})^l \delta_{t+l}
+\end{equation}
+
+\noindent où $\delta_t = R_{t+1} + \gamma V(S_{t+1}) - V(S_t)$ est l'erreur TD locale. Ce paramètre $\lambda_{GAE}$ offre un curseur analogue à celui de $TD(\lambda)$ : une valeur proche de $0$ produit une estimation à faible variance mais potentiellement biaisée (horizon court), tandis qu'une valeur proche de $1$ réduit le biais au prix d'une variance plus élevée (horizon long). Ce paramètre sera directement retrouvé lors de la configuration expérimentale de PPO. 
+
+PPO cible précisément un problème grave inhérent au gradient de politique : 
+un pas d'optimisation trop grand peut radicalement "détruire" une politique 
+pourtant fonctionnelle que le réseau ne parviendrait plus à retrouver.
+
+PPO sécurise l'apprentissage en introduisant une fonction objectif "écrêtée" (\textit{Clipped Surrogate Objective}) limitant strictement le volume de modification de la politique entre deux mises à jour :
+\begin{equation}
+    L^{CLIP}(\theta) = \hat{\mathbb{E}}_t \left[ \min\Big(r_t(\theta)\hat{A}_t, \;\text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t\Big) \right]
+\end{equation}
+
+Pour interpréter rigoureusement cette formule (que l'on cherche à maximiser) : 
+\begin{itemize}
+    \item $r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)}$ représente le ratio de probabilité. Il quantifie si l'action $a_t$ est plus (ratio $>1$) ou moins (ratio $<1$) probable d'être choisie par la nouvelle politique en cours d'optimisation qu'elle ne l'était sous l'ancienne.
+    \item $\hat{A}_t$ est l'avantage délivré par le Critique, indiquant à quel point l'action s'est révélée judicieuse.
+    \item La fonction $\text{clip}$ compresse mathématiquement ce ratio dans la fenêtre bornée $[1-\epsilon, 1+\epsilon]$ (avec typiquement $\epsilon = 0.2$).
+\end{itemize}
+
+Grâce à l'opérateur $\min$, PPO applique une politique conservatrice. Si une action a été très bonne ($\hat{A}_t > 0$), on cherche à augmenter son ratio de probabilité pour la sélectionner davantage à l'avenir. Cependant, l'algorithme "coupe" les incitations au-delà de la borne permise : il empêche l'acteur de bouleverser tout son réseau de neurones d'un coup pour cette seule action. C'est un processus algorithmique de type \textbf{On-Policy} très fiable. PPO compense partiellement sa \textit{sample efficiency} médiocre — inhérente à toute méthode On-Policy — en autorisant plusieurs passes d'optimisation (\textit{epochs}) sur le même batch de trajectoires collectées, là où un algorithme de gradient de politique classique ne réalise qu'une seule mise à jour par batch. Néanmoins, ce batch doit être intégralement renouvelé après chaque cycle de mise à jour, car les nouvelles données générées par la politique légèrement modifiée ne seraient plus représentatives de l'ancienne \parencite{schulmanProximalPolicyOptimization2017}.
+
+\subsubsection{Soft Actor-Critic (SAC)}
+
+À l'inverse, \textbf{SAC} \parencite{haarnojaSoftActorCriticOffPolicy2018} mise sur l'efficacité et l'exploration en intégrant l'\textbf{entropie} ($\mathcal{H}$) à la récompense. L'agent cherche à maximiser un compromis entre ses récompenses et son "aléatoire" (via l'entropie de sa politique) pour rester curieux et éviter de se figer dans une stratégie sous-optimale. La fonction objectif de SAC s'écrit ainsi :
+\begin{equation}
+    J(\pi) = \sum_{t=0}^{T} \mathbb{E}_{(s_t, a_t)} \Big[ r(s_t, a_t) + \alpha \mathcal{H}\big(\pi(\cdot|s_t)\big) \Big]
+\end{equation}
+
+Cette approche offre deux arguments majeurs pour notre étude :
+\begin{enumerate}
+    \item \textbf{Exploration robuste} : L'agent est récompensé à rester "curieux". En diversifiant ses trajectoires, il évite de converger prématurément vers une stratégie médiocre.
+    \item \textbf{Efficacité d'interaction} : Étant \textbf{Off-Policy}, SAC stocke l'intégralité de ses transitions $(s, a, r, s')$ dans un \textit{Replay Buffer} — exactement comme DQN — et peut réutiliser massivement ces expériences passées pour s'entraîner, indépendamment de la politique courante. Cette propriété lui confère une bien meilleure \textit{sample efficiency} que PPO, un atout décisif pour la robotique où chaque interaction physique est coûteuse.
+\end{enumerate}
+
+Enfin, SAC exploite le \textbf{\textit{reparameterization trick}} pour rendre son optimisation différentiable : plutôt que d'échantillonner directement une action aléatoire $a \sim \pi_\theta(\cdot|s)$ — opération non différentiable bloquant la rétropropagation — l'action est exprimée comme une transformation déterministe d'un bruit aléatoire externe $\epsilon \sim \mathcal{N}(0,1)$, soit $a = \mu_\theta(s) + \sigma_\theta(s) \cdot \epsilon$. Cette reformulation découple la source d'aléatoire des paramètres $\theta$, permettant le calcul du gradient par rapport à ces derniers. Cette propriété rend SAC très efficace en espace continu, mais difficilement adaptable aux environnements purement discrets.
+
+\subsection{Synthèse et positionnement des algorithmes étudiés}
+
+Les trois algorithmes retenus pour cette étude ont été délibérément choisis pour couvrir des paradigmes d'apprentissage complémentaires. Le tableau~\ref{tab:algo-comparison} résume leurs caractéristiques fondamentales selon les axes de comparaison qui structureront l'analyse expérimentale.
+
+\begin{table}[htp]
+\centering
+
+\caption{Comparaison des algorithmes DQN, PPO et SAC selon leurs caractéristiques fondamentales.}
+\label{tab:algo-comparison}
+
+\renewcommand{\arraystretch}{1.4}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Critère} & \textbf{DQN} & \textbf{PPO} & \textbf{SAC} \\
+\hline
+Paradigme & Off-Policy & On-Policy & Off-Policy \\
+\hline
+Espace d'actions & Discret & Discret / Continu & Continu \\
+\hline
+Replay Buffer & \checkmark & $\times$ & \checkmark \\
+\hline
+\textit{Sample Efficiency} & Moyenne & Faible & Élevée \\
+\hline
+Stabilité & Moyenne & Élevée & Élevée \\
+\hline
+Exploration & $\epsilon$-greedy & $\epsilon$-greedy / stochastique & Maximisation d'entropie \\
+\hline
+Référence fondatrice & \textcite{mnihHumanlevelControlDeep2015} & \textcite{schulmanProximalPolicyOptimization2017} & \textcite{haarnojaSoftActorCriticOffPolicy2018} \\
+\hline
+\end{tabular}%
+}
+
+
+
+\end{table}
+
+
+\noindent Cette diversité de paradigmes permet une comparaison expérimentale riche : DQN sert de référence tabulaire profonde, PPO représente l'approche On-Policy de l'état de l'art, et SAC incarne l'efficacité Off-Policy avec exploration intrinsèque. Leur confrontation sur des environnements Gymnasium standardisés, puis sur un environnement complexe avec \textit{reward shaping}, constituera le cœur de l'analyse empirique de ce mémoire.
