@@ -335,3 +335,9 @@ venv/
 env/
 
 *.zip
+
+# Folder models
+models/
+
+# Weight and biases files
+wandb/
