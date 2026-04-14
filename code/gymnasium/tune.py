@@ -15,12 +15,14 @@ import gymnasium as gym
 import numpy as np
 import torch
 import optuna
+import wandb
 from optuna.pruners import MedianPruner
 from optuna.samplers import TPESampler
 
 from stable_baselines3 import DQN, PPO, SAC
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
+from wandb.integration.sb3 import WandbCallback
 
 # ---------------------------------------------------------------------------
 # Configuration centrale
@@ -118,19 +120,48 @@ class Objective:
         elif self.algo_name == "SAC":
             kwargs = sample_sac_params(trial)
 
+        # 1. Initialiser une run WandB spécifique pour ce trial
+        run = wandb.init(
+            project="rl-lunarlander-tune",
+            group=f"{self.algo_name}_{self.env_type}",
+            name=f"trial_{trial.number}",
+            config=kwargs,
+            sync_tensorboard=True, # Essentiel pour extraire les courbes de SB3
+            reinit=True
+        )
+
+        # 2. Créer l'environnement
         env = gym.make(self.env_id)
         env = Monitor(env)
 
         try:
-            model = self.algo_class(env=env, seed=self.seed, **kwargs)
-            model.learn(total_timesteps=TUNE_TIMESTEPS)
+            # 3. Initialiser le modèle avec le paramètre tensorboard_log
+            model = self.algo_class(
+                env=env, 
+                seed=self.seed, 
+                tensorboard_log=f"runs/{run.id}", 
+                **kwargs
+            )
+            
+            # 4. Apprendre en passant le callback de WandB
+            model.learn(
+                total_timesteps=TUNE_TIMESTEPS,
+                callback=WandbCallback(gradient_save_freq=0, verbose=0)
+            )
+            
+            # 5. Évaluation
             mean_reward, _ = evaluate_policy(model, env, n_eval_episodes=EVAL_EPISODES)
+            wandb.log({"optuna/mean_reward": mean_reward})
+            
         except Exception as e:
             print(f"Échec de l'entraînement de ce trial à cause de: {e}")
             env.close()
+            run.finish()
             raise optuna.exceptions.TrialPruned()
+            
         finally:
             env.close()
+            run.finish()
 
         return mean_reward
 
