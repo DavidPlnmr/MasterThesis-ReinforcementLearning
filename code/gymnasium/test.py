@@ -3,7 +3,7 @@ import time
 import gymnasium as gym
 from stable_baselines3 import DQN, PPO, SAC
 
-def test_model(model_dir, model_name, algo_class, env_id):
+def test_model(model_dir, model_name, algo_class, env_id, seed=None):
     model_path = os.path.join(model_dir, model_name)
     if not os.path.exists(model_path):
         print(f"Modèle introuvable : {model_path}")
@@ -13,7 +13,7 @@ def test_model(model_dir, model_name, algo_class, env_id):
     model = algo_class.load(model_path)
     env = gym.make(env_id, render_mode="human")
     
-    obs, info = env.reset()
+    obs, info = env.reset(seed=seed)
     done = truncated = False
     
     while not (done or truncated):
@@ -38,6 +38,7 @@ if __name__ == "__main__":
     
     for config in configs:
         model_dir = os.path.join(base_dir, config["dir"])
-        # On va tester le modèle final pour chaque algorithme (seed_42_final.zip)
-        model_name = "seed_42_final.zip"
-        test_model(model_dir, model_name, config["algo"], config["env"])
+        # On va tester le modèle final pour chaque algorithme
+        model_name = "seed_456_final.zip"
+        # On passe la graine (seed) à l'environnement pour rendre le test déterministe
+        test_model(model_dir, model_name, config["algo"], config["env"], seed=789)

@@ -1,0 +1,182 @@
+"""
+Script d'optimisation des hyperparamètres avec Optuna pour LunarLander.
+========================================================================
+Utilisation :
+    python tune.py --algo DQN --env discrete --trials 20 --seed 42
+    python tune.py --algo PPO --env continuous --trials 20 --seed 42
+"""
+
+import argparse
+import os
+import random
+import time
+
+import gymnasium as gym
+import numpy as np
+import torch
+import optuna
+from optuna.pruners import MedianPruner
+from optuna.samplers import TPESampler
+
+from stable_baselines3 import DQN, PPO, SAC
+from stable_baselines3.common.evaluation import evaluate_policy
+from stable_baselines3.common.monitor import Monitor
+
+# ---------------------------------------------------------------------------
+# Configuration centrale
+# ---------------------------------------------------------------------------
+
+ENV_IDS = {
+    "discrete":   "LunarLander-v3",
+    "continuous": "LunarLanderContinuous-v3",
+}
+
+# Budget de timesteps réduit pour l'optimisation (tuning plus rapide)
+TUNE_TIMESTEPS = 100_000
+EVAL_EPISODES = 5
+
+ALGO_CLASSES = {"DQN": DQN, "PPO": PPO, "SAC": SAC}
+
+VALID_COMBINATIONS = {
+    "DQN": ["discrete"],
+    "PPO": ["discrete", "continuous"],
+    "SAC": ["continuous"],
+}
+
+# ---------------------------------------------------------------------------
+# Seeding global
+# ---------------------------------------------------------------------------
+
+def set_global_seed(seed: int) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    os.environ["PYTHONHASHSEED"] = str(seed)
+
+# ---------------------------------------------------------------------------
+# Optuna Objective
+# ---------------------------------------------------------------------------
+
+def sample_dqn_params(trial: optuna.Trial) -> dict:
+    return {
+        "learning_rate": trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True),
+        "buffer_size": trial.suggest_categorical("buffer_size", [10_000, 50_000, 100_000]),
+        "learning_starts": trial.suggest_categorical("learning_starts", [0, 1000, 5000]),
+        "batch_size": trial.suggest_categorical("batch_size", [32, 64, 128, 256]),
+        "gamma": trial.suggest_categorical("gamma", [0.9, 0.95, 0.98, 0.99, 0.995, 0.999]),
+        "train_freq": trial.suggest_categorical("train_freq", [1, 4, 8, 16]),
+        "target_update_interval": trial.suggest_categorical("target_update_interval", [1, 100, 250, 500, 1000]),
+        "exploration_fraction": trial.suggest_float("exploration_fraction", 0.05, 0.5),
+        "exploration_final_eps": trial.suggest_float("exploration_final_eps", 0.01, 0.1),
+        "policy": "MlpPolicy",
+    }
+
+def sample_ppo_params(trial: optuna.Trial) -> dict:
+    batch_size = trial.suggest_categorical("batch_size", [32, 64, 128, 256, 512])
+    n_steps = trial.suggest_categorical("n_steps", [16, 32, 64, 128, 256, 512, 1024, 2048])
+    if n_steps < batch_size: n_steps = batch_size
+    return {
+        "learning_rate": trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True),
+        "n_steps": n_steps,
+        "batch_size": batch_size,
+        "n_epochs": trial.suggest_categorical("n_epochs", [1, 3, 5, 10, 20]),
+        "gamma": trial.suggest_categorical("gamma", [0.9, 0.95, 0.98, 0.99, 0.995, 0.999]),
+        "gae_lambda": trial.suggest_categorical("gae_lambda", [0.8, 0.9, 0.92, 0.95, 0.98, 0.99, 1.0]),
+        "ent_coef": trial.suggest_float("ent_coef", 0.00000001, 0.1, log=True),
+        "clip_range": trial.suggest_categorical("clip_range", [0.1, 0.2, 0.3, 0.4]),
+        "policy": "MlpPolicy",
+    }
+
+def sample_sac_params(trial: optuna.Trial) -> dict:
+    return {
+        "learning_rate": trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True),
+        "buffer_size": trial.suggest_categorical("buffer_size", [10_000, 50_000, 100_000]),
+        "learning_starts": trial.suggest_categorical("learning_starts", [0, 1000, 5000]),
+        "batch_size": trial.suggest_categorical("batch_size", [32, 64, 128, 256, 512]),
+        "gamma": trial.suggest_categorical("gamma", [0.9, 0.95, 0.98, 0.99, 0.995, 0.999]),
+        "tau": trial.suggest_categorical("tau", [0.001, 0.005, 0.01, 0.02, 0.05]),
+        "ent_coef": "auto",
+        "policy": "MlpPolicy",
+    }
+
+class Objective:
+    def __init__(self, algo_name: str, env_type: str, seed: int):
+        self.algo_name = algo_name
+        self.env_type = env_type
+        self.seed = seed
+        self.env_id = ENV_IDS[env_type]
+        self.algo_class = ALGO_CLASSES[algo_name]
+
+    def __call__(self, trial: optuna.Trial) -> float:
+        if self.algo_name == "DQN":
+            kwargs = sample_dqn_params(trial)
+        elif self.algo_name == "PPO":
+            kwargs = sample_ppo_params(trial)
+        elif self.algo_name == "SAC":
+            kwargs = sample_sac_params(trial)
+
+        env = gym.make(self.env_id)
+        env = Monitor(env)
+
+        try:
+            model = self.algo_class(env=env, seed=self.seed, **kwargs)
+            model.learn(total_timesteps=TUNE_TIMESTEPS)
+            mean_reward, _ = evaluate_policy(model, env, n_eval_episodes=EVAL_EPISODES)
+        except Exception as e:
+            print(f"Échec de l'entraînement de ce trial à cause de: {e}")
+            env.close()
+            raise optuna.exceptions.TrialPruned()
+        finally:
+            env.close()
+
+        return mean_reward
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--algo", type=str, required=True, choices=["DQN", "PPO", "SAC"])
+    parser.add_argument("--env", type=str, required=True, choices=["discrete", "continuous"])
+    parser.add_argument("--trials", type=int, default=20)
+    parser.add_argument("--seed", type=int, default=42)
+    args = parser.parse_args()
+
+    if args.env not in VALID_COMBINATIONS[args.algo]:
+        raise ValueError(f"Combinaison invalide : {args.algo} avec l'environnement {args.env}.")
+
+    set_global_seed(args.seed)
+
+    print(f"--- Début du Tuning Optuna ---")
+    print(f"Algo : {args.algo} | Env : {args.env} | Trials : {args.trials}")
+    
+    study = optuna.create_study(
+        study_name=f"{args.algo}_{args.env}",
+        direction="maximize",
+        sampler=TPESampler(seed=args.seed),
+        pruner=MedianPruner()
+    )
+
+    objective = Objective(args.algo, args.env, args.seed)
+    study.optimize(objective, n_trials=args.trials, show_progress_bar=True)
+
+    print(f"\n=> Meilleur run: Score de {study.best_value}")
+    print("Hyperparamètres optimaux :")
+    for key, val in study.best_trial.params.items():
+        print(f"  {key}: {val}")
+
+    # Sauvegarde
+    out_dir = os.path.join("models", f"{args.algo}_{args.env}")
+    os.makedirs(out_dir, exist_ok=True)
+    with open(os.path.join(out_dir, "best_params.txt"), "w") as f:
+        f.write(f"Score: {study.best_value}\n")
+        f.write("Params:\n")
+        for k, v in study.best_trial.params.items():
+            f.write(f"{k}: {v}\n")
+
+if __name__ == "__main__":
+    main()
