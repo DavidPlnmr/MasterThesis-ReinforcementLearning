@@ -70,7 +70,7 @@ def sample_dqn_params(trial: optuna.Trial) -> dict:
         "batch_size": trial.suggest_categorical("batch_size", [32, 64, 128, 256]),
         "gamma": trial.suggest_categorical("gamma", [0.9, 0.95, 0.98, 0.99, 0.995, 0.999]),
         "train_freq": trial.suggest_categorical("train_freq", [1, 4, 8, 16]),
-        "target_update_interval": trial.suggest_categorical("target_update_interval", [1, 100, 250, 500, 1000]),
+        "target_update_interval": trial.suggest_categorical("target_update_interval", [100, 250, 500, 1000]),
         "exploration_fraction": trial.suggest_float("exploration_fraction", 0.05, 0.5),
         "exploration_final_eps": trial.suggest_float("exploration_final_eps", 0.01, 0.1),
         "policy": "MlpPolicy",
@@ -78,7 +78,7 @@ def sample_dqn_params(trial: optuna.Trial) -> dict:
 
 def sample_ppo_params(trial: optuna.Trial) -> dict:
     batch_size = trial.suggest_categorical("batch_size", [32, 64, 128, 256, 512])
-    n_steps = trial.suggest_categorical("n_steps", [16, 32, 64, 128, 256, 512, 1024, 2048])
+    n_steps = trial.suggest_categorical("n_steps", [256, 512, 1024, 2048])
     if n_steps < batch_size: n_steps = batch_size
     return {
         "learning_rate": trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True),
@@ -96,7 +96,7 @@ def sample_sac_params(trial: optuna.Trial) -> dict:
     return {
         "learning_rate": trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True),
         "buffer_size": trial.suggest_categorical("buffer_size", [10_000, 50_000, 100_000]),
-        "learning_starts": trial.suggest_categorical("learning_starts", [0, 1000, 5000]),
+        "learning_starts": trial.suggest_categorical("learning_starts", [1000, 5000, 100000]),
         "batch_size": trial.suggest_categorical("batch_size", [32, 64, 128, 256, 512]),
         "gamma": trial.suggest_categorical("gamma", [0.9, 0.95, 0.98, 0.99, 0.995, 0.999]),
         "tau": trial.suggest_categorical("tau", [0.001, 0.005, 0.01, 0.02, 0.05]),
