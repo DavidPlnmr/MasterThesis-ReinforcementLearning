@@ -186,6 +186,9 @@ class Objective:
             kwargs = sample_sac_params(trial)
 
         # ── 2. WandB run ───────────────────────────────────────────────────
+        if wandb.run is not None:
+            wandb.finish()
+
         run = wandb.init(
             project=self.wandb_project,
             group=f"{self.algo_name}_{self.env_type}",
@@ -197,7 +200,7 @@ class Objective:
                 "tune_timesteps": self.tune_timesteps,
                 "trial_number":   trial.number,
             },
-            reinit="finish_previous",
+            reinit=True,
             dir=os.environ.get("WANDB_DIR", "."),
         )
 
