@@ -4,17 +4,6 @@ Script d'optimisation des hyperparamètres avec Optuna pour LunarLander.
 Utilisation :
     python tune.py --algo DQN --env discrete --trials 20 --seed 42
     python tune.py --algo PPO --env continuous --trials 20 --seed 42
-
-Fixes appliqués :
-    - wandb.tensorboard.patch()  → appelé UNE SEULE FOIS avant l'étude,
-      plus dans l'objective (évite les re-patches qui perdent des données).
-    - Crashs traités comme PRUNED → désormais levés en tant que vraies
-      exceptions pour ne pas polluer l'étude Optuna.
-    - Environnement seedé + seeding CUDA complet.
-    - tb_log_name fixé pour un chemin TensorBoard stable (pas de timestamp).
-    - Contrainte PPO n_steps >= batch_size gérée proprement.
-    - device="auto" : GPU utilisé si disponible (nécessite .sif buildé
-      depuis pytorch:2.1.2-cuda11.8 pour compatibilité sm_61 / TITAN Xp).
 """
 
 import argparse
@@ -30,10 +19,9 @@ import wandb
 from optuna.pruners import MedianPruner
 from optuna.samplers import TPESampler
 from stable_baselines3 import DQN, PPO, SAC
+from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.callbacks import BaseCallback
-
 
 # ---------------------------------------------------------------------------
 # Configuration centrale
@@ -52,18 +40,49 @@ VALID_COMBINATIONS = {
     "SAC": ["continuous"],
 }
 
+# ---------------------------------------------------------------------------
+# Callback WandB — métriques épisodes + métriques algo-spécifiques
+# ---------------------------------------------------------------------------
+
 class EpisodeMetricsCallback(BaseCallback):
+    """
+    Logue dans WandB à chaque step :
+      - rollout/ep_rew_mean  : reward moyen des derniers épisodes
+      - rollout/ep_rew_std   : écart-type du reward (stabilité)
+      - rollout/ep_len_mean  : longueur moyenne des épisodes
+
+    Métriques algo-spécifiques :
+      - dqn/exploration_rate : décroissance epsilon-greedy (DQN)
+      - sac/entropy_coef     : coefficient d'entropie adaptatif (SAC)
+    """
     def __init__(self, run, verbose: int = 0):
         super().__init__(verbose)
         self.run = run
 
     def _on_step(self) -> bool:
         buf = self.model.ep_info_buffer
+
+        # ── Métriques épisodes (communes à tous les algos) ─────────────────
         if len(buf) > 0:
+            rewards = [ep["r"] for ep in buf]
             self.run.log({
-                "rollout/ep_rew_mean": np.mean([ep["r"] for ep in buf]),
+                "rollout/ep_rew_mean": np.mean(rewards),
+                "rollout/ep_rew_std":  np.std(rewards),
                 "rollout/ep_len_mean": np.mean([ep["l"] for ep in buf]),
             }, step=self.num_timesteps)
+
+        # ── DQN : taux d'exploration epsilon-greedy ────────────────────────
+        if hasattr(self.model, "exploration_rate"):
+            self.run.log({
+                "dqn/exploration_rate": self.model.exploration_rate,
+            }, step=self.num_timesteps)
+
+        # ── SAC : coefficient d'entropie adaptatif ─────────────────────────
+        if hasattr(self.model, "log_ent_coef"):
+            self.run.log({
+                "sac/entropy_coef": self.model.ent_coef_tensor.item(),
+            }, step=self.num_timesteps)
+
         return True
 
 # ---------------------------------------------------------------------------
@@ -103,11 +122,7 @@ def sample_ppo_params(trial: optuna.Trial) -> dict:
     batch_size = trial.suggest_categorical("batch_size", [32, 64, 128, 256, 512])
     n_steps    = trial.suggest_categorical("n_steps",    [256, 512, 1024, 2048])
 
-    # Contrainte dure : n_steps doit être >= batch_size pour que PPO puisse
-    # construire au moins un mini-batch complet.
     if n_steps < batch_size:
-        # On signale le trial comme invalide proprement ; Optuna ne le compte
-        # pas comme un vrai essai et en relance un autre.
         raise optuna.exceptions.TrialPruned(
             f"n_steps ({n_steps}) < batch_size ({batch_size}) : config invalide."
         )
@@ -166,14 +181,11 @@ class Objective:
         if self.algo_name == "DQN":
             kwargs = sample_dqn_params(trial)
         elif self.algo_name == "PPO":
-            kwargs = sample_ppo_params(trial)  # peut lever TrialPruned
+            kwargs = sample_ppo_params(trial)
         else:
             kwargs = sample_sac_params(trial)
 
-
-        # ── 3. WandB run ───────────────────────────────────────────────────
-        # sync_tensorboard=True + le patch fait UNE SEULE FOIS avant l'étude
-        # (voir main()) suffit ; pas besoin de re-patcher ici.
+        # ── 2. WandB run ───────────────────────────────────────────────────
         run = wandb.init(
             project=self.wandb_project,
             group=f"{self.algo_name}_{self.env_type}",
@@ -185,20 +197,16 @@ class Objective:
                 "tune_timesteps": self.tune_timesteps,
                 "trial_number":   trial.number,
             },
-            reinit=True,
-            # Évite que WandB crée un sous-dossier wandb/ dans le répertoire
-            # courant de chaque trial — utile sur les clusters.
+            reinit="finish_previous",
             dir=os.environ.get("WANDB_DIR", "."),
         )
 
-        # ── 4. Environnement ───────────────────────────────────────────────
+        # ── 3. Environnement ───────────────────────────────────────────────
         env = Monitor(gym.make(self.env_id))
 
         mean_reward: float = float("-inf")
         try:
-            # ── 5. Modèle ──────────────────────────────────────────────────
-            # device="auto" : SB3 utilise le GPU si disponible (CUDA 11.8 +
-            # sm_61 supporté avec pytorch:2.1.2-cuda11.8 dans le .sif).
+            # ── 4. Modèle ──────────────────────────────────────────────────
             model = self.algo_class(
                 env=env,
                 seed=self.seed,
@@ -208,39 +216,62 @@ class Objective:
                 policy=kwargs["policy"],
             )
 
-            # ── 6. Entraînement ────────────────────────────────────────────
+            # ── 5. Entraînement ────────────────────────────────────────────
             model.learn(
                 total_timesteps=self.tune_timesteps,
-                callback=EpisodeMetricsCallback(run),
+                callback=EpisodeMetricsCallback(run=run),
                 reset_num_timesteps=True,
             )
 
-            # ── 7. Évaluation ──────────────────────────────────────────────
+            # ── 6. Évaluation finale ───────────────────────────────────────
             mean_reward, std_reward = evaluate_policy(
                 model, env, n_eval_episodes=self.eval_episodes, deterministic=True
             )
+
+            # Métriques d'évaluation finale + hyperparamètres clés
+            # → utilisables dans le Parallel Coordinates Plot de WandB
             run.log({
-                "optuna/mean_reward": mean_reward,
-                "optuna/std_reward":  std_reward,
-                "optuna/trial":       trial.number,
+                "eval/mean_reward":  mean_reward,
+                "eval/std_reward":   std_reward,
+
+                # Hyperparamètres communs — impact sur le score final
+                "hparams/learning_rate": kwargs.get("learning_rate"),
+                "hparams/gamma":         kwargs.get("gamma"),
+                "hparams/batch_size":    kwargs.get("batch_size"),
+
+                # Hyperparamètres algo-spécifiques
+                **({
+                    "hparams/exploration_fraction":  kwargs.get("exploration_fraction"),
+                    "hparams/exploration_final_eps": kwargs.get("exploration_final_eps"),
+                    "hparams/buffer_size":           kwargs.get("buffer_size"),
+                } if self.algo_name == "DQN" else {}),
+
+                **({
+                    "hparams/n_steps":    kwargs.get("n_steps"),
+                    "hparams/n_epochs":   kwargs.get("n_epochs"),
+                    "hparams/gae_lambda": kwargs.get("gae_lambda"),
+                    "hparams/ent_coef":   kwargs.get("ent_coef"),
+                    "hparams/clip_range": kwargs.get("clip_range"),
+                } if self.algo_name == "PPO" else {}),
+
+                **({
+                    "hparams/tau":        kwargs.get("tau"),
+                    "hparams/buffer_size": kwargs.get("buffer_size"),
+                } if self.algo_name == "SAC" else {}),
             })
 
         except optuna.exceptions.TrialPruned:
-            # Re-propagation propre (e.g. contrainte PPO n_steps/batch_size)
             raise
 
         except Exception as exc:
-            # Vrai crash (CUDA, OOM, etc.) : on le logue et on le remonte
-            # comme un échec, PAS comme un pruning, pour ne pas biaiser TPE.
             warnings.warn(f"[Trial {trial.number}] Échec : {exc}")
             run.log({"optuna/crash": 1})
             run.finish(exit_code=1)
             env.close()
-            raise  # ← remonte l'exception réelle → Optuna marque FAIL
+            raise
 
         finally:
             env.close()
-            # run.finish() est idempotent ; on l'appelle dans tous les cas
             try:
                 run.finish()
             except Exception:
@@ -286,20 +317,14 @@ def main() -> None:
         print("  CPU uniquement.")
     print()
 
-    # ── WandB tensorboard patch — UNE SEULE FOIS avant l'étude ────────────
-    # Pointer sur le dossier racine commun à tous les trials de cette étude.
-    root_tb_dir = f"runs/{args.algo}_{args.env}"
-    os.makedirs(root_tb_dir, exist_ok=True)
-    wandb.tensorboard.patch(root_logdir=root_tb_dir)
-
-    # ── Optuna study (SQLite pour reprise sur cluster) ────────────────────
+    # ── Optuna study (SQLite pour reprise sur cluster) ─────────────────────
     db_path     = f"{args.algo}_{args.env}_optuna.db"
     storage_url = f"sqlite:///{db_path}"
 
     study = optuna.create_study(
         study_name=f"{args.algo}_{args.env}",
         storage=storage_url,
-        load_if_exists=True,          # reprise automatique si le job SLURM redémarre
+        load_if_exists=True,
         direction="maximize",
         sampler=TPESampler(seed=args.seed),
         pruner=MedianPruner(n_startup_trials=5, n_warmup_steps=20_000),
@@ -325,7 +350,6 @@ def main() -> None:
         objective,
         n_trials=args.trials,
         show_progress_bar=True,
-        # Continuer même si un trial lève une exception non-Optuna
         catch=(Exception,),
     )
 
