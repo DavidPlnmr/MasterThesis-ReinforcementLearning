@@ -127,6 +127,9 @@ class Objective:
             sync_tensorboard=True, # Essentiel pour extraire les courbes de SB3
             reinit=True
         )
+        
+        # Patch : Obliger le patch AVANT que le modèle ne commence à écrire dans tensorboard
+        wandb.tensorboard.patch(root_logdir=f"runs/{run.id}")
 
         # 2. Créer l'environnement
         env = gym.make(self.env_id)
@@ -137,7 +140,8 @@ class Objective:
             model = self.algo_class(
                 env=env, 
                 seed=self.seed, 
-                tensorboard_log=f"runs/{run.id}", 
+                tensorboard_log=f"runs/{run.id}",
+                device="auto", # Ajout pour laisser SB3 gérer la redirection CPU/GPU
                 **kwargs
             )
             
