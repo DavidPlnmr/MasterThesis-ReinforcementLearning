@@ -1,4 +1,3 @@
-# ✅ CUDA 12.6 + cuDNN 9.5 — correspondance exacte avec les modules dispo
 FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
 
 WORKDIR /app
@@ -14,7 +13,7 @@ RUN pip install --no-cache-dir --upgrade pip \
     "stable-baselines3[extra]==2.3.2" \
     "gymnasium[box2d]==0.29.1" \
     optuna==3.6.1 \
-    "optuna-integration[wandb]==3.6.1" \
+    "optuna-integration[wandb]==3.6.0" \
     wandb==0.17.0 \
     tensorboard==2.16.2
 
