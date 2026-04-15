@@ -185,6 +185,12 @@ def main():
     print(f"--- Début du Tuning Optuna ---")
     print(f"Algo : {args.algo} | Env : {args.env} | Trials : {args.trials}")
     
+    # Check GPU
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Device utilisé par PyTorch : {device}")
+    if torch.cuda.is_available():
+        print(f"Nom du GPU : {torch.cuda.get_device_name(device)}")
+        
     # 1. Définir le chemin de la base de données locale (SQLite)
     db_name = f"{args.algo}_{args.env}_optuna.db"
     storage_url = f"sqlite:///{db_name}"
