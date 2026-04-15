@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir --upgrade pip \
  && pip install --no-cache-dir \
     "numpy<2.0" \
     "stable-baselines3[extra]==2.3.2" \
-    "gymnasium[box2d]==0.29.1" \
+    "gymnasium[box2d]==1.0.0" \
     optuna==3.6.1 \
     "optuna-integration[wandb]==3.6.0" \
     "wandb==0.17.0" \

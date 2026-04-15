@@ -156,10 +156,8 @@ class Objective:
             kwargs = sample_sac_params(trial)
 
         # ── 2. Dossier TensorBoard fixe (sans timestamp) ───────────────────
-        # tb_log_name="trial" + tensorboard_log=dir  →  SB3 écrit dans
-        # {tensorboard_log}/trial_1/  de manière déterministe.
-        tb_dir  = f"runs/{self.algo_name}_{self.env_type}"
-        tb_name = f"trial_{trial.number}"   # sous-dossier final
+        tb_dir  = f"runs/{self.algo_name}_{self.env_type}/trial_{trial.number}"
+        tb_name = "metrics"   # ← même nom pour tous → clé always "metrics/rollout/ep_rew_mean"
 
         # ── 3. WandB run ───────────────────────────────────────────────────
         # sync_tensorboard=True + le patch fait UNE SEULE FOIS avant l'étude
