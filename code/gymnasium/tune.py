@@ -121,10 +121,16 @@ class Objective:
         # 1. Définir explicitement le dossier de logs du trial courant
         tensorboard_dir = f"runs/{self.algo_name}_{self.env_type}_trial_{trial.number}"
         
-        # 2. Patch : Indiquer à WandB ce dossier AVANT wandb.init (corrige le bug de perte de données PPO/SAC)
+        # 2. Sécurité Optuna : Désamorcer l'ancien patch s'il existe avant de patcher
+        try:
+            wandb.tensorboard.unpatch()
+        except:
+            pass
+            
+        # 3. Indiquer à WandB ce dossier AVANT wandb.init
         wandb.tensorboard.patch(root_logdir=tensorboard_dir)
 
-        # 3. Initialiser une run WandB spécifique pour ce trial
+        # 4. Initialiser une run WandB spécifique pour ce trial
         run = wandb.init(
             project="rl-lunarlander-tune",
             group=f"{self.algo_name}_{self.env_type}",
@@ -161,11 +167,19 @@ class Objective:
             print(f"Échec de l'entraînement de ce trial à cause de: {e}")
             env.close()
             run.finish()
+            try:
+                wandb.tensorboard.unpatch()
+            except:
+                pass
             raise optuna.exceptions.TrialPruned()
             
         finally:
             env.close()
             run.finish()
+            try:
+                wandb.tensorboard.unpatch()
+            except:
+                pass
 
         return mean_reward
 
