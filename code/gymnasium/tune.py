@@ -79,8 +79,14 @@ class EpisodeMetricsCallback(BaseCallback):
 
         # ── SAC : coefficient d'entropie adaptatif ─────────────────────────
         if hasattr(self.model, "log_ent_coef"):
+            try:
+                # SB3 >= 2.0 : ent_coef_tensor
+                ent_coef = self.model.ent_coef_tensor.item()
+            except AttributeError:
+                # Fallback : calcul depuis log_ent_coef
+                ent_coef = float(torch.exp(self.model.log_ent_coef).detach().cpu())
             self.run.log({
-                "sac/entropy_coef": self.model.ent_coef_tensor.item(),
+                "sac/entropy_coef": ent_coef,
             }, step=self.num_timesteps)
 
         return True
