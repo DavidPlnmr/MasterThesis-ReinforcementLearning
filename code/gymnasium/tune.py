@@ -32,7 +32,8 @@ from optuna.samplers import TPESampler
 from stable_baselines3 import DQN, PPO, SAC
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
-from wandb.integration.sb3 import WandbCallback
+from stable_baselines3.common.callbacks import BaseCallback
+
 
 # ---------------------------------------------------------------------------
 # Configuration centrale
@@ -50,6 +51,20 @@ VALID_COMBINATIONS = {
     "PPO": ["discrete", "continuous"],
     "SAC": ["continuous"],
 }
+
+class EpisodeMetricsCallback(BaseCallback):
+    def __init__(self, run, verbose: int = 0):
+        super().__init__(verbose)
+        self.run = run
+
+    def _on_step(self) -> bool:
+        buf = self.model.ep_info_buffer
+        if len(buf) > 0:
+            self.run.log({
+                "rollout/ep_rew_mean": np.mean([ep["r"] for ep in buf]),
+                "rollout/ep_len_mean": np.mean([ep["l"] for ep in buf]),
+            }, step=self.num_timesteps)
+        return True
 
 # ---------------------------------------------------------------------------
 # Seeding global
@@ -155,9 +170,6 @@ class Objective:
         else:
             kwargs = sample_sac_params(trial)
 
-        # ── 2. Dossier TensorBoard fixe (sans timestamp) ───────────────────
-        tb_dir  = f"runs/{self.algo_name}_{self.env_type}/trial_{trial.number}"
-        tb_name = "metrics"   # ← même nom pour tous → clé always "metrics/rollout/ep_rew_mean"
 
         # ── 3. WandB run ───────────────────────────────────────────────────
         # sync_tensorboard=True + le patch fait UNE SEULE FOIS avant l'étude
@@ -173,7 +185,6 @@ class Objective:
                 "tune_timesteps": self.tune_timesteps,
                 "trial_number":   trial.number,
             },
-            sync_tensorboard=True,
             reinit=True,
             # Évite que WandB crée un sous-dossier wandb/ dans le répertoire
             # courant de chaque trial — utile sur les clusters.
@@ -192,7 +203,6 @@ class Objective:
                 env=env,
                 seed=self.seed,
                 device="auto",
-                tensorboard_log=tb_dir,
                 verbose=0,
                 **{k: v for k, v in kwargs.items() if k != "policy"},
                 policy=kwargs["policy"],
@@ -201,11 +211,7 @@ class Objective:
             # ── 6. Entraînement ────────────────────────────────────────────
             model.learn(
                 total_timesteps=self.tune_timesteps,
-                tb_log_name=tb_name,    # ← chemin stable pour WandB sync
-                callback=WandbCallback(
-                    gradient_save_freq=0,
-                    verbose=0,
-                ),
+                callback=EpisodeMetricsCallback(run),
                 reset_num_timesteps=True,
             )
 
