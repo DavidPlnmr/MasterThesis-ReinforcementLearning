@@ -185,12 +185,24 @@ def main():
     print(f"--- Début du Tuning Optuna ---")
     print(f"Algo : {args.algo} | Env : {args.env} | Trials : {args.trials}")
     
+    # 1. Définir le chemin de la base de données locale (SQLite)
+    db_name = f"{args.algo}_{args.env}_optuna.db"
+    storage_url = f"sqlite:///{db_name}"
+    
+    # 2. Assigner le storage et activer 'load_if_exists=True'
     study = optuna.create_study(
         study_name=f"{args.algo}_{args.env}",
+        storage=storage_url,
+        load_if_exists=True,
         direction="maximize",
         sampler=TPESampler(seed=args.seed),
         pruner=MedianPruner()
     )
+
+    # 3. Afficher le nombre d'essais déjà complétés
+    trials_done = len([t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE])
+    print(f"-> Reprise de l'étude (Base de données : {db_name})")
+    print(f"-> Essais déjà complétés : {trials_done}")
 
     objective = Objective(args.algo, args.env, args.seed)
     study.optimize(objective, n_trials=args.trials, show_progress_bar=True)
