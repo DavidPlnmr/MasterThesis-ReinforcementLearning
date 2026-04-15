@@ -33,10 +33,6 @@ ENV_IDS = {
     "continuous": "LunarLanderContinuous-v3",
 }
 
-# Budget de timesteps réduit pour l'optimisation (tuning plus rapide)
-TUNE_TIMESTEPS = 100_000
-EVAL_EPISODES = 5
-
 ALGO_CLASSES = {"DQN": DQN, "PPO": PPO, "SAC": SAC}
 
 VALID_COMBINATIONS = {
@@ -105,12 +101,14 @@ def sample_sac_params(trial: optuna.Trial) -> dict:
     }
 
 class Objective:
-    def __init__(self, algo_name: str, env_type: str, seed: int):
+    def __init__(self, algo_name: str, env_type: str, seed: int, tune_timesteps: int, eval_episodes: int):
         self.algo_name = algo_name
         self.env_type = env_type
         self.seed = seed
         self.env_id = ENV_IDS[env_type]
         self.algo_class = ALGO_CLASSES[algo_name]
+        self.tune_timesteps = tune_timesteps
+        self.eval_episodes = eval_episodes
 
     def __call__(self, trial: optuna.Trial) -> float:
         if self.algo_name == "DQN":
@@ -145,12 +143,12 @@ class Objective:
             
             # 4. Apprendre en passant le callback de WandB
             model.learn(
-                total_timesteps=TUNE_TIMESTEPS,
+                total_timesteps=self.tune_timesteps,
                 callback=WandbCallback(gradient_save_freq=0, verbose=0)
             )
             
             # 5. Évaluation
-            mean_reward, _ = evaluate_policy(model, env, n_eval_episodes=EVAL_EPISODES)
+            mean_reward, _ = evaluate_policy(model, env, n_eval_episodes=self.eval_episodes)
             wandb.log({"optuna/mean_reward": mean_reward})
             
         except Exception as e:
@@ -175,6 +173,8 @@ def main():
     parser.add_argument("--env", type=str, required=True, choices=["discrete", "continuous"])
     parser.add_argument("--trials", type=int, default=20)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--tune-timesteps", type=int, default=100_000, help="Nombre de timesteps par trial Optuna")
+    parser.add_argument("--eval-episodes", type=int, default=5, help="Nombre d'épisodes pour l'évaluation")
     args = parser.parse_args()
 
     if args.env not in VALID_COMBINATIONS[args.algo]:
@@ -204,7 +204,7 @@ def main():
     print(f"-> Reprise de l'étude (Base de données : {db_name})")
     print(f"-> Essais déjà complétés : {trials_done}")
 
-    objective = Objective(args.algo, args.env, args.seed)
+    objective = Objective(args.algo, args.env, args.seed, args.tune_timesteps, args.eval_episodes)
     study.optimize(objective, n_trials=args.trials, show_progress_bar=True)
 
     print(f"\n=> Meilleur run: Score de {study.best_value}")
