@@ -1,28 +1,25 @@
-# Utiliser l'image officielle de PyTorch avec CUDA comme base
 FROM pytorch/pytorch:2.1.2-cuda11.8-cudnn8-runtime
-
-# Définir le répertoire de travail dans le conteneur
+ 
 WORKDIR /app
-
-# Installer les dépendances système requises (swig et build-essential sont nécessaires pour Box2D / LunarLander)
-RUN apt-get update && apt-get install -y \
-    swig \
-    build-essential \
+ 
+# ── Dépendances système ─────────────────────────────────────────────────────
+# swig + build-essential : requis pour compiler Box2D (LunarLander)
+# git                    : requis par certains packages pip installés depuis
+#                          des dépôts GitHub (e.g. sb3-contrib en snapshot)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        swig \
+        build-essential \
+        git \
     && rm -rf /var/lib/apt/lists/*
-
-# Mettre à jour pip
-RUN pip install --no-cache-dir --upgrade pip
-
-
-# Installer les dépendances Python pour l'apprentissage par renforcement
-# Vous pouvez aussi utiliser un fichier requirements.txt si vous préférez : COPY requirements.txt . && pip install -r requirements.txt
-RUN pip install --no-cache-dir \
-    "stable-baselines3[extra]" \
-    "gymnasium[box2d]" \
-    wandb \
-    tensorboard \
-    optuna \
-    "optuna-integration[wandb]"
-
-# Command par défaut
+ 
+# ── Dépendances Python ──────────────────────────────────────────────────────
+RUN pip install --no-cache-dir --upgrade pip \
+ && pip install --no-cache-dir \
+        "stable-baselines3[extra]==2.3.2" \
+        "gymnasium[box2d]==0.29.1" \
+        optuna==3.6.1 \
+        "optuna-integration[wandb]==3.6.1" \
+        wandb==0.17.0 \
+        tensorboard==2.16.2
+ 
 CMD ["/bin/bash"]
