@@ -40,7 +40,7 @@ from wandb.integration.sb3 import WandbCallback
 
 ENV_IDS = {
     "discrete":   "LunarLander-v2",
-    "continuous": "LunarLanderContinuous-v2,
+    "continuous": "LunarLanderContinuous-v2",
 }
 
 ALGO_CLASSES = {"DQN": DQN, "PPO": PPO, "SAC": SAC}
