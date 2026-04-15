@@ -118,30 +118,32 @@ class Objective:
         elif self.algo_name == "SAC":
             kwargs = sample_sac_params(trial)
 
-        # 1. Initialiser une run WandB spécifique pour ce trial
+        # 1. Définir explicitement le dossier de logs du trial courant
+        tensorboard_dir = f"runs/{self.algo_name}_{self.env_type}_trial_{trial.number}"
+        
+        # 2. Patch : Indiquer à WandB ce dossier AVANT wandb.init (corrige le bug de perte de données PPO/SAC)
+        wandb.tensorboard.patch(root_logdir=tensorboard_dir)
+
+        # 3. Initialiser une run WandB spécifique pour ce trial
         run = wandb.init(
             project="rl-lunarlander-tune",
             group=f"{self.algo_name}_{self.env_type}",
             name=f"trial_{trial.number}",
             config=kwargs,
-            sync_tensorboard=True, # Essentiel pour extraire les courbes de SB3
+            sync_tensorboard=True, # WandB ira lire les évènements de tensorboard_dir
             reinit=True
         )
-        
-        # Patch : Obliger le patch AVANT que le modèle ne commence à écrire dans tensorboard
-        wandb.tensorboard.patch(root_logdir=f"runs/{run.id}")
 
-        # 2. Créer l'environnement
+        # 4. Créer l'environnement
         env = gym.make(self.env_id)
         env = Monitor(env)
 
         try:
-            # 3. Initialiser le modèle avec le paramètre tensorboard_log
+            # 5. Initialiser le modèle avec le strict paramètre tensorboard_log
             model = self.algo_class(
                 env=env, 
                 seed=self.seed, 
-                tensorboard_log=f"runs/{run.id}",
-                device="auto", # Ajout pour laisser SB3 gérer la redirection CPU/GPU
+                tensorboard_log=tensorboard_dir, 
                 **kwargs
             )
             
