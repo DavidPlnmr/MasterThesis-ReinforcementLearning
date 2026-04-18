@@ -346,21 +346,24 @@ def main() -> None:
     print(f"  Essais déjà complétés : {trials_done}")
     print()
 
-    objective = Objective(
-        algo_name=args.algo,
-        env_type=args.env,
-        seed=args.seed,
-        tune_timesteps=args.tune_timesteps,
-        eval_episodes=args.eval_episodes,
-        wandb_project=args.wandb_project,
-    )
+    if trials_done >= args.trials:
+        print(f"  ✓ {trials_done} trials déjà complétés — pas de nouveaux trials.")
+    else:
+        objective = Objective(
+            algo_name=args.algo,
+            env_type=args.env,
+            seed=args.seed,
+            tune_timesteps=args.tune_timesteps,
+            eval_episodes=args.eval_episodes,
+            wandb_project=args.wandb_project,
+        )
 
-    study.optimize(
-        objective,
-        n_trials=args.trials,
-        show_progress_bar=True,
-        catch=(Exception,),
-    )
+        study.optimize(
+            objective,
+            n_trials=args.trials - trials_done,  # ← only missing trials
+            show_progress_bar=True,
+            catch=(Exception,),
+        )
 
     # ── Résultats ──────────────────────────────────────────────────────────
     print(f"\n{'='*60}")
