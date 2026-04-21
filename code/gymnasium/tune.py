@@ -228,7 +228,7 @@ class Objective:
         run = wandb.init(
             project=self.wandb_project,
             group=f"{self.algo_name}_{self.env_type}",
-            name=f"trial_{trial.number}",
+            name=f"{self.algo_name}_{self.env_type}_trial_{trial.number}",
             config={
                 **kwargs,
                 "algo":           self.algo_name,
