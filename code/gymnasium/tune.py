@@ -92,6 +92,36 @@ class EpisodeMetricsCallback(BaseCallback):
         return True
 
 # ---------------------------------------------------------------------------
+# Callback Optuna Pruning
+# ---------------------------------------------------------------------------
+class OptunaPruningCallback(BaseCallback):
+    """
+    Callback pour reporter les performances intermédiaires à Optuna
+    et arrêter prématurément l'entraînement (pruning) si l'essai n'est pas prometteur.
+    """
+    def __init__(self, trial: optuna.Trial, eval_freq: int = 10_000, verbose: int = 0):
+        super().__init__(verbose)
+        self.trial = trial
+        self.eval_freq = eval_freq
+
+    def _on_step(self) -> bool:
+        # Évaluation périodique (ex: tous les 10 000 steps)
+        if self.eval_freq > 0 and self.num_timesteps % self.eval_freq == 0:
+            buf = self.model.ep_info_buffer
+            if len(buf) > 0:
+                # Utilise la moyenne des récompenses récentes comme score intermédiaire
+                mean_reward = np.mean([ep["r"] for ep in buf])
+                
+                # Reporte la valeur au pruner d'Optuna
+                self.trial.report(mean_reward, self.num_timesteps)
+
+                # Si l'algo MedianPruner juge le score insuffisant, on élague (prune)
+                if self.trial.should_prune():
+                    raise optuna.exceptions.TrialPruned()
+                    
+        return True
+
+# ---------------------------------------------------------------------------
 # Seeding global
 # ---------------------------------------------------------------------------
 
@@ -228,7 +258,10 @@ class Objective:
             # ── 5. Entraînement ────────────────────────────────────────────
             model.learn(
                 total_timesteps=self.tune_timesteps,
-                callback=EpisodeMetricsCallback(run=run),
+                callback=[
+                    EpisodeMetricsCallback(run=run),
+                    OptunaPruningCallback(trial=trial, eval_freq=10_000)
+                ],
                 reset_num_timesteps=True,
             )
 
