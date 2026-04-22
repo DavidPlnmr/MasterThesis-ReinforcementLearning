@@ -140,6 +140,10 @@ def set_global_seed(seed: int) -> None:
 # ---------------------------------------------------------------------------
 
 def sample_dqn_params(trial: optuna.Trial) -> dict:
+    net_arch_key = trial.suggest_categorical("net_arch", ["small", "medium", "large"])
+    net_arch = {"small": [64, 64], "medium": [256, 256], "large": [400, 300]}[net_arch_key]
+
+
     return {
         "learning_rate":           trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True),
         "buffer_size":             trial.suggest_categorical("buffer_size", [10_000, 50_000, 100_000]),
@@ -150,6 +154,7 @@ def sample_dqn_params(trial: optuna.Trial) -> dict:
         "target_update_interval":  trial.suggest_categorical("target_update_interval", [100, 250, 500, 1000]),
         "exploration_fraction":    trial.suggest_float("exploration_fraction", 0.05, 0.5),
         "exploration_final_eps":   trial.suggest_float("exploration_final_eps", 0.01, 0.1),
+        "policy_kwargs":          {"net_arch": net_arch},
         "policy": "MlpPolicy",
     }
 
@@ -157,6 +162,9 @@ def sample_dqn_params(trial: optuna.Trial) -> dict:
 def sample_ppo_params(trial: optuna.Trial) -> dict:
     batch_size = trial.suggest_categorical("batch_size", [32, 64, 128, 256, 512])
     n_steps    = trial.suggest_categorical("n_steps",    [256, 512, 1024, 2048])
+    net_arch_key = trial.suggest_categorical("net_arch", ["small", "medium", "large"])
+    net_arch     = {"small": [64, 64], "medium": [256, 256], "large": [400, 300]}[net_arch_key]
+
 
     if n_steps < batch_size:
         raise optuna.exceptions.TrialPruned(
@@ -172,11 +180,17 @@ def sample_ppo_params(trial: optuna.Trial) -> dict:
         "gae_lambda":    trial.suggest_categorical("gae_lambda", [0.8, 0.9, 0.92, 0.95, 0.98, 0.99, 1.0]),
         "ent_coef":      trial.suggest_float("ent_coef", 1e-8, 0.1, log=True),
         "clip_range":    trial.suggest_categorical("clip_range", [0.1, 0.2, 0.3, 0.4]),
+        "max_grad_norm": trial.suggest_float("max_grad_norm", 0.3, 5.0, log=True),
+        "vf_coef":       trial.suggest_float("vf_coef", 0.1, 1.0),
+        "policy_kwargs":  {"net_arch": net_arch},
         "policy": "MlpPolicy",
     }
 
 
 def sample_sac_params(trial: optuna.Trial) -> dict:
+    net_arch_key = trial.suggest_categorical("net_arch", ["small", "medium", "large"])
+    net_arch     = {"small": [64, 64], "medium": [256, 256], "large": [400, 300]}[net_arch_key]
+
     return {
         "learning_rate":   trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True),
         "buffer_size":     trial.suggest_categorical("buffer_size", [10_000, 50_000, 100_000]),
@@ -184,7 +198,10 @@ def sample_sac_params(trial: optuna.Trial) -> dict:
         "batch_size":      trial.suggest_categorical("batch_size", [32, 64, 128, 256, 512]),
         "gamma":           trial.suggest_categorical("gamma", [0.9, 0.95, 0.98, 0.99, 0.995, 0.999]),
         "tau":             trial.suggest_categorical("tau", [0.001, 0.005, 0.01, 0.02, 0.05]),
+        "use_sde": trial.suggest_categorical("use_sde", [True, False]),
+        "target_update_interval": trial.suggest_categorical("target_update_interval", [1, 2, 4]),
         "ent_coef":        "auto",
+        "policy_kwargs":  {"net_arch": net_arch},
         "policy": "MlpPolicy",
     }
 
@@ -202,6 +219,7 @@ class Objective:
         tune_timesteps:  int,
         eval_episodes:   int,
         wandb_project:   str,
+        eval_freq:       int,
     ):
         self.algo_name      = algo_name
         self.env_type       = env_type
@@ -211,6 +229,7 @@ class Objective:
         self.tune_timesteps = tune_timesteps
         self.eval_episodes  = eval_episodes
         self.wandb_project  = wandb_project
+        self.eval_freq      = eval_freq
 
     def __call__(self, trial: optuna.Trial) -> float:
         # ── 1. Sampling ────────────────────────────────────────────────────
@@ -260,7 +279,7 @@ class Objective:
                 total_timesteps=self.tune_timesteps,
                 callback=[
                     EpisodeMetricsCallback(run=run),
-                    OptunaPruningCallback(trial=trial, eval_freq=10_000)
+                    OptunaPruningCallback(trial=trial, eval_freq=self.eval_freq)
                 ],
                 reset_num_timesteps=True,
             )
@@ -330,14 +349,20 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--algo",           type=str, required=True, choices=["DQN", "PPO", "SAC"])
     parser.add_argument("--env",            type=str, required=True, choices=["discrete", "continuous"])
-    parser.add_argument("--trials",         type=int, default=20)
+    parser.add_argument("--trials",         type=int, default=150)
     parser.add_argument("--seed",           type=int, default=42)
-    parser.add_argument("--tune-timesteps", type=int, default=100_000,
+    parser.add_argument("--tune-timesteps", type=int, default=250_000,
                         help="Timesteps par trial Optuna")
-    parser.add_argument("--eval-episodes",  type=int, default=5,
+    parser.add_argument("--eval-episodes",  type=int, default=20,
                         help="Épisodes d'évaluation finale du trial")
     parser.add_argument("--wandb-project",  type=str, default="rl-lunarlander-tune",
                         help="Nom du projet WandB")
+    parser.add_argument("--eval-freq",      type=int, default=10_000,
+                        help="Fréquence d'évaluation intermédiaire pour le pruning Optuna")
+    parser.add_argument("--n-warmup-steps", type=int, default=30_000,
+                        help="Nombre de steps avant que le pruner d'Optuna puisse commencer à élaguer les trials")
+    parser.add_argument("--n-startup-trials", type=int, default=15,
+                        help="Nombre de trials initiaux à compléter avant que le pruner d'Optuna puisse commencer à élaguer les trials")
     args = parser.parse_args()
 
     if args.env not in VALID_COMBINATIONS[args.algo]:
@@ -369,7 +394,7 @@ def main() -> None:
         load_if_exists=True,
         direction="maximize",
         sampler=TPESampler(seed=args.seed),
-        pruner=MedianPruner(n_startup_trials=5, n_warmup_steps=20_000),
+        pruner=MedianPruner(n_startup_trials=args.n_startup_trials, n_warmup_steps=args.n_warmup_steps),
     )
 
     trials_done = sum(
@@ -389,6 +414,7 @@ def main() -> None:
             tune_timesteps=args.tune_timesteps,
             eval_episodes=args.eval_episodes,
             wandb_project=args.wandb_project,
+            eval_freq=args.eval_freq,
         )
 
         study.optimize(
