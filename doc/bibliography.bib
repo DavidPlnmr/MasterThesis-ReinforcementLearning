@@ -8,6 +8,19 @@
   file = {/Users/davidpaulino/Zotero/storage/J7JFPFCZ/alphago.html}
 }
 
+@software{antoninraffinDLRRMStablebaselines3V2802026,
+  title = {{{DLR-RM}}/Stable-Baselines3: V2.8.0: {{Dropped Python}} 3.9, Added {{Python}} 3.13 Support, {{MaskablePPO}} Bug Fix, Default Hyperparams for Unlisted Env in the {{RL Zoo}}, {{Markdown}} Doc},
+  shorttitle = {{{DLR-RM}}/Stable-Baselines3},
+  author = {Antonin RAFFIN and Quentin Gallouédec and Noah Dormann and Adam Gleave and Anssi and Alex Pasquali and Juan Rocamonde and M. Ernestus and Patrick Helm and Corentin and Thomas Simonini and Tobias Rohrer and Sidney Tio and Rohan Tangri and Mark Towers and Tom Dörr and {unexploredtest} and Wilson Jallet and Steven H. Wang and Sam Toyer and Roland Gavrilescu and Paul Maria Scheikl and Parth Kothari and Oleksii Kachaiev and Megan Klaiber and Bernhard Raml and Chris Schindlbeck and Costa Huang and Dominic Kerr},
+  date = {2026-04-01},
+  doi = {10.5281/ZENODO.8123988},
+  url = {https://zenodo.org/doi/10.5281/zenodo.8123988},
+  urldate = {2026-04-21},
+  abstract = {Breaking Changes: Removed support for Python 3.9, please upgrade to Python {$>$}= 3.10 Set strict=True for every call to zip(...) Switched to pygame-ce when installing extras New Features: Added official support for Python 3.13 Bug Fixes: Fixed saving and loading of Torch compiled models (using th.compile()) by updating get\_parameters() Added a warning to env-checker if a multidiscrete space has multi-dimensional array (@unexploredtest) Fixed pandas.concat futurewarnings occuring when dataframes are empty by removing empty frames from the list before concatenating SB3-Contrib Set strict=True for every call to zip(...) Fixed MaskablePPO and RecurrentPPO inaccurate n\_updates counting when target\_kl early exits the training loop Fixed RecurrentPPO and MaskablePPO forward and predict not reshaping the action before clipping it (@immortal-boy) Do not call forward() method directly in RecurrentPPO (@immortal-boy) Fixed MaskableCategorical.apply\_masking() crashing with ValueError: Simplex when cached probs deviate from sum=1 in float32 with large action spaces (torch 2.9+) (@kirann-05) Switched to Markdown documentation (using MyST parser) RL Zoo Set strict=True for every call to zip(...) Allow to specify env\_kwargs in the hyperparam config Switched to Markdown documentation (using MyST parser) Allow to use default hyperparameters for any environment Save training command in Weights \& Biases (Wandb) Save training command and default hyperparameters as study attributes SBX (SB3 + Jax) Increased Jax version range and use tf-nightly Deprecations: zip\_strict() is not needed anymore since Python 3.10, please use zip(..., strict=True) instead Others: Updated to Python 3.10+ annotations Removed some unused variables (@unexploredtest) Improved type hints for distributions Simplified zip file loading by removing Python 3.6 workaround and enabling weights\_only=True (PyTorch 2.x) Sped up saving/loading tests Updated black from v25 to v26 Updated monitor test to check handling of empty monitor files Documentation: Added a note on MultiDiscrete spaces with multi-dimensional arrays and a wrapper to fix the issue (@unexploredtest) Added an example of manual export of SBX (SB3 + Jax) model to ONNX (@m-abr) Switched to Markdown documentation (using MyST parser) New Contributors @unexploredtest made their first contribution in https://github.com/DLR-RM/stable-baselines3/pull/2200 @m-abr made their first contribution in https://github.com/DLR-RM/stable-baselines3/pull/2214 @sdace9719 made their first contribution in https://github.com/DLR-RM/stable-baselines3/pull/2218 Full Changelog: https://github.com/DLR-RM/stable-baselines3/compare/v2.7.1...v2.8.0},
+  organization = {Zenodo},
+  version = {v2.8.0}
+}
+
 @online{christodoulouSoftActorCriticDiscrete2019,
   title = {Soft {{Actor-Critic}} for {{Discrete Action Settings}}},
   author = {Christodoulou, Petros},
@@ -22,6 +35,16 @@
   pubstate = {prepublished},
   keywords = {Computer Science - Artificial Intelligence,Computer Science - Machine Learning,Statistics - Machine Learning},
   file = {/Users/davidpaulino/Zotero/storage/3HSM5CZT/Christodoulou - 2019 - Soft Actor-Critic for Discrete Action Settings.pdf;/Users/davidpaulino/Zotero/storage/PKQC9ZZC/1910.html}
+}
+
+@online{GymnasiumDocumentation,
+  title = {Gymnasium {{Documentation}}},
+  date = {2025},
+  url = {https://gymnasium.farama.org/index.html},
+  urldate = {2026-04-21},
+  abstract = {A standard API for reinforcement learning and a diverse set of reference environments (formerly Gym)},
+  langid = {english},
+  file = {/Users/davidpaulino/Zotero/storage/TVV749DV/index.html}
 }
 
 @online{haarnojaSoftActorCriticOffPolicy2018,
@@ -115,6 +138,24 @@
   file = {/Users/davidpaulino/Zotero/storage/GGZVYAAS/openai-five.html}
 }
 
+@online{OptunaHyperparameterOptimization,
+  title = {Optuna - {{A}} Hyperparameter Optimization Framework},
+  url = {https://optuna.org/},
+  urldate = {2026-04-21},
+  abstract = {Optuna is an automatic hyperparameter optimization software framework, particularly designed for machine learning. It features an imperative, define-by-run style user API.},
+  langid = {english},
+  organization = {Optuna}
+}
+
+@online{RLGymRLGym,
+  title = {{{RLGym}} | {{RLGym}}},
+  url = {https://rlgym.org/},
+  urldate = {2026-04-21},
+  abstract = {The Rocket League Gym},
+  langid = {english},
+  file = {/Users/davidpaulino/Zotero/storage/ZF7A9SGC/rlgym.org.html}
+}
+
 @online{schulmanHighDimensionalContinuousControl2018,
   title = {High-{{Dimensional Continuous Control Using Generalized Advantage Estimation}}},
   author = {Schulman, John and Moritz, Philipp and Levine, Sergey and Jordan, Michael and Abbeel, Pieter},
@@ -176,6 +217,28 @@
   file = {/Users/davidpaulino/Zotero/storage/QPW7W95S/Tang et al. - 2024 - Deep Reinforcement Learning for Robotics A Survey of Real-World Successes.pdf;/Users/davidpaulino/Zotero/storage/PLAVE9ZF/2408.html}
 }
 
+@software{veilleuxVirxECRlviser2026,
+  title = {{{VirxEC}}/Rlviser},
+  author = {Veilleux, Eric},
+  date = {2026-03-01T00:48:57Z},
+  origdate = {2023-03-27T18:43:13Z},
+  url = {https://github.com/VirxEC/rlviser},
+  urldate = {2026-04-22},
+  abstract = {A visualizer for the RocketSim project},
+  keywords = {bevy,rocket-league,rocketsim,rust}
+}
+
+@online{WeightsBiasesAI,
+  title = {Weights \& {{Biases}}: {{The AI Developer Platform}}},
+  shorttitle = {Weights \& {{Biases}}},
+  url = {https://wandb.ai/site/},
+  urldate = {2026-04-21},
+  abstract = {Learn why thousands of companies rely on W\&B as their system of record for training AI models and developing AI applications with confidence.},
+  langid = {american},
+  organization = {Weights \& Biases},
+  file = {/Users/davidpaulino/Zotero/storage/TQB9JL4H/site.html}
+}
+
 @article{williamsSimpleStatisticalGradientfollowing1992,
   title = {Simple Statistical Gradient-Following Algorithms for Connectionist Reinforcement Learning},
   author = {Williams, Ronald J.},
@@ -205,4 +268,15 @@
   langid = {french},
   organization = {Futura},
   file = {/Users/davidpaulino/Zotero/storage/QU2Z2QBN/intelligence-artificielle-alphago-16467.html}
+}
+
+@software{zealanlZealanLRocketSim2026,
+  title = {{{ZealanL}}/{{RocketSim}}},
+  author = {ZealanL},
+  date = {2026-04-19T23:38:59Z},
+  origdate = {2022-08-06T17:50:49Z},
+  url = {https://github.com/ZealanL/RocketSim},
+  urldate = {2026-04-22},
+  abstract = {A C++ library for simulating Rocket League games at maximum efficiency},
+  keywords = {cpp,physics-simulation,rocket-league,rust,simulation}
 }

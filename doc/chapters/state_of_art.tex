@@ -394,7 +394,7 @@ L'avantage majeur de ce duo est qu'il paramètre intrinsèquement très bien la 
 \subsubsection{Proximal Policy Optimization (PPO)}
 
 L'algorithme \textbf{PPO} \parencite{schulmanProximalPolicyOptimization2017} est devenu un standard industriel pour son équilibre entre simplicité et grande robustesse. 
-En pratique, PPO est quasi-systématiquement combiné avec l'estimateur \textbf{GAE} (\textit{Generalized Advantage Estimation}) \parencite{schulmanHighDimensionalContinuousControl2018}, qui généralise le retour à $n$ pas pour l'estimation de l'avantage. Plutôt que de choisir un horizon fixe $n$, GAE calcule une moyenne géométrique pondérée de tous les retours possibles, contrôlée par un paramètre $\lambda_{GAE} \in [0,1]$ :
+En pratique, PPO est quasi-systématiquement combiné avec l'estimateur \textbf{GAE} (\textit{Generalized Advantage Estimation}) \parencite{schulmanHighDimensionalContinuousControl2018}, qui généralise le retour à $n$ pas pour l'estimation de l'avantage. Plutôt que de choisir un horizon fixe $n$, GAE calcule une moyenne pondérée de tous les retours possibles, contrôlée par un paramètre $\lambda_{GAE} \in [0,1]$ :
 
 \begin{equation}
     \hat{A}_t^{GAE(\gamma, \lambda_{GAE})} = \sum_{l=0}^{\infty} (\gamma \lambda_{GAE})^l \delta_{t+l}

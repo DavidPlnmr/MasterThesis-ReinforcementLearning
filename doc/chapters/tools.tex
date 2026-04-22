@@ -1,6 +1,24 @@
-% TODO : Citer 
-% * PyTorch (pas sûr sûr)
-% * OpenAI Gymnasium
-% * Stable Baselines3
-% * RLgym
-% * RocketSim
+Dans ce mémoire, plusieurs outils et bibliothèques ont été mobilisés pour conduire les expériences d'apprentissage par renforcement.
+
+\subsection{Gymnasium}
+Gymnasium (anciennement OpenAI Gym) est une bibliothèque de référence pour la création et l'utilisation d'environnements d'apprentissage par renforcement. Elle expose une interface standardisée permettant d'interagir de manière uniforme avec des environnements très variés, ce qui facilite le développement et la comparaison d'algorithmes de RL. Gymnasium propose un large catalogue d'environnements, allant des jeux classiques aux tâches de contrôle continu, ce qui en fait un socle incontournable pour tester et évaluer les performances des agents. \parencite{GymnasiumDocumentation}
+
+\subsection{Stable Baselines3}
+Stable Baselines3 est une bibliothèque de référence pour l'implémentation d'algorithmes d'apprentissage par renforcement reposant sur PyTorch. Elle fournit des implémentations robustes et éprouvées d'algorithmes populaires tels que DQN, PPO ou SAC. Conçue pour allier simplicité d'utilisation et hautes performances, elle constitue un choix naturel aussi bien pour la recherche que pour des applications pratiques en RL. \parencite{antoninraffinDLRRMStablebaselines3V2802026}
+
+\subsection{Optuna}
+Optuna est une bibliothèque d'optimisation d'hyperparamètres permettant d'identifier efficacement les configurations les plus performantes pour un modèle donné. Contrairement aux approches exhaustives de type \textit{grid search}, qui parcourent l'espace des hyperparamètres de manière séquentielle et aveugle, Optuna s'appuie sur une recherche bayésienne pour orienter intelligemment l'exploration vers les régions les plus prometteuses.
+
+Par ailleurs, Optuna intègre un mécanisme d'élagage (\textit{pruning}) qui permet d'interrompre prématurément les essais peu prometteurs, sur la base d'une évaluation continue des performances en cours d'entraînement. Cette double approche — échantillonnage guidé et élagage précoce — s'avère particulièrement précieuse en apprentissage par renforcement, où l'entraînement des agents est à la fois coûteux en ressources de calcul et très sensible aux choix d'hyperparamètres. \parencite{OptunaHyperparameterOptimization}
+
+\subsection{Weights \& Biases}
+Weights \& Biases (WandB) est une plateforme de suivi et de visualisation des expériences d'apprentissage automatique. Elle permet d'enregistrer les métriques d'entraînement, de visualiser les courbes d'apprentissage et de comparer les performances de différents modèles et configurations. WandB facilite par ailleurs la collaboration en centralisant l'ensemble des résultats expérimentaux et en offrant des outils de partage adaptés au travail en équipe. \parencite{WeightsBiasesAI}
+
+\subsection{RLgym}
+RLgym est une bibliothèque de simulation d'environnements pour l'apprentissage par renforcement, initialement conçue pour le jeu Rocket League\footnote{\url{https://www.rocketleague.com}}, mais désormais indépendante de celui-ci. Elle s'appuie sur les abstractions de Gymnasium et propose des outils spécifiques à la simulation de physique de jeu pour l'entraînement d'agents. \parencite{RLGymRLGym}
+
+\subsubsection{RocketSim}
+RocketSim est une bibliothèque de simulation physique de Rocket League, optimisée pour les scénarios d'entraînement intensif. Son principal atout réside dans la prise en charge du \textit{headless training} — un entraînement sans interface graphique — qui supprime toute charge de rendu visuel et accélère considérablement les cycles d'expérimentation. \parencite{zealanlZealanLRocketSim2026}
+
+\subsubsection{RLViser}
+RLViser est une bibliothèque de visualisation complémentaire à RocketSim. Elle permet de rejouer et d'inspecter visuellement les parties simulées, ce qui s'avère précieux pour analyser les comportements des agents et appréhender les dynamiques de l'environnement. \parencite{veilleuxVirxECRlviser2026}
