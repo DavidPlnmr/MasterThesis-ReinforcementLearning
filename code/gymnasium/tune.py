@@ -400,8 +400,15 @@ def main() -> None:
     trials_done = sum(
         1 for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE
     )
+
+    trials_complete = sum(1 for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE)
+    trials_pruned   = sum(1 for t in study.trials if t.state == optuna.trial.TrialState.PRUNED)
+    trials_failed   = sum(1 for t in study.trials if t.state == optuna.trial.TrialState.FAIL)
+    trials_done = trials_complete + trials_pruned
+
+
     print(f"  Base de données : {db_path}")
-    print(f"  Essais déjà complétés : {trials_done}")
+    print(f"  Complétés : {trials_complete} | Prunés : {trials_pruned} | Échoués : {trials_failed}")
     print()
 
     if trials_done >= args.trials:
