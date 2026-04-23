@@ -241,8 +241,7 @@ class Objective:
             kwargs = sample_sac_params(trial)
 
         # ── 2. WandB run ───────────────────────────────────────────────────
-        if wandb.run is not None:
-            wandb.finish()
+        
 
         run = wandb.init(
             project=self.wandb_project,
@@ -257,6 +256,7 @@ class Objective:
             },
             reinit=True,
             dir=os.environ.get("WANDB_DIR", "."),
+            settings=wandb.Settings(start_method="thread"),  # pour éviter les problèmes de fork avec Optuna + SB3
         )
 
         # ── 3. Environnement ───────────────────────────────────────────────
@@ -268,7 +268,7 @@ class Objective:
             model = self.algo_class(
                 env=env,
                 seed=self.seed,
-                device="auto",
+                device="cpu",
                 verbose=0,
                 **{k: v for k, v in kwargs.items() if k != "policy"},
                 policy=kwargs["policy"],
@@ -363,6 +363,8 @@ def main() -> None:
                         help="Nombre de steps avant que le pruner d'Optuna puisse commencer à élaguer les trials")
     parser.add_argument("--n-startup-trials", type=int, default=15,
                         help="Nombre de trials initiaux à compléter avant que le pruner d'Optuna puisse commencer à élaguer les trials")
+    parser.add_argument("--n-jobs", type=int, default=1,
+                    help="Nombre de trials Optuna en parallèle (SQLite gère le lock)")
     args = parser.parse_args()
 
     if args.env not in VALID_COMBINATIONS[args.algo]:
@@ -373,16 +375,7 @@ def main() -> None:
 
     set_global_seed(args.seed)
 
-    # ── Device info ────────────────────────────────────────────────────────
-    print(f"\n{'='*60}")
-    print(f"  Tuning Optuna : {args.algo} | {args.env} | {args.trials} trials")
-    print(f"{'='*60}")
-    if torch.cuda.is_available():
-        print(f"  GPU détecté : {torch.cuda.get_device_name(0)}")
-        print(f"  CUDA {torch.version.cuda} — sm_61 : {'sm_61' in torch.cuda.get_arch_list()}")
-    else:
-        print("  CPU uniquement.")
-    print()
+    
 
     # ── Optuna study (SQLite pour reprise sur cluster) ─────────────────────
     db_path     = f"{args.algo}_{args.env}_optuna.db"
@@ -428,6 +421,7 @@ def main() -> None:
             objective,
             n_trials=args.trials - trials_done,  # ← only missing trials
             show_progress_bar=True,
+            n_jobs=args.n_jobs,
             catch=(Exception,),
         )
 
