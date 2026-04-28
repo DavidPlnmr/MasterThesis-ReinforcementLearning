@@ -381,7 +381,7 @@ def main() -> None:
 
     # ── Optuna study (SQLite pour reprise sur cluster) ─────────────────────
     db_path = args.db_path or f"{args.algo}_{args.env}_optuna.db"
-    storage_url = f"sqlite:///{db_path}"
+    storage_url = f"sqlite:///{db_path}?timeout=60"
 
     study = optuna.create_study(
         study_name=f"{args.algo}_{args.env}",
