@@ -242,7 +242,6 @@ class Objective:
 
         # ── 2. WandB run ───────────────────────────────────────────────────
         
-
         run = wandb.init(
             project=self.wandb_project,
             group=f"{self.algo_name}_{self.env_type}",
@@ -365,6 +364,9 @@ def main() -> None:
                         help="Nombre de trials initiaux à compléter avant que le pruner d'Optuna puisse commencer à élaguer les trials")
     parser.add_argument("--n-jobs", type=int, default=1,
                     help="Nombre de trials Optuna en parallèle (SQLite gère le lock)")
+    parser.add_argument("--db-path", type=str, default=None,
+                    help="Chemin vers la base SQLite (défaut: {algo}_{env}_optuna.db)")
+
     args = parser.parse_args()
 
     if args.env not in VALID_COMBINATIONS[args.algo]:
@@ -378,7 +380,7 @@ def main() -> None:
     
 
     # ── Optuna study (SQLite pour reprise sur cluster) ─────────────────────
-    db_path     = f"{args.algo}_{args.env}_optuna.db"
+    db_path = args.db_path or f"{args.algo}_{args.env}_optuna.db"
     storage_url = f"sqlite:///{db_path}"
 
     study = optuna.create_study(
