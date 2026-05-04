@@ -47,6 +47,13 @@ VALID_COMBINATIONS = {
     "SAC": ["continuous"],
 }
 
+# ── Reconstruction de policy_kwargs depuis net_arch ────────────────
+NET_ARCH_MAP = {
+    "small":  [64, 64],
+    "medium": [256, 256],
+    "large":  [400, 300],
+}
+
 EVAL_SEEDS = [42, 123, 456, 789, 1337]
 
 # ---------------------------------------------------------------------------
@@ -102,6 +109,12 @@ def load_best_params(algo: str, env_type: str) -> dict:
                 except (ValueError, SyntaxError):
                     val = val_str   # garde la string telle quelle (ex: "auto", "MlpPolicy")
                 params[key] = val
+
+    
+
+    if "net_arch" in params:
+        net_arch_key = params.pop("net_arch")  # retire "net_arch" du dict
+        params["policy_kwargs"] = {"net_arch": NET_ARCH_MAP[net_arch_key]}
 
     if not params:
         raise ValueError(f"Aucun paramètre trouvé dans {path}")
@@ -302,8 +315,8 @@ def main() -> None:
 
         run = wandb.init(
             project=args.wandb_project,
-            group=key,              # ex: "DQN_discrete"
-            name=f"seed_{seed}",
+            group=f"{args.algo_name}_{args.env_type}",
+            name=f"{args.algo_name}_{args.env_type}_seed_{seed}",
             config={
                 **params,
                 "algo":            args.algo,
