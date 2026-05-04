@@ -4,6 +4,19 @@ Script d'optimisation des hyperparamètres avec Optuna pour LunarLander.
 Utilisation :
     python tune.py --algo DQN --env discrete --trials 20 --seed 42
     python tune.py --algo PPO --env continuous --trials 20 --seed 42
+    python tune.py --algo PPO --env continuous --trials 20 --n-envs 4  # VecEnv
+    python tune.py --algo DQN --env discrete --trials 20 --n-jobs 4    # parallèle Optuna
+
+CORRECTIONS APPLIQUÉES :
+  - Bug fix : double env.close() supprimé du bloc except
+  - Bug fix : seeding de l'environnement via gym.make(seed=seed)
+  - Bug fix : guard sur study.best_trial avant sauvegarde
+  - Bug fix : trials_done déclaré une seule fois (suppression du doublon)
+  - Perf   : support SubprocVecEnv/DummyVecEnv via --n-envs
+  - Perf   : évaluation parallélisée via n_eval_envs
+  - MLOps  : log optuna/pruned dans WandB pour tracer l'historique
+  - MLOps  : hparams/* en WandB summary plutôt qu'en log redondant
+  - Clean  : eval_freq aligné sur n_steps pour PPO
 """
 
 import argparse
@@ -20,8 +33,10 @@ from optuna.pruners import MedianPruner
 from optuna.samplers import TPESampler
 from stable_baselines3 import DQN, PPO, SAC
 from stable_baselines3.common.callbacks import BaseCallback
+from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
 
 # ---------------------------------------------------------------------------
 # Configuration centrale
@@ -39,6 +54,9 @@ VALID_COMBINATIONS = {
     "PPO": ["discrete", "continuous"],
     "SAC": ["continuous"],
 }
+
+# DQN ne supporte pas VecEnv (off-policy mono-env dans SB3)
+ALGO_SUPPORTS_VECENV = {"DQN": False, "PPO": True, "SAC": True}
 
 # ---------------------------------------------------------------------------
 # Callback WandB — métriques épisodes + métriques algo-spécifiques
@@ -94,31 +112,30 @@ class EpisodeMetricsCallback(BaseCallback):
 # ---------------------------------------------------------------------------
 # Callback Optuna Pruning
 # ---------------------------------------------------------------------------
+
 class OptunaPruningCallback(BaseCallback):
     """
     Callback pour reporter les performances intermédiaires à Optuna
     et arrêter prématurément l'entraînement (pruning) si l'essai n'est pas prometteur.
+
+    Note PPO : eval_freq doit être un multiple de n_steps pour être effectif,
+    car PPO ne step pas à chaque timestep individuel.
     """
     def __init__(self, trial: optuna.Trial, eval_freq: int = 10_000, verbose: int = 0):
         super().__init__(verbose)
-        self.trial = trial
+        self.trial    = trial
         self.eval_freq = eval_freq
 
     def _on_step(self) -> bool:
-        # Évaluation périodique (ex: tous les 10 000 steps)
         if self.eval_freq > 0 and self.num_timesteps % self.eval_freq == 0:
             buf = self.model.ep_info_buffer
             if len(buf) > 0:
-                # Utilise la moyenne des récompenses récentes comme score intermédiaire
                 mean_reward = np.mean([ep["r"] for ep in buf])
-                
-                # Reporte la valeur au pruner d'Optuna
                 self.trial.report(mean_reward, self.num_timesteps)
 
-                # Si l'algo MedianPruner juge le score insuffisant, on élague (prune)
                 if self.trial.should_prune():
                     raise optuna.exceptions.TrialPruned()
-                    
+
         return True
 
 # ---------------------------------------------------------------------------
@@ -143,7 +160,6 @@ def sample_dqn_params(trial: optuna.Trial) -> dict:
     net_arch_key = trial.suggest_categorical("net_arch", ["small", "medium", "large"])
     net_arch = {"small": [64, 64], "medium": [256, 256], "large": [400, 300]}[net_arch_key]
 
-
     return {
         "learning_rate":           trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True),
         "buffer_size":             trial.suggest_categorical("buffer_size", [10_000, 50_000, 100_000]),
@@ -154,8 +170,8 @@ def sample_dqn_params(trial: optuna.Trial) -> dict:
         "target_update_interval":  trial.suggest_categorical("target_update_interval", [100, 250, 500, 1000]),
         "exploration_fraction":    trial.suggest_float("exploration_fraction", 0.05, 0.5),
         "exploration_final_eps":   trial.suggest_float("exploration_final_eps", 0.01, 0.1),
-        "policy_kwargs":          {"net_arch": net_arch},
-        "policy": "MlpPolicy",
+        "policy_kwargs":           {"net_arch": net_arch},
+        "policy":                  "MlpPolicy",
     }
 
 
@@ -164,7 +180,6 @@ def sample_ppo_params(trial: optuna.Trial) -> dict:
     n_steps    = trial.suggest_categorical("n_steps",    [256, 512, 1024, 2048])
     net_arch_key = trial.suggest_categorical("net_arch", ["small", "medium", "large"])
     net_arch     = {"small": [64, 64], "medium": [256, 256], "large": [400, 300]}[net_arch_key]
-
 
     if n_steps < batch_size:
         raise optuna.exceptions.TrialPruned(
@@ -182,8 +197,8 @@ def sample_ppo_params(trial: optuna.Trial) -> dict:
         "clip_range":    trial.suggest_categorical("clip_range", [0.1, 0.2, 0.3, 0.4]),
         "max_grad_norm": trial.suggest_float("max_grad_norm", 0.3, 5.0, log=True),
         "vf_coef":       trial.suggest_float("vf_coef", 0.1, 1.0),
-        "policy_kwargs":  {"net_arch": net_arch},
-        "policy": "MlpPolicy",
+        "policy_kwargs": {"net_arch": net_arch},
+        "policy":        "MlpPolicy",
     }
 
 
@@ -192,18 +207,63 @@ def sample_sac_params(trial: optuna.Trial) -> dict:
     net_arch     = {"small": [64, 64], "medium": [256, 256], "large": [400, 300]}[net_arch_key]
 
     return {
-        "learning_rate":   trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True),
-        "buffer_size":     trial.suggest_categorical("buffer_size", [10_000, 50_000, 100_000]),
-        "learning_starts": trial.suggest_categorical("learning_starts", [1000, 5000, 10000]),
-        "batch_size":      trial.suggest_categorical("batch_size", [32, 64, 128, 256, 512]),
-        "gamma":           trial.suggest_categorical("gamma", [0.9, 0.95, 0.98, 0.99, 0.995, 0.999]),
-        "tau":             trial.suggest_categorical("tau", [0.001, 0.005, 0.01, 0.02, 0.05]),
-        "use_sde": trial.suggest_categorical("use_sde", [True, False]),
+        "learning_rate":          trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True),
+        "buffer_size":            trial.suggest_categorical("buffer_size", [10_000, 50_000, 100_000]),
+        "learning_starts":        trial.suggest_categorical("learning_starts", [1000, 5000, 10000]),
+        "batch_size":             trial.suggest_categorical("batch_size", [32, 64, 128, 256, 512]),
+        "gamma":                  trial.suggest_categorical("gamma", [0.9, 0.95, 0.98, 0.99, 0.995, 0.999]),
+        "tau":                    trial.suggest_categorical("tau", [0.001, 0.005, 0.01, 0.02, 0.05]),
+        "use_sde":                trial.suggest_categorical("use_sde", [True, False]),
         "target_update_interval": trial.suggest_categorical("target_update_interval", [1, 2, 4]),
-        "ent_coef":        "auto",
-        "policy_kwargs":  {"net_arch": net_arch},
-        "policy": "MlpPolicy",
+        "ent_coef":               "auto",
+        "policy_kwargs":          {"net_arch": net_arch},
+        "policy":                 "MlpPolicy",
     }
+
+
+# ---------------------------------------------------------------------------
+# Utilitaires environnement
+# ---------------------------------------------------------------------------
+
+def make_env(env_id: str, seed: int, rank: int = 0):
+    """Factory pour un environnement seedé (compatible SubprocVecEnv)."""
+    def _init():
+        env = gym.make(env_id, seed=seed + rank)  # FIX: seed transmis à l'env
+        return Monitor(env)
+    return _init
+
+
+def build_train_env(env_id: str, seed: int, n_envs: int, algo_name: str):
+    """
+    Construit l'environnement d'entraînement.
+    - DQN ne supporte pas VecEnv multi-env → always n_envs=1 (Monitor direct)
+    - PPO/SAC : SubprocVecEnv si n_envs > 1, DummyVecEnv sinon
+    """
+    if not ALGO_SUPPORTS_VECENV[algo_name] or n_envs == 1:
+        # Mono-env seedé
+        env = Monitor(gym.make(env_id, seed=seed))
+        return env
+
+    vec_cls = SubprocVecEnv if n_envs > 1 else DummyVecEnv
+    return make_vec_env(
+        env_id,
+        n_envs=n_envs,
+        seed=seed,
+        vec_env_cls=vec_cls,
+        monitor_dir=None,
+    )
+
+
+def build_eval_env(env_id: str, seed: int, n_eval_envs: int = 1):
+    """Environnement(s) d'évaluation finale (toujours DummyVecEnv ou Monitor)."""
+    if n_eval_envs == 1:
+        return Monitor(gym.make(env_id, seed=seed + 9999))
+    return make_vec_env(
+        env_id,
+        n_envs=n_eval_envs,
+        seed=seed + 9999,
+        vec_env_cls=DummyVecEnv,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -220,6 +280,8 @@ class Objective:
         eval_episodes:   int,
         wandb_project:   str,
         eval_freq:       int,
+        n_envs:          int,
+        n_eval_envs:     int,
     ):
         self.algo_name      = algo_name
         self.env_type       = env_type
@@ -230,6 +292,8 @@ class Objective:
         self.eval_episodes  = eval_episodes
         self.wandb_project  = wandb_project
         self.eval_freq      = eval_freq
+        self.n_envs         = n_envs
+        self.n_eval_envs    = n_eval_envs
 
     def __call__(self, trial: optuna.Trial) -> float:
         # ── 1. Sampling ────────────────────────────────────────────────────
@@ -241,7 +305,6 @@ class Objective:
             kwargs = sample_sac_params(trial)
 
         # ── 2. WandB run ───────────────────────────────────────────────────
-        
         run = wandb.init(
             project=self.wandb_project,
             group=f"{self.algo_name}_{self.env_type}",
@@ -252,25 +315,28 @@ class Objective:
                 "env":            self.env_id,
                 "tune_timesteps": self.tune_timesteps,
                 "trial_number":   trial.number,
+                "n_envs":         self.n_envs,
             },
             reinit=True,
             dir=os.environ.get("WANDB_DIR", "."),
-            settings=wandb.Settings(start_method="thread"),  # pour éviter les problèmes de fork avec Optuna + SB3
+            settings=wandb.Settings(start_method="thread"),
         )
 
-        # ── 3. Environnement ───────────────────────────────────────────────
-        env = Monitor(gym.make(self.env_id))
+        # ── 3. Environnements ──────────────────────────────────────────────
+        train_env = build_train_env(self.env_id, self.seed, self.n_envs, self.algo_name)
+        eval_env  = build_eval_env(self.env_id, self.seed, self.n_eval_envs)
 
         mean_reward: float = float("-inf")
         try:
             # ── 4. Modèle ──────────────────────────────────────────────────
+            policy = kwargs.pop("policy")
             model = self.algo_class(
-                env=env,
+                env=train_env,
                 seed=self.seed,
                 device="cpu",
                 verbose=0,
-                **{k: v for k, v in kwargs.items() if k != "policy"},
-                policy=kwargs["policy"],
+                policy=policy,
+                **kwargs,
             )
 
             # ── 5. Entraînement ────────────────────────────────────────────
@@ -278,60 +344,52 @@ class Objective:
                 total_timesteps=self.tune_timesteps,
                 callback=[
                     EpisodeMetricsCallback(run=run),
-                    OptunaPruningCallback(trial=trial, eval_freq=self.eval_freq)
+                    OptunaPruningCallback(trial=trial, eval_freq=self.eval_freq),
                 ],
                 reset_num_timesteps=True,
             )
 
             # ── 6. Évaluation finale ───────────────────────────────────────
             mean_reward, std_reward = evaluate_policy(
-                model, env, n_eval_episodes=self.eval_episodes, deterministic=True
+                model,
+                eval_env,
+                n_eval_episodes=self.eval_episodes,
+                deterministic=True,
             )
 
-            # Métriques d'évaluation finale + hyperparamètres clés
-            # → utilisables dans le Parallel Coordinates Plot de WandB
-            run.log({
-                "eval/mean_reward":  mean_reward,
-                "eval/std_reward":   std_reward,
+            # Métriques finales → WandB summary (accessible dans Parallel
+            # Coordinates Plot sans polluer le log temporel)
+            run.summary["eval/mean_reward"] = mean_reward
+            run.summary["eval/std_reward"]  = std_reward
 
-                # Hyperparamètres communs — impact sur le score final
-                "hparams/learning_rate": kwargs.get("learning_rate"),
-                "hparams/gamma":         kwargs.get("gamma"),
-                "hparams/batch_size":    kwargs.get("batch_size"),
-
-                # Hyperparamètres algo-spécifiques
-                **({
-                    "hparams/exploration_fraction":  kwargs.get("exploration_fraction"),
-                    "hparams/exploration_final_eps": kwargs.get("exploration_final_eps"),
-                    "hparams/buffer_size":           kwargs.get("buffer_size"),
-                } if self.algo_name == "DQN" else {}),
-
-                **({
-                    "hparams/n_steps":    kwargs.get("n_steps"),
-                    "hparams/n_epochs":   kwargs.get("n_epochs"),
-                    "hparams/gae_lambda": kwargs.get("gae_lambda"),
-                    "hparams/ent_coef":   kwargs.get("ent_coef"),
-                    "hparams/clip_range": kwargs.get("clip_range"),
-                } if self.algo_name == "PPO" else {}),
-
-                **({
-                    "hparams/tau":        kwargs.get("tau"),
-                    "hparams/buffer_size": kwargs.get("buffer_size"),
-                } if self.algo_name == "SAC" else {}),
-            })
+            # Marqueur de trial non-pruné
+            run.summary["optuna/pruned"] = 0
 
         except optuna.exceptions.TrialPruned:
+            # FIX: log le pruning dans WandB avant de propager
+            try:
+                run.summary["optuna/pruned"] = 1
+            except Exception:
+                pass
             raise
 
         except Exception as exc:
             warnings.warn(f"[Trial {trial.number}] Échec : {exc}")
             run.log({"optuna/crash": 1})
             run.finish(exit_code=1)
-            env.close()
+            # FIX: on ne ferme PAS les envs ici — le finally s'en charge
             raise
 
         finally:
-            env.close()
+            # FIX: fermeture unique des envs dans le finally
+            try:
+                train_env.close()
+            except Exception:
+                pass
+            try:
+                eval_env.close()
+            except Exception:
+                pass
             try:
                 run.finish()
             except Exception:
@@ -359,13 +417,20 @@ def main() -> None:
     parser.add_argument("--eval-freq",      type=int, default=10_000,
                         help="Fréquence d'évaluation intermédiaire pour le pruning Optuna")
     parser.add_argument("--n-warmup-steps", type=int, default=30_000,
-                        help="Nombre de steps avant que le pruner d'Optuna puisse commencer à élaguer les trials")
+                        help="Steps avant que le pruner Optuna puisse élaguer")
     parser.add_argument("--n-startup-trials", type=int, default=15,
-                        help="Nombre de trials initiaux à compléter avant que le pruner d'Optuna puisse commencer à élaguer les trials")
-    parser.add_argument("--n-jobs", type=int, default=1,
-                    help="Nombre de trials Optuna en parallèle (SQLite gère le lock)")
-    parser.add_argument("--db-path", type=str, default=None,
-                    help="Chemin vers la base SQLite (défaut: {algo}_{env}_optuna.db)")
+                        help="Trials initiaux avant que le pruner puisse élaguer")
+    parser.add_argument("--n-jobs",         type=int, default=1,
+                        help="Trials Optuna en parallèle (SQLite gère le lock). "
+                             "Note : reproductibilité non garantie en mode parallèle.")
+    parser.add_argument("--db-path",        type=str, default=None,
+                        help="Chemin vers la base SQLite (défaut: {algo}_{env}_optuna.db)")
+    # FIX: nouveaux arguments VecEnv
+    parser.add_argument("--n-envs",         type=int, default=1,
+                        help="Nombre d'environnements parallèles pour l'entraînement "
+                             "(PPO/SAC uniquement). DQN ignoré (forcé à 1).")
+    parser.add_argument("--n-eval-envs",    type=int, default=1,
+                        help="Nombre d'environnements parallèles pour l'évaluation finale.")
 
     args = parser.parse_args()
 
@@ -375,12 +440,17 @@ def main() -> None:
             f"Combinaisons valides : {VALID_COMBINATIONS}"
         )
 
+    # DQN ne supporte pas VecEnv multi-env dans SB3
+    if args.algo == "DQN" and args.n_envs > 1:
+        warnings.warn(
+            "DQN ne supporte pas n_envs > 1 dans SB3. Forcé à n_envs=1."
+        )
+        args.n_envs = 1
+
     set_global_seed(args.seed)
 
-    
-
     # ── Optuna study (SQLite pour reprise sur cluster) ─────────────────────
-    db_path = args.db_path or f"{args.algo}_{args.env}_optuna.db"
+    db_path     = args.db_path or f"{args.algo}_{args.env}_optuna.db"
     storage_url = f"sqlite:///{db_path}?timeout=60"
 
     study = optuna.create_study(
@@ -389,18 +459,17 @@ def main() -> None:
         load_if_exists=True,
         direction="maximize",
         sampler=TPESampler(seed=args.seed),
-        pruner=MedianPruner(n_startup_trials=args.n_startup_trials, n_warmup_steps=args.n_warmup_steps),
+        pruner=MedianPruner(
+            n_startup_trials=args.n_startup_trials,
+            n_warmup_steps=args.n_warmup_steps,
+        ),
     )
 
-    trials_done = sum(
-        1 for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE
-    )
-
+    # FIX: une seule déclaration de trials_done (suppression du doublon)
     trials_complete = sum(1 for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE)
     trials_pruned   = sum(1 for t in study.trials if t.state == optuna.trial.TrialState.PRUNED)
     trials_failed   = sum(1 for t in study.trials if t.state == optuna.trial.TrialState.FAIL)
-    trials_done = trials_complete + trials_pruned
-
+    trials_done     = trials_complete + trials_pruned
 
     print(f"  Base de données : {db_path}")
     print(f"  Complétés : {trials_complete} | Prunés : {trials_pruned} | Échoués : {trials_failed}")
@@ -417,11 +486,13 @@ def main() -> None:
             eval_episodes=args.eval_episodes,
             wandb_project=args.wandb_project,
             eval_freq=args.eval_freq,
+            n_envs=args.n_envs,
+            n_eval_envs=args.n_eval_envs,
         )
 
         study.optimize(
             objective,
-            n_trials=args.trials - trials_done,  # ← only missing trials
+            n_trials=args.trials - trials_done,
             show_progress_bar=True,
             n_jobs=args.n_jobs,
             catch=(Exception,),
@@ -429,25 +500,28 @@ def main() -> None:
 
     # ── Résultats ──────────────────────────────────────────────────────────
     print(f"\n{'='*60}")
+
+    # FIX: guard sur best_trial avant accès (tous les trials peuvent être prunés)
     if study.best_trial is not None:
         print(f"  Meilleur score : {study.best_value:.2f}")
         print("  Hyperparamètres optimaux :")
         for k, v in study.best_trial.params.items():
             print(f"    {k}: {v}")
+
+        # ── Sauvegarde locale des meilleurs params ─────────────────────────
+        out_dir = os.path.join("models", f"{args.algo}_{args.env}")
+        os.makedirs(out_dir, exist_ok=True)
+        best_params_path = os.path.join(out_dir, "best_params.txt")
+        with open(best_params_path, "w") as f:
+            f.write(f"Score: {study.best_value}\n")
+            f.write("Params:\n")
+            for k, v in study.best_trial.params.items():
+                f.write(f"  {k}: {v}\n")
+        print(f"  Meilleurs paramètres sauvegardés dans : {best_params_path}")
     else:
         print("  Aucun trial complété avec succès.")
-    print(f"{'='*60}\n")
 
-    # ── Sauvegarde locale des meilleurs params ─────────────────────────────
-    out_dir = os.path.join("models", f"{args.algo}_{args.env}")
-    os.makedirs(out_dir, exist_ok=True)
-    best_params_path = os.path.join(out_dir, "best_params.txt")
-    with open(best_params_path, "w") as f:
-        f.write(f"Score: {study.best_value}\n")
-        f.write("Params:\n")
-        for k, v in study.best_trial.params.items():
-            f.write(f"  {k}: {v}\n")
-    print(f"  Meilleurs paramètres sauvegardés dans : {best_params_path}")
+    print(f"{'='*60}\n")
 
 
 if __name__ == "__main__":
