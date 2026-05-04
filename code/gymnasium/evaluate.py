@@ -315,8 +315,8 @@ def main() -> None:
 
         run = wandb.init(
             project=args.wandb_project,
-            group=f"{args.algo_name}_{args.env_type}",
-            name=f"{args.algo_name}_{args.env_type}_seed_{seed}",
+            group=f"{args.algo}_{args.env}",
+            name=f"{args.algo}_{args.env}_seed_{seed}",
             config={
                 **params,
                 "algo":            args.algo,
