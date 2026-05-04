@@ -194,7 +194,7 @@ def train_run(
         latest_ckpt = os.path.join(ckpt_dir, existing[-1])
         print(f"    → Checkpoint trouvé : {latest_ckpt}")
         try:
-            model      = algo_class.load(latest_ckpt, env=env, device="auto")
+            model      = algo_class.load(latest_ckpt, env=env, device="cpu")
             steps_done = model.num_timesteps
             print(f"    → Reprise à {steps_done}/{train_timesteps} steps")
         except Exception as e:
@@ -206,7 +206,7 @@ def train_run(
         model = algo_class(
             env=env,
             seed=seed,
-            device="auto",
+            device="cpu",
             verbose=0,
             policy=params.get("policy", "MlpPolicy"),
             **model_kwargs,
@@ -314,6 +314,7 @@ def main() -> None:
             },
             reinit=True,
             dir=os.environ.get("WANDB_DIR", "."),
+            settings=wandb.Settings(start_method="thread"),
         )
 
         mean_reward = train_run(
