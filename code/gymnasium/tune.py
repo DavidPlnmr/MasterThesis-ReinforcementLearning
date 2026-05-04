@@ -226,9 +226,15 @@ def sample_sac_params(trial: optuna.Trial) -> dict:
 # ---------------------------------------------------------------------------
 
 def make_env(env_id: str, seed: int, rank: int = 0):
-    """Factory pour un environnement seedé (compatible SubprocVecEnv)."""
+    """
+    Factory pour un environnement seedé (compatible SubprocVecEnv).
+
+    Note : gym.make() n'accepte pas seed= dans toutes les versions de Gymnasium.
+    On utilise env.reset(seed=...) qui est l'API stable depuis Gymnasium 0.26+.
+    """
     def _init():
-        env = gym.make(env_id, seed=seed + rank)  # FIX: seed transmis à l'env
+        env = gym.make(env_id)
+        env.reset(seed=seed + rank)
         return Monitor(env)
     return _init
 
@@ -238,11 +244,13 @@ def build_train_env(env_id: str, seed: int, n_envs: int, algo_name: str):
     Construit l'environnement d'entraînement.
     - DQN ne supporte pas VecEnv multi-env → always n_envs=1 (Monitor direct)
     - PPO/SAC : SubprocVecEnv si n_envs > 1, DummyVecEnv sinon
+
+    Seeding via env.reset(seed=...) — compatible toutes versions Gymnasium.
     """
     if not ALGO_SUPPORTS_VECENV[algo_name] or n_envs == 1:
-        # Mono-env seedé
-        env = Monitor(gym.make(env_id, seed=seed))
-        return env
+        env = gym.make(env_id)
+        env.reset(seed=seed)
+        return Monitor(env)
 
     vec_cls = SubprocVecEnv if n_envs > 1 else DummyVecEnv
     return make_vec_env(
@@ -255,9 +263,14 @@ def build_train_env(env_id: str, seed: int, n_envs: int, algo_name: str):
 
 
 def build_eval_env(env_id: str, seed: int, n_eval_envs: int = 1):
-    """Environnement(s) d'évaluation finale (toujours DummyVecEnv ou Monitor)."""
+    """
+    Environnement(s) d'évaluation finale (toujours DummyVecEnv ou Monitor).
+    Seeding via env.reset(seed=...) — compatible toutes versions Gymnasium.
+    """
     if n_eval_envs == 1:
-        return Monitor(gym.make(env_id, seed=seed + 9999))
+        env = gym.make(env_id)
+        env.reset(seed=seed + 9999)
+        return Monitor(env)
     return make_vec_env(
         env_id,
         n_envs=n_eval_envs,
