@@ -7,16 +7,17 @@ Utilisation :
     python evaluate.py --algo PPO --env continuous --train-timesteps 500000 --eval-episodes 20
     python evaluate.py --algo SAC --env continuous --train-timesteps 500000 --eval-episodes 20
 
-Fonctionnalités :
-    - Charge les meilleurs hyperparamètres depuis models/<ALGO>_<ENV>/best_params.txt
-    - Entraîne sur EVAL_SEEDS seeds indépendants
-    - Checkpoints toutes les 10k steps → reprise automatique si crash SLURM
-    - Log complet dans WandB (courbes d'entraînement + évaluation finale)
-    - Résumé sauvegardé dans models/<ALGO>_<ENV>/eval_summary.txt
+Reprise automatique :
+    - Si une seed est entièrement terminée (résultat dans eval_results.json),
+      elle est sautée sans relancer ni WandB ni entraînement.
+    - Si une seed est partiellement entraînée (checkpoint .zip présent),
+      l'entraînement reprend depuis le dernier checkpoint.
+    - Si aucune seed n'a encore été traitée, tout repart de zéro.
 """
 
 import argparse
 import ast
+import json
 import os
 import random
 import warnings
@@ -47,7 +48,6 @@ VALID_COMBINATIONS = {
     "SAC": ["continuous"],
 }
 
-# ── Reconstruction de policy_kwargs depuis net_arch ────────────────
 NET_ARCH_MAP = {
     "small":  [64, 64],
     "medium": [256, 256],
@@ -71,6 +71,51 @@ def set_global_seed(seed: int) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Persistance des résultats par seed
+# ---------------------------------------------------------------------------
+
+def results_path(algo: str, env_type: str) -> str:
+    """Chemin du fichier JSON qui trace les résultats par seed."""
+    return os.path.join("models", f"{algo}_{env_type}", "eval_results.json")
+
+
+def load_completed_results(algo: str, env_type: str) -> dict:
+    """
+    Charge le dict des seeds déjà complétées.
+    Format : { "42": {"mean_reward": 250.3, "std_reward": 12.1}, ... }
+    Retourne {} si le fichier n'existe pas encore.
+    """
+    path = results_path(algo, env_type)
+    if not os.path.exists(path):
+        return {}
+    with open(path) as f:
+        return json.load(f)
+
+
+def save_seed_result(
+    algo:        str,
+    env_type:    str,
+    seed:        int,
+    mean_reward: float,
+    std_reward:  float,
+) -> None:
+    """
+    Ajoute ou met à jour le résultat d'une seed dans eval_results.json.
+    Écriture atomique : on recharge, on modifie, on réécrit.
+    """
+    path = results_path(algo, env_type)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    results = load_completed_results(algo, env_type)
+    results[str(seed)] = {
+        "mean_reward": float(mean_reward),
+        "std_reward":  float(std_reward),
+    }
+    with open(path, "w") as f:
+        json.dump(results, f, indent=2)
+
+
+# ---------------------------------------------------------------------------
 # Chargement des meilleurs hyperparamètres
 # ---------------------------------------------------------------------------
 
@@ -82,6 +127,7 @@ def load_best_params(algo: str, env_type: str) -> dict:
         Params:
           learning_rate: 0.0003
           gamma: 0.99
+          net_arch: medium
           ...
     """
     path = os.path.join("models", f"{algo}_{env_type}", "best_params.txt")
@@ -91,9 +137,9 @@ def load_best_params(algo: str, env_type: str) -> dict:
             f"Lance d'abord : python tune.py --algo {algo} --env {env_type}"
         )
 
-    params = {}
-    best_score = None
-    in_params_section = False
+    params      = {}
+    best_score  = None
+    in_params   = False
 
     with open(path) as f:
         for line in f:
@@ -101,26 +147,25 @@ def load_best_params(algo: str, env_type: str) -> dict:
             if line.startswith("Score:"):
                 best_score = float(line.split(":", 1)[1].strip())
             elif line.startswith("Params:"):
-                in_params_section = True
-            elif in_params_section and line.startswith("  "):
+                in_params = True
+            elif in_params and line.startswith("  "):
                 key, _, val_str = line.strip().partition(": ")
                 try:
                     val = ast.literal_eval(val_str)
                 except (ValueError, SyntaxError):
-                    val = val_str   # garde la string telle quelle (ex: "auto", "MlpPolicy")
+                    val = val_str
                 params[key] = val
 
-    
-
     if "net_arch" in params:
-        net_arch_key = params.pop("net_arch")  # retire "net_arch" du dict
+        net_arch_key = params.pop("net_arch")
         params["policy_kwargs"] = {"net_arch": NET_ARCH_MAP[net_arch_key]}
 
     if not params:
         raise ValueError(f"Aucun paramètre trouvé dans {path}")
 
     print(f"  Params chargés depuis {path}")
-    print(f"  Score Optuna : {best_score:.2f}")
+    if best_score is not None:
+        print(f"  Score Optuna : {best_score:.2f}")
     return params
 
 
@@ -129,12 +174,6 @@ def load_best_params(algo: str, env_type: str) -> dict:
 # ---------------------------------------------------------------------------
 
 class EvalMetricsCallback(BaseCallback):
-    """
-    Logue dans WandB à chaque step :
-      - rollout/ep_rew_mean, ep_rew_std, ep_len_mean
-      - dqn/exploration_rate (DQN uniquement)
-      - sac/entropy_coef     (SAC uniquement)
-    """
     def __init__(self, run, verbose: int = 0):
         super().__init__(verbose)
         self.run = run
@@ -149,30 +188,26 @@ class EvalMetricsCallback(BaseCallback):
                 "rollout/ep_len_mean": np.mean([ep["l"] for ep in buf]),
             }, step=self.num_timesteps)
 
-        # DQN — décroissance epsilon
         if hasattr(self.model, "exploration_rate"):
             self.run.log({
                 "dqn/exploration_rate": self.model.exploration_rate,
             }, step=self.num_timesteps)
 
-        # SAC — entropie adaptative
         if hasattr(self.model, "log_ent_coef"):
             try:
                 ent_coef = self.model.ent_coef_tensor.item()
             except AttributeError:
                 ent_coef = float(torch.exp(self.model.log_ent_coef).detach().cpu())
-            self.run.log({
-                "sac/entropy_coef": ent_coef,
-            }, step=self.num_timesteps)
+            self.run.log({"sac/entropy_coef": ent_coef}, step=self.num_timesteps)
 
         return True
 
 
 # ---------------------------------------------------------------------------
-# Entraînement d'un run (algo + seed) avec reprise sur checkpoint
+# Entraînement + évaluation d'une seed
 # ---------------------------------------------------------------------------
 
-def train_run(
+def train_and_evaluate(
     algo_name:       str,
     env_type:        str,
     env_id:          str,
@@ -181,10 +216,10 @@ def train_run(
     train_timesteps: int,
     eval_episodes:   int,
     run:             "wandb.sdk.wandb_run.Run",
-) -> float:
+) -> tuple[float, float]:
     """
-    Entraîne le modèle pour un seed donné et retourne mean_reward final.
-    Reprend automatiquement depuis le dernier checkpoint si disponible.
+    Entraîne le modèle pour un seed donné (avec reprise sur checkpoint)
+    et retourne (mean_reward, std_reward) de l'évaluation finale.
     """
     algo_class = ALGO_CLASSES[algo_name]
     ckpt_dir   = os.path.join(
@@ -192,7 +227,8 @@ def train_run(
     )
     os.makedirs(ckpt_dir, exist_ok=True)
 
-    env = Monitor(gym.make(env_id))
+    train_env = Monitor(gym.make(env_id))
+    train_env.reset(seed=seed)
 
     # ── Recherche du dernier checkpoint ───────────────────────────────────
     existing = sorted([
@@ -205,11 +241,11 @@ def train_run(
 
     if existing:
         latest_ckpt = os.path.join(ckpt_dir, existing[-1])
-        print(f"    → Checkpoint trouvé : {latest_ckpt}")
+        print(f"    → Checkpoint trouvé : {os.path.basename(latest_ckpt)}")
         try:
-            model      = algo_class.load(latest_ckpt, env=env, device="cpu")
+            model      = algo_class.load(latest_ckpt, env=train_env, device="cpu")
             steps_done = model.num_timesteps
-            print(f"    → Reprise à {steps_done}/{train_timesteps} steps")
+            print(f"    → Reprise à {steps_done:,}/{train_timesteps:,} steps")
         except Exception as e:
             warnings.warn(f"Checkpoint corrompu ({e}), repart de zéro.")
             model = None
@@ -217,7 +253,7 @@ def train_run(
     if model is None:
         model_kwargs = {k: v for k, v in params.items() if k != "policy"}
         model = algo_class(
-            env=env,
+            env=train_env,
             seed=seed,
             device="cpu",
             verbose=0,
@@ -225,40 +261,42 @@ def train_run(
             **model_kwargs,
         )
 
-    # ── Entraînement (si pas déjà complet) ────────────────────────────────
+    # ── Entraînement ──────────────────────────────────────────────────────
     remaining = train_timesteps - steps_done
     if remaining <= 0:
-        print(f"    → Entraînement déjà complet ({steps_done} steps).")
+        print(f"    → Entraînement déjà complet ({steps_done:,} steps).")
     else:
+        print(f"    → Entraînement : {remaining:,} steps restants...")
         checkpoint_cb = CheckpointCallback(
             save_freq=10_000,
             save_path=ckpt_dir,
             name_prefix=algo_name,
-            save_replay_buffer=True,    # important pour DQN/SAC (off-policy)
+            save_replay_buffer=True,
             save_vecnormalize=False,
         )
-        metrics_cb = EvalMetricsCallback(run=run)
-
         model.learn(
             total_timesteps=remaining,
-            callback=[checkpoint_cb, metrics_cb],
-            reset_num_timesteps=False,  # conserve le compteur global de steps
+            callback=[checkpoint_cb, EvalMetricsCallback(run=run)],
+            reset_num_timesteps=False,  # conserve le compteur global
         )
 
     # ── Évaluation finale déterministe ────────────────────────────────────
+    eval_env = Monitor(gym.make(env_id))
+    eval_env.reset(seed=seed + 9999)
+
     mean_reward, std_reward = evaluate_policy(
-        model, env,
+        model, eval_env,
         n_eval_episodes=eval_episodes,
         deterministic=True,
     )
-    run.log({
-        "eval/mean_reward": mean_reward,
-        "eval/std_reward":  std_reward,
-        "eval/seed":        seed,
-    })
 
-    env.close()
-    return mean_reward
+    run.summary["eval/mean_reward"] = mean_reward
+    run.summary["eval/std_reward"]  = std_reward
+    run.summary["eval/seed"]        = seed
+
+    train_env.close()
+    eval_env.close()
+    return mean_reward, std_reward
 
 
 # ---------------------------------------------------------------------------
@@ -271,10 +309,8 @@ def main() -> None:
                         choices=["DQN", "PPO", "SAC"])
     parser.add_argument("--env",             type=str, required=True,
                         choices=["discrete", "continuous"])
-    parser.add_argument("--train-timesteps", type=int, default=500_000,
-                        help="Timesteps d'entraînement par seed")
-    parser.add_argument("--eval-episodes",   type=int, default=20,
-                        help="Épisodes d'évaluation finale par seed")
+    parser.add_argument("--train-timesteps", type=int, default=500_000)
+    parser.add_argument("--eval-episodes",   type=int, default=20)
     parser.add_argument("--wandb-project",   type=str,
                         default="rl-lunarlander-eval")
     args = parser.parse_args()
@@ -288,35 +324,67 @@ def main() -> None:
     env_id = ENV_IDS[args.env]
     key    = f"{args.algo}_{args.env}"
 
-    # ── Device info ────────────────────────────────────────────────────────
     print(f"\n{'='*60}")
     print(f"  Évaluation : {args.algo} | {args.env} | {len(EVAL_SEEDS)} seeds")
     print(f"{'='*60}")
-    if torch.cuda.is_available():
-        print(f"  GPU : {torch.cuda.get_device_name(0)}")
-        print(f"  CUDA {torch.version.cuda} — sm_61 : {'sm_61' in torch.cuda.get_arch_list()}")
+
+    # ── Chargement des seeds déjà complétées ──────────────────────────────
+    completed = load_completed_results(args.algo, args.env)
+
+    if all(str(s) in completed for s in EVAL_SEEDS):
+        # Toutes les seeds sont terminées — affiche le résumé et sort immédiatement
+        # sans charger les params, sans init WandB, sans toucher aux checkpoints.
+        print("  ✓ Toutes les seeds sont déjà complétées.\n")
+        rewards = np.array([completed[str(s)]["mean_reward"] for s in EVAL_SEEDS])
+        solved  = int(np.sum(rewards >= 200))
+        print(f"{'='*60}")
+        print(f"  RÉSUMÉ FINAL — {key}")
+        print(f"{'='*60}")
+        print(f"  Mean  : {rewards.mean():.2f}")
+        print(f"  Std   : {rewards.std():.2f}")
+        print(f"  Min   : {rewards.min():.2f}")
+        print(f"  Max   : {rewards.max():.2f}")
+        print(f"  Résolu: {solved}/{len(EVAL_SEEDS)} seeds (reward ≥ 200)")
+        for s in EVAL_SEEDS:
+            r = completed[str(s)]
+            print(f"    seed {s:4d} : {r['mean_reward']:7.2f} ± {r['std_reward']:.2f}")
+        print(f"{'='*60}\n")
+        return
+
+    if completed:
+        done_seeds = [int(s) for s in completed]
+        print(f"  Seeds déjà complétées : {done_seeds}")
+        print(f"  Seeds restantes       : "
+              f"{[s for s in EVAL_SEEDS if s not in done_seeds]}")
     else:
-        print("  CPU uniquement.")
+        print("  Aucune seed complétée — démarrage complet.")
     print()
 
-    # ── Chargement des meilleurs params ────────────────────────────────────
+    # ── Chargement des params ──────────────────────────────────────────────
     params = load_best_params(args.algo, args.env)
     print()
 
     # ── Boucle seeds ──────────────────────────────────────────────────────
-    rewards = []
-
     for seed in EVAL_SEEDS:
-        set_global_seed(seed)
-        print(f"  Seed {seed}...")
 
+        # ── Seed déjà terminée → skip ─────────────────────────────────────
+        if str(seed) in completed:
+            r = completed[str(seed)]
+            print(f"  Seed {seed} : déjà complétée "
+                  f"(mean={r['mean_reward']:.2f}, std={r['std_reward']:.2f}) — skip.")
+            continue
+
+        print(f"\n  Seed {seed}...")
+        set_global_seed(seed)
+
+        # Ferme proprement un éventuel run WandB orphelin
         if wandb.run is not None:
             wandb.finish()
 
         run = wandb.init(
             project=args.wandb_project,
-            group=f"{args.algo}_{args.env}",
-            name=f"{args.algo}_{args.env}_seed_{seed}",
+            group=key,
+            name=f"{key}_seed_{seed}",
             config={
                 **params,
                 "algo":            args.algo,
@@ -330,51 +398,74 @@ def main() -> None:
             settings=wandb.Settings(start_method="thread"),
         )
 
-        mean_reward = train_run(
-            algo_name=args.algo,
-            env_type=args.env,
-            env_id=env_id,
-            params=params,
-            seed=seed,
-            train_timesteps=args.train_timesteps,
-            eval_episodes=args.eval_episodes,
-            run=run,
-        )
+        try:
+            mean_reward, std_reward = train_and_evaluate(
+                algo_name=args.algo,
+                env_type=args.env,
+                env_id=env_id,
+                params=params,
+                seed=seed,
+                train_timesteps=args.train_timesteps,
+                eval_episodes=args.eval_episodes,
+                run=run,
+            )
+        except Exception as exc:
+            warnings.warn(f"Seed {seed} échouée : {exc}")
+            run.finish(exit_code=1)
+            # On ne sauvegarde PAS le résultat → la seed sera relancée
+            raise
 
-        rewards.append(mean_reward)
-        print(f"    → mean_reward = {mean_reward:.2f}")
-        wandb.finish()
+        # ── Sauvegarde immédiate du résultat ──────────────────────────────
+        # Fait AVANT wandb.finish() pour garantir la persistance même si
+        # finish() crashe ou si le job SLURM est tué juste après.
+        save_seed_result(args.algo, args.env, seed, mean_reward, std_reward)
+        print(f"    → mean_reward = {mean_reward:.2f} ± {std_reward:.2f}  [sauvegardé]")
+
+        run.finish()
 
     # ── Résumé final ───────────────────────────────────────────────────────
-    arr    = np.array(rewards)
-    solved = int(np.sum(arr >= 200))
+    # Recharge depuis le fichier pour inclure les seeds skipées
+    final_results = load_completed_results(args.algo, args.env)
+
+    # Vérifie que toutes les seeds sont présentes
+    missing = [s for s in EVAL_SEEDS if str(s) not in final_results]
+    if missing:
+        print(f"\n  ⚠️  Seeds manquantes (non complétées) : {missing}")
+        print("  Relancez le script pour compléter.")
+        return
+
+    rewards = np.array([final_results[str(s)]["mean_reward"] for s in EVAL_SEEDS])
+    solved  = int(np.sum(rewards >= 200))
 
     print(f"\n{'='*60}")
-    print(f"  RÉSUMÉ — {key}")
+    print(f"  RÉSUMÉ FINAL — {key}")
     print(f"{'='*60}")
-    print(f"  Mean  : {arr.mean():.2f}")
-    print(f"  Std   : {arr.std():.2f}")
-    print(f"  Min   : {arr.min():.2f}")
-    print(f"  Max   : {arr.max():.2f}")
+    print(f"  Mean  : {rewards.mean():.2f}")
+    print(f"  Std   : {rewards.std():.2f}")
+    print(f"  Min   : {rewards.min():.2f}")
+    print(f"  Max   : {rewards.max():.2f}")
     print(f"  Résolu: {solved}/{len(EVAL_SEEDS)} seeds (reward ≥ 200)")
+    for s in EVAL_SEEDS:
+        r = final_results[str(s)]
+        print(f"    seed {s:4d} : {r['mean_reward']:7.2f} ± {r['std_reward']:.2f}")
     print(f"{'='*60}\n")
 
-    # ── Sauvegarde ─────────────────────────────────────────────────────────
-    out_dir = os.path.join("models", key)
-    os.makedirs(out_dir, exist_ok=True)
+    # ── Sauvegarde du résumé texte ─────────────────────────────────────────
+    out_dir      = os.path.join("models", key)
     summary_path = os.path.join(out_dir, "eval_summary.txt")
     with open(summary_path, "w") as f:
-        f.write(f"Algo : {args.algo}\n")
-        f.write(f"Env  : {args.env}\n")
-        f.write(f"Seeds: {EVAL_SEEDS}\n\n")
-        f.write(f"Mean  : {arr.mean():.2f}\n")
-        f.write(f"Std   : {arr.std():.2f}\n")
-        f.write(f"Min   : {arr.min():.2f}\n")
-        f.write(f"Max   : {arr.max():.2f}\n")
+        f.write(f"Algo  : {args.algo}\n")
+        f.write(f"Env   : {args.env}\n")
+        f.write(f"Seeds : {EVAL_SEEDS}\n\n")
+        f.write(f"Mean  : {rewards.mean():.2f}\n")
+        f.write(f"Std   : {rewards.std():.2f}\n")
+        f.write(f"Min   : {rewards.min():.2f}\n")
+        f.write(f"Max   : {rewards.max():.2f}\n")
         f.write(f"Résolu: {solved}/{len(EVAL_SEEDS)} seeds\n\n")
         f.write("Détail par seed:\n")
-        for s, r in zip(EVAL_SEEDS, rewards):
-            f.write(f"  seed {s}: {r:.2f}\n")
+        for s in EVAL_SEEDS:
+            r = final_results[str(s)]
+            f.write(f"  seed {s}: {r['mean_reward']:.2f} ± {r['std_reward']:.2f}\n")
 
     print(f"  Résumé sauvegardé dans : {summary_path}")
 
