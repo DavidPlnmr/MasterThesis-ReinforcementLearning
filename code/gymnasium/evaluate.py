@@ -13,6 +13,13 @@ Reprise automatique :
     - Si une seed est partiellement entraînée (checkpoint .zip présent),
       l'entraînement reprend depuis le dernier checkpoint.
     - Si aucune seed n'a encore été traitée, tout repart de zéro.
+
+Métriques d'évaluation finale (par seed) :
+    - mean_reward / std_reward : récompense moyenne et écart-type sur N épisodes
+    - mean_length / std_length : longueur moyenne des épisodes (informative sur
+      la qualité du comportement : crash court, atterrissage propre plus long)
+    - success_rate : fraction d'épisodes avec reward >= 200 (métrique de
+      résolution officielle de LunarLander, lisible sans connaissance du reward)
 """
 
 import argparse
@@ -54,7 +61,8 @@ NET_ARCH_MAP = {
     "large":  [400, 300],
 }
 
-EVAL_SEEDS = [42, 123, 456, 789, 1337]
+EVAL_SEEDS    = [42, 123, 456, 789, 1337]
+SUCCESS_THRESHOLD = 200.0   # seuil officiel de résolution LunarLander
 
 # ---------------------------------------------------------------------------
 # Seeding global
@@ -75,14 +83,20 @@ def set_global_seed(seed: int) -> None:
 # ---------------------------------------------------------------------------
 
 def results_path(algo: str, env_type: str) -> str:
-    """Chemin du fichier JSON qui trace les résultats par seed."""
     return os.path.join("models", f"{algo}_{env_type}", "eval_results.json")
 
 
 def load_completed_results(algo: str, env_type: str) -> dict:
     """
     Charge le dict des seeds déjà complétées.
-    Format : { "42": {"mean_reward": 250.3, "std_reward": 12.1}, ... }
+    Format :
+        {
+          "42": {
+            "mean_reward": 250.3, "std_reward": 12.1,
+            "mean_length": 412.0, "std_length": 38.2,
+            "success_rate": 0.85
+          }, ...
+        }
     Retourne {} si le fichier n'existe pas encore.
     """
     path = results_path(algo, env_type)
@@ -93,27 +107,29 @@ def load_completed_results(algo: str, env_type: str) -> dict:
 
 
 def save_seed_result(
-    algo:        str,
-    env_type:    str,
-    seed:        int,
-    mean_reward: float,
-    std_reward:  float,
-    mean_length: float = 0.0,
-    std_length:  float = 0.0,
+    algo:         str,
+    env_type:     str,
+    seed:         int,
+    mean_reward:  float,
+    std_reward:   float,
+    mean_length:  float,
+    std_length:   float,
+    success_rate: float,
 ) -> None:
     """
     Ajoute ou met à jour le résultat d'une seed dans eval_results.json.
-    Écriture atomique : on recharge, on modifie, on réécrit.
+    Écriture atomique : recharge → modifie → réécrit.
     """
     path = results_path(algo, env_type)
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
     results = load_completed_results(algo, env_type)
     results[str(seed)] = {
-        "mean_reward": float(mean_reward),
-        "std_reward":  float(std_reward),
-        "mean_length": float(mean_length),
-        "std_length":  float(std_length),
+        "mean_reward":  float(mean_reward),
+        "std_reward":   float(std_reward),
+        "mean_length":  float(mean_length),
+        "std_length":   float(std_length),
+        "success_rate": float(success_rate),
     }
     with open(path, "w") as f:
         json.dump(results, f, indent=2)
@@ -124,16 +140,6 @@ def save_seed_result(
 # ---------------------------------------------------------------------------
 
 def load_best_params(algo: str, env_type: str) -> dict:
-    """
-    Lit models/<algo>_<env_type>/best_params.txt et retourne un dict de params.
-    Format attendu (généré par tune.py) :
-        Score: 250.3
-        Params:
-          learning_rate: 0.0003
-          gamma: 0.99
-          net_arch: medium
-          ...
-    """
     path = os.path.join("models", f"{algo}_{env_type}", "best_params.txt")
     if not os.path.exists(path):
         raise FileNotFoundError(
@@ -141,9 +147,9 @@ def load_best_params(algo: str, env_type: str) -> dict:
             f"Lance d'abord : python tune.py --algo {algo} --env {env_type}"
         )
 
-    params      = {}
-    best_score  = None
-    in_params   = False
+    params     = {}
+    best_score = None
+    in_params  = False
 
     with open(path) as f:
         for line in f:
@@ -208,6 +214,21 @@ class EvalMetricsCallback(BaseCallback):
 
 
 # ---------------------------------------------------------------------------
+# Utilitaire d'affichage d'une ligne de résultat
+# ---------------------------------------------------------------------------
+
+def _fmt_result(r: dict) -> str:
+    sr = r.get("success_rate", 0.0)
+    ml = r.get("mean_length", 0.0)
+    sl = r.get("std_length", 0.0)
+    return (
+        f"reward={r['mean_reward']:7.2f} ± {r['std_reward']:.2f} | "
+        f"len={ml:6.1f} ± {sl:.1f} | "
+        f"success={sr*100:5.1f}%"
+    )
+
+
+# ---------------------------------------------------------------------------
 # Entraînement + évaluation d'une seed
 # ---------------------------------------------------------------------------
 
@@ -220,10 +241,10 @@ def train_and_evaluate(
     train_timesteps: int,
     eval_episodes:   int,
     run:             "wandb.sdk.wandb_run.Run",
-) -> tuple[float, float, float, float]:
+) -> tuple[float, float, float, float, float]:
     """
     Entraîne le modèle pour un seed donné (avec reprise sur checkpoint)
-    et retourne (mean_reward, std_reward, mean_length, std_length) de l'évaluation finale.
+    et retourne (mean_reward, std_reward, mean_length, std_length, success_rate).
     """
     algo_class = ALGO_CLASSES[algo_name]
     ckpt_dir   = os.path.join(
@@ -281,7 +302,7 @@ def train_and_evaluate(
         model.learn(
             total_timesteps=remaining,
             callback=[checkpoint_cb, EvalMetricsCallback(run=run)],
-            reset_num_timesteps=False,  # conserve le compteur global
+            reset_num_timesteps=False,
         )
 
     # ── Évaluation finale déterministe ────────────────────────────────────
@@ -294,21 +315,72 @@ def train_and_evaluate(
         deterministic=True,
         return_episode_rewards=True,
     )
+    ep_rewards = np.array(ep_rewards)
+    ep_lengths = np.array(ep_lengths)
 
-    mean_reward = float(np.mean(ep_rewards))
-    std_reward  = float(np.std(ep_rewards))
-    mean_length = float(np.mean(ep_lengths))
-    std_length  = float(np.std(ep_lengths))
+    mean_reward  = float(np.mean(ep_rewards))
+    std_reward   = float(np.std(ep_rewards))
+    mean_length  = float(np.mean(ep_lengths))
+    std_length   = float(np.std(ep_lengths))
+    success_rate = float(np.mean(ep_rewards >= SUCCESS_THRESHOLD))
 
-    run.summary["eval/mean_reward"] = mean_reward
-    run.summary["eval/std_reward"]  = std_reward
-    run.summary["eval/mean_length"] = mean_length
-    run.summary["eval/std_length"]  = std_length
-    run.summary["eval/seed"]        = seed
+    run.summary["eval/mean_reward"]  = mean_reward
+    run.summary["eval/std_reward"]   = std_reward
+    run.summary["eval/mean_length"]  = mean_length
+    run.summary["eval/std_length"]   = std_length
+    run.summary["eval/success_rate"] = success_rate
+    run.summary["eval/seed"]         = seed
 
     train_env.close()
     eval_env.close()
-    return mean_reward, std_reward, mean_length, std_length
+    return mean_reward, std_reward, mean_length, std_length, success_rate
+
+
+# ---------------------------------------------------------------------------
+# Affichage du résumé final
+# ---------------------------------------------------------------------------
+
+def print_and_save_summary(
+    algo:     str,
+    env_type: str,
+    results:  dict,
+) -> None:
+    key     = f"{algo}_{env_type}"
+    rewards = np.array([results[str(s)]["mean_reward"] for s in EVAL_SEEDS])
+    solved  = int(np.sum(rewards >= SUCCESS_THRESHOLD))
+    sr_mean = float(np.mean([results[str(s)].get("success_rate", 0.0)
+                              for s in EVAL_SEEDS]))
+
+    print(f"\n{'='*60}")
+    print(f"  RÉSUMÉ FINAL — {key}")
+    print(f"{'='*60}")
+    print(f"  Mean reward : {rewards.mean():.2f}  (std={rewards.std():.2f})")
+    print(f"  Min / Max   : {rewards.min():.2f} / {rewards.max():.2f}")
+    print(f"  Success rate (moy. seeds) : {sr_mean*100:.1f}%")
+    print(f"  Seeds résolues : {solved}/{len(EVAL_SEEDS)}  (reward ≥ {SUCCESS_THRESHOLD:.0f})")
+    print()
+    for s in EVAL_SEEDS:
+        print(f"    seed {s:4d} : {_fmt_result(results[str(s)])}")
+    print(f"{'='*60}\n")
+
+    # ── Sauvegarde texte ──────────────────────────────────────────────────
+    out_dir      = os.path.join("models", key)
+    os.makedirs(out_dir, exist_ok=True)
+    summary_path = os.path.join(out_dir, "eval_summary.txt")
+
+    with open(summary_path, "w") as f:
+        f.write(f"Algo  : {algo}\n")
+        f.write(f"Env   : {env_type}\n")
+        f.write(f"Seeds : {EVAL_SEEDS}\n\n")
+        f.write(f"Mean reward : {rewards.mean():.2f}  (std={rewards.std():.2f})\n")
+        f.write(f"Min / Max   : {rewards.min():.2f} / {rewards.max():.2f}\n")
+        f.write(f"Success rate (moy. seeds) : {sr_mean*100:.1f}%\n")
+        f.write(f"Seeds résolues : {solved}/{len(EVAL_SEEDS)}\n\n")
+        f.write("Détail par seed:\n")
+        for s in EVAL_SEEDS:
+            f.write(f"  seed {s}: {_fmt_result(results[str(s)])}\n")
+
+    print(f"  Résumé sauvegardé dans : {summary_path}")
 
 
 # ---------------------------------------------------------------------------
@@ -340,29 +412,12 @@ def main() -> None:
     print(f"  Évaluation : {args.algo} | {args.env} | {len(EVAL_SEEDS)} seeds")
     print(f"{'='*60}")
 
-    # ── Chargement des seeds déjà complétées ──────────────────────────────
+    # ── Court-circuit si toutes les seeds sont déjà terminées ─────────────
     completed = load_completed_results(args.algo, args.env)
 
     if all(str(s) in completed for s in EVAL_SEEDS):
-        # Toutes les seeds sont terminées — affiche le résumé et sort immédiatement
-        # sans charger les params, sans init WandB, sans toucher aux checkpoints.
         print("  ✓ Toutes les seeds sont déjà complétées.\n")
-        rewards = np.array([completed[str(s)]["mean_reward"] for s in EVAL_SEEDS])
-        solved  = int(np.sum(rewards >= 200))
-        print(f"{'='*60}")
-        print(f"  RÉSUMÉ FINAL — {key}")
-        print(f"{'='*60}")
-        print(f"  Mean  : {rewards.mean():.2f}")
-        print(f"  Std   : {rewards.std():.2f}")
-        print(f"  Min   : {rewards.min():.2f}")
-        print(f"  Max   : {rewards.max():.2f}")
-        print(f"  Résolu: {solved}/{len(EVAL_SEEDS)} seeds (reward ≥ 200)")
-        for s in EVAL_SEEDS:
-            r = completed[str(s)]
-            m_len = r.get("mean_length", 0.0)
-            s_len = r.get("std_length", 0.0)
-            print(f"    seed {s:4d} : {r['mean_reward']:7.2f} ± {r['std_reward']:.2f}  (len: {m_len:6.1f} ± {s_len:.1f})")
-        print(f"{'='*60}\n")
+        print_and_save_summary(args.algo, args.env, completed)
         return
 
     if completed:
@@ -381,18 +436,14 @@ def main() -> None:
     # ── Boucle seeds ──────────────────────────────────────────────────────
     for seed in EVAL_SEEDS:
 
-        # ── Seed déjà terminée → skip ─────────────────────────────────────
         if str(seed) in completed:
             r = completed[str(seed)]
-            m_len = r.get("mean_length", 0.0)
-            print(f"  Seed {seed} : déjà complétée "
-                  f"(mean={r['mean_reward']:.2f}, std={r['std_reward']:.2f} | len={m_len:.1f}) — skip.")
+            print(f"  Seed {seed} : {_fmt_result(r)} — skip.")
             continue
 
         print(f"\n  Seed {seed}...")
         set_global_seed(seed)
 
-        # Ferme proprement un éventuel run WandB orphelin
         if wandb.run is not None:
             wandb.finish()
 
@@ -414,79 +465,44 @@ def main() -> None:
         )
 
         try:
-            mean_reward, std_reward, mean_length, std_length = train_and_evaluate(
-                algo_name=args.algo,
-                env_type=args.env,
-                env_id=env_id,
-                params=params,
-                seed=seed,
-                train_timesteps=args.train_timesteps,
-                eval_episodes=args.eval_episodes,
-                run=run,
-            )
+            mean_reward, std_reward, mean_length, std_length, success_rate = \
+                train_and_evaluate(
+                    algo_name=args.algo,
+                    env_type=args.env,
+                    env_id=env_id,
+                    params=params,
+                    seed=seed,
+                    train_timesteps=args.train_timesteps,
+                    eval_episodes=args.eval_episodes,
+                    run=run,
+                )
         except Exception as exc:
             warnings.warn(f"Seed {seed} échouée : {exc}")
             run.finish(exit_code=1)
-            # On ne sauvegarde PAS le résultat → la seed sera relancée
             raise
 
-        # ── Sauvegarde immédiate du résultat ──────────────────────────────
-        # Fait AVANT wandb.finish() pour garantir la persistance même si
-        # finish() crashe ou si le job SLURM est tué juste après.
-        save_seed_result(args.algo, args.env, seed, mean_reward, std_reward, mean_length, std_length)
-        print(f"    → mean_reward = {mean_reward:.2f} ± {std_reward:.2f} | len = {mean_length:.1f} ± {std_length:.1f} [sauvegardé]")
+        # Sauvegarde AVANT wandb.finish() — robustesse aux kills SLURM
+        save_seed_result(
+            args.algo, args.env, seed,
+            mean_reward, std_reward,
+            mean_length, std_length,
+            success_rate,
+        )
+        r = {"mean_reward": mean_reward, "std_reward": std_reward,
+             "mean_length": mean_length, "std_length": std_length,
+             "success_rate": success_rate}
+        print(f"    → {_fmt_result(r)}  [sauvegardé]")
 
         run.finish()
 
     # ── Résumé final ───────────────────────────────────────────────────────
-    # Recharge depuis le fichier pour inclure les seeds skipées
     final_results = load_completed_results(args.algo, args.env)
-
-    # Vérifie que toutes les seeds sont présentes
     missing = [s for s in EVAL_SEEDS if str(s) not in final_results]
     if missing:
-        print(f"\n  ⚠️  Seeds manquantes (non complétées) : {missing}")
-        print("  Relancez le script pour compléter.")
+        print(f"\n  ⚠️  Seeds manquantes : {missing} — relancez le script.")
         return
 
-    rewards = np.array([final_results[str(s)]["mean_reward"] for s in EVAL_SEEDS])
-    solved  = int(np.sum(rewards >= 200))
-
-    print(f"\n{'='*60}")
-    print(f"  RÉSUMÉ FINAL — {key}")
-    print(f"{'='*60}")
-    print(f"  Mean  : {rewards.mean():.2f}")
-    print(f"  Std   : {rewards.std():.2f}")
-    print(f"  Min   : {rewards.min():.2f}")
-    print(f"  Max   : {rewards.max():.2f}")
-    print(f"  Résolu: {solved}/{len(EVAL_SEEDS)} seeds (reward ≥ 200)")
-    for s in EVAL_SEEDS:
-        r = final_results[str(s)]
-        m_len = r.get("mean_length", 0.0)
-        s_len = r.get("std_length", 0.0)
-        print(f"    seed {s:4d} : {r['mean_reward']:7.2f} ± {r['std_reward']:.2f}  (len: {m_len:6.1f} ± {s_len:.1f})")
-    print(f"{'='*60}\n")
-
-    # ── Sauvegarde du résumé texte ─────────────────────────────────────────
-    out_dir      = os.path.join("models", key)
-    summary_path = os.path.join(out_dir, "eval_summary.txt")
-    with open(summary_path, "w") as f:
-        f.write(f"Algo  : {args.algo}\n")
-        f.write(f"Env   : {args.env}\n")
-        f.write(f"Seeds : {EVAL_SEEDS}\n\n")
-        f.write(f"Mean  : {rewards.mean():.2f}\n")
-        f.write(f"Std   : {rewards.std():.2f}\n")
-        f.write(f"Min   : {rewards.min():.2f}\n")
-        f.write(f"Max   : {rewards.max():.2f}\n")
-        f.write(f"Résolu: {solved}/{len(EVAL_SEEDS)} seeds\n\n")
-        f.write("Détail par seed:\n")
-        for s in EVAL_SEEDS:
-            r = final_results[str(s)]
-            m_len = r.get("mean_length", 0.0)
-            s_len = r.get("std_length", 0.0)
-            f.write(f"  seed {s}: {r['mean_reward']:.2f} ± {r['std_reward']:.2f}  (len: {m_len:.1f} ± {s_len:.1f})\n")
-
-    print(f"  Résumé sauvegardé dans : {summary_path}")
+    print_and_save_summary(args.algo, args.env, final_results)
 
 
 if __name__ == "__main__":
