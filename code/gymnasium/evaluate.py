@@ -449,15 +449,21 @@ def main() -> None:
 
         run = wandb.init(
             project=args.wandb_project,
-            group=key,
+            group=key,                          # groupement visuel dans l'UI
             name=f"{key}_seed_{seed}",
+            tags=[args.algo, args.env, key],    # filtrage rapide dans les panels
             config={
-                **params,
-                "algo":            args.algo,
-                "env":             env_id,
+                # ── Identification — utilisables comme axes dans tous les panels
+                "algo":      args.algo,         # "DQN" / "PPO" / "SAC"
+                "env":       args.env,           # "discrete" / "continuous"
+                "combo":     key,                # "DQN_discrete", "PPO_continuous", …
+                "env_id":    env_id,             # "LunarLander-v2", …
+                # ── Paramètres d'entraînement
                 "seed":            seed,
                 "train_timesteps": args.train_timesteps,
                 "eval_episodes":   args.eval_episodes,
+                # ── Hyperparamètres optimaux (à plat pour les panels)
+                **params,
             },
             reinit=True,
             dir=os.environ.get("WANDB_DIR", "."),
