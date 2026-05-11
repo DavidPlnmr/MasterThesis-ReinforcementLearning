@@ -107,7 +107,7 @@ Un essai interrompu par le pruner est enregistré avec l'état \texttt{PRUNED}
 dans la base Optuna et comptabilisé dans le total des essais effectués,
 au même titre qu'un essai complet. Seuls les essais ayant échoué pour des
 raisons techniques (crash, erreur mémoire) ne sont pas comptabilisés.
-La campagne cible \textbf{150 essais} par combinaison algorithme/environnement.
+La campagne cible au minimum \textbf{150 essais} par combinaison algorithme/environnement.
 
 \newpage
 % -----------------------------------------------------------------------------
@@ -116,7 +116,7 @@ La campagne cible \textbf{150 essais} par combinaison algorithme/environnement.
 % -----------------------------------------------------------------------------
 
 Les tableaux suivants décrivent les hyperparamètres testés pour chaque
-algorithme, leur rôle et les plages de recherche utilisées.
+algorithme, leur rôle et les plages de recherche utilisées. Il est important de noter que pour l'ensemble des expériences, la politique neuronale employée repose sur des Perceptrons Multicouches (MLP, illustré par \texttt{MlpPolicy} dans l'écosystème Stable-Baselines3). L'état de l'environnement \textit{LunarLander} étant un simple vecteur de 8 dimensions, l'utilisation de réseaux convolutifs n'est donc pas pertinente dans ce contexte.
 
 
 % Colonnes 1 et 3 fixées ; la colonne centrale consomme exactement le reste de
@@ -208,7 +208,7 @@ algorithme, leur rôle et les plages de recherche utilisées.
   & $[0.01,\;0.1]$ \\[4pt]
 
 \texttt{net\_arch}
-  & Architecture du réseau de neurones --- nombre et taille des couches
+  & Architecture du réseau MLP --- nombre et taille des couches
     cachées (\textit{catégoriel}).
   & \textit{small} [64,64],\newline
     \textit{medium} [256,256],\newline
@@ -306,7 +306,7 @@ algorithme, leur rôle et les plages de recherche utilisées.
   & $[0.1,\;1.0]$ \\[4pt]
 
 \texttt{net\_arch}
-  & Architecture du réseau acteur-critique (\textit{catégoriel}).
+  & Architecture du réseau MLP acteur-critique (\textit{catégoriel}).
   & \textit{small} [64,64],\newline
     \textit{medium} [256,256],\newline
     \textit{large} [400,300] \\
@@ -379,6 +379,7 @@ algorithme, leur rôle et les plages de recherche utilisées.
     équilibrant exploration et exploitation sans réglage manuel.
   & \texttt{auto} \\[4pt]
 
+
 \texttt{use\_sde}
   & Active l'\textit{State Dependent Exploration} (SDE)
     (\textit{catégoriel}). Le bruit d'exploration dépend de l'état
@@ -392,7 +393,7 @@ algorithme, leur rôle et les plages de recherche utilisées.
   & $\{1,\;2,\;4\}$ \\[4pt]
 
 \texttt{net\_arch}
-  & Architecture des réseaux acteur et critique (\textit{catégoriel}).
+  & Architecture des réseaux MLP acteur et critique (\textit{catégoriel}).
   & \textit{small} [64,64],\newline
     \textit{medium} [256,256],\newline
     \textit{large} [400,300] \\
