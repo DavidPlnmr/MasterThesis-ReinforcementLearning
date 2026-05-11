@@ -98,6 +98,8 @@ def save_seed_result(
     seed:        int,
     mean_reward: float,
     std_reward:  float,
+    mean_length: float = 0.0,
+    std_length:  float = 0.0,
 ) -> None:
     """
     Ajoute ou met à jour le résultat d'une seed dans eval_results.json.
@@ -110,6 +112,8 @@ def save_seed_result(
     results[str(seed)] = {
         "mean_reward": float(mean_reward),
         "std_reward":  float(std_reward),
+        "mean_length": float(mean_length),
+        "std_length":  float(std_length),
     }
     with open(path, "w") as f:
         json.dump(results, f, indent=2)
@@ -216,10 +220,10 @@ def train_and_evaluate(
     train_timesteps: int,
     eval_episodes:   int,
     run:             "wandb.sdk.wandb_run.Run",
-) -> tuple[float, float]:
+) -> tuple[float, float, float, float]:
     """
     Entraîne le modèle pour un seed donné (avec reprise sur checkpoint)
-    et retourne (mean_reward, std_reward) de l'évaluation finale.
+    et retourne (mean_reward, std_reward, mean_length, std_length) de l'évaluation finale.
     """
     algo_class = ALGO_CLASSES[algo_name]
     ckpt_dir   = os.path.join(
@@ -284,19 +288,27 @@ def train_and_evaluate(
     eval_env = Monitor(gym.make(env_id))
     eval_env.reset(seed=seed + 9999)
 
-    mean_reward, std_reward = evaluate_policy(
+    ep_rewards, ep_lengths = evaluate_policy(
         model, eval_env,
         n_eval_episodes=eval_episodes,
         deterministic=True,
+        return_episode_rewards=True,
     )
+
+    mean_reward = float(np.mean(ep_rewards))
+    std_reward  = float(np.std(ep_rewards))
+    mean_length = float(np.mean(ep_lengths))
+    std_length  = float(np.std(ep_lengths))
 
     run.summary["eval/mean_reward"] = mean_reward
     run.summary["eval/std_reward"]  = std_reward
+    run.summary["eval/mean_length"] = mean_length
+    run.summary["eval/std_length"]  = std_length
     run.summary["eval/seed"]        = seed
 
     train_env.close()
     eval_env.close()
-    return mean_reward, std_reward
+    return mean_reward, std_reward, mean_length, std_length
 
 
 # ---------------------------------------------------------------------------
@@ -347,7 +359,9 @@ def main() -> None:
         print(f"  Résolu: {solved}/{len(EVAL_SEEDS)} seeds (reward ≥ 200)")
         for s in EVAL_SEEDS:
             r = completed[str(s)]
-            print(f"    seed {s:4d} : {r['mean_reward']:7.2f} ± {r['std_reward']:.2f}")
+            m_len = r.get("mean_length", 0.0)
+            s_len = r.get("std_length", 0.0)
+            print(f"    seed {s:4d} : {r['mean_reward']:7.2f} ± {r['std_reward']:.2f}  (len: {m_len:6.1f} ± {s_len:.1f})")
         print(f"{'='*60}\n")
         return
 
@@ -370,8 +384,9 @@ def main() -> None:
         # ── Seed déjà terminée → skip ─────────────────────────────────────
         if str(seed) in completed:
             r = completed[str(seed)]
+            m_len = r.get("mean_length", 0.0)
             print(f"  Seed {seed} : déjà complétée "
-                  f"(mean={r['mean_reward']:.2f}, std={r['std_reward']:.2f}) — skip.")
+                  f"(mean={r['mean_reward']:.2f}, std={r['std_reward']:.2f} | len={m_len:.1f}) — skip.")
             continue
 
         print(f"\n  Seed {seed}...")
@@ -399,7 +414,7 @@ def main() -> None:
         )
 
         try:
-            mean_reward, std_reward = train_and_evaluate(
+            mean_reward, std_reward, mean_length, std_length = train_and_evaluate(
                 algo_name=args.algo,
                 env_type=args.env,
                 env_id=env_id,
@@ -418,8 +433,8 @@ def main() -> None:
         # ── Sauvegarde immédiate du résultat ──────────────────────────────
         # Fait AVANT wandb.finish() pour garantir la persistance même si
         # finish() crashe ou si le job SLURM est tué juste après.
-        save_seed_result(args.algo, args.env, seed, mean_reward, std_reward)
-        print(f"    → mean_reward = {mean_reward:.2f} ± {std_reward:.2f}  [sauvegardé]")
+        save_seed_result(args.algo, args.env, seed, mean_reward, std_reward, mean_length, std_length)
+        print(f"    → mean_reward = {mean_reward:.2f} ± {std_reward:.2f} | len = {mean_length:.1f} ± {std_length:.1f} [sauvegardé]")
 
         run.finish()
 
@@ -447,7 +462,9 @@ def main() -> None:
     print(f"  Résolu: {solved}/{len(EVAL_SEEDS)} seeds (reward ≥ 200)")
     for s in EVAL_SEEDS:
         r = final_results[str(s)]
-        print(f"    seed {s:4d} : {r['mean_reward']:7.2f} ± {r['std_reward']:.2f}")
+        m_len = r.get("mean_length", 0.0)
+        s_len = r.get("std_length", 0.0)
+        print(f"    seed {s:4d} : {r['mean_reward']:7.2f} ± {r['std_reward']:.2f}  (len: {m_len:6.1f} ± {s_len:.1f})")
     print(f"{'='*60}\n")
 
     # ── Sauvegarde du résumé texte ─────────────────────────────────────────
@@ -465,7 +482,9 @@ def main() -> None:
         f.write("Détail par seed:\n")
         for s in EVAL_SEEDS:
             r = final_results[str(s)]
-            f.write(f"  seed {s}: {r['mean_reward']:.2f} ± {r['std_reward']:.2f}\n")
+            m_len = r.get("mean_length", 0.0)
+            s_len = r.get("std_length", 0.0)
+            f.write(f"  seed {s}: {r['mean_reward']:.2f} ± {r['std_reward']:.2f}  (len: {m_len:.1f} ± {s_len:.1f})\n")
 
     print(f"  Résumé sauvegardé dans : {summary_path}")
 
