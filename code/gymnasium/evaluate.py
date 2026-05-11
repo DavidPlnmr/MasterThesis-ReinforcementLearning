@@ -11,7 +11,8 @@ Reprise automatique :
     - Si une seed est entièrement terminée (résultat dans eval_results.json),
       elle est sautée sans relancer ni WandB ni entraînement.
     - Si une seed est partiellement entraînée (checkpoint .zip présent),
-      l'entraînement reprend depuis le dernier checkpoint.
+      l'entraînement reprend depuis le dernier checkpoint ET sur le même run
+      WandB qu'au lancement initial (via wandb_run_id.txt).
     - Si aucune seed n'a encore été traitée, tout repart de zéro.
 
 Métriques d'évaluation finale (par seed) :
@@ -61,8 +62,9 @@ NET_ARCH_MAP = {
     "large":  [400, 300],
 }
 
-EVAL_SEEDS    = [42, 123, 456, 789, 1337]
+EVAL_SEEDS        = [42, 123, 456, 789, 1337]
 SUCCESS_THRESHOLD = 200.0   # seuil officiel de résolution LunarLander
+
 
 # ---------------------------------------------------------------------------
 # Seeding global
@@ -76,6 +78,33 @@ def set_global_seed(seed: int) -> None:
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark     = False
     os.environ["PYTHONHASHSEED"] = str(seed)
+
+
+# ---------------------------------------------------------------------------
+# Persistance du run_id WandB par seed
+# ---------------------------------------------------------------------------
+
+def run_id_path(algo: str, env_type: str, seed: int) -> str:
+    return os.path.join(
+        "checkpoints", f"{algo}_{env_type}", f"seed_{seed}", "wandb_run_id.txt"
+    )
+
+
+def load_run_id(algo: str, env_type: str, seed: int) -> "str | None":
+    """Retourne le run_id WandB sauvegardé pour cette seed, ou None."""
+    path = run_id_path(algo, env_type, seed)
+    if os.path.exists(path):
+        with open(path) as f:
+            return f.read().strip() or None
+    return None
+
+
+def save_run_id(algo: str, env_type: str, seed: int, run_id: str) -> None:
+    """Persiste le run_id WandB pour pouvoir reprendre le même run plus tard."""
+    path = run_id_path(algo, env_type, seed)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        f.write(run_id)
 
 
 # ---------------------------------------------------------------------------
@@ -241,7 +270,7 @@ def train_and_evaluate(
     train_timesteps: int,
     eval_episodes:   int,
     run:             "wandb.sdk.wandb_run.Run",
-) -> tuple[float, float, float, float, float]:
+) -> "tuple[float, float, float, float, float]":
     """
     Entraîne le modèle pour un seed donné (avec reprise sur checkpoint)
     et retourne (mean_reward, std_reward, mean_length, std_length, success_rate).
@@ -447,17 +476,26 @@ def main() -> None:
         if wandb.run is not None:
             wandb.finish()
 
+        # ── Reprise du run WandB existant si disponible ───────────────────
+        existing_run_id = load_run_id(args.algo, args.env, seed)
+        if existing_run_id:
+            print(f"    → Run WandB existant trouvé : {existing_run_id} — reprise.")
+        else:
+            print(f"    → Aucun run WandB existant — création d'un nouveau run.")
+
         run = wandb.init(
             project=args.wandb_project,
-            group=key,                          # groupement visuel dans l'UI
+            group=key,
             name=f"{key}_seed_{seed}",
-            tags=[args.algo, args.env, key],    # filtrage rapide dans les panels
+            tags=[args.algo, args.env, key],
+            id=existing_run_id,   # None → WandB génère un nouvel ID
+            resume="allow",       # reprend si l'ID existe, crée sinon
             config={
                 # ── Identification — utilisables comme axes dans tous les panels
-                "algo":      args.algo,         # "DQN" / "PPO" / "SAC"
-                "env":       args.env,           # "discrete" / "continuous"
-                "combo":     key,                # "DQN_discrete", "PPO_continuous", …
-                "env_id":    env_id,             # "LunarLander-v2", …
+                "algo":      args.algo,
+                "env":       args.env,
+                "combo":     key,
+                "env_id":    env_id,
                 # ── Paramètres d'entraînement
                 "seed":            seed,
                 "train_timesteps": args.train_timesteps,
@@ -469,6 +507,10 @@ def main() -> None:
             dir=os.environ.get("WANDB_DIR", "."),
             settings=wandb.Settings(start_method="thread"),
         )
+
+        # Sauvegarde immédiate de l'ID — avant tout entraînement
+        # (robustesse aux kills SLURM dès les premières secondes)
+        save_run_id(args.algo, args.env, seed, run.id)
 
         try:
             mean_reward, std_reward, mean_length, std_length, success_rate = \
