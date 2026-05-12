@@ -29,6 +29,7 @@ import json
 import os
 import random
 import warnings
+import re
 
 import gymnasium as gym
 import numpy as np
@@ -284,11 +285,17 @@ def train_and_evaluate(
     train_env = Monitor(gym.make(env_id))
     train_env.reset(seed=seed)
 
-    # ── Recherche du dernier checkpoint ───────────────────────────────────
-    existing = sorted([
-        f for f in os.listdir(ckpt_dir)
-        if f.endswith(".zip") and f.startswith(f"{algo_name}_")
-    ])
+    
+
+    def _ckpt_step(filename: str) -> int:
+        m = re.search(r"_(\d+)_steps\.zip$", filename)
+        return int(m.group(1)) if m else -1
+
+    existing = sorted(
+        [f for f in os.listdir(ckpt_dir)
+        if f.endswith(".zip") and f.startswith(f"{algo_name}_")],
+        key=_ckpt_step,
+    )
 
     model      = None
     steps_done = 0
