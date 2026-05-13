@@ -369,89 +369,7 @@ réseaux convolutifs n'est pas pertinent dans ce contexte.
 \endgroup
 
 % -----------------------------------------------------------------------------
-\subsection{Protocole d'évaluation finale}
-% -----------------------------------------------------------------------------
-
-Une fois les hyperparamètres optimaux identifiés pour chaque combinaison
-algorithme/environnement, une évaluation finale est conduite pour mesurer la
-robustesse des configurations retenues. Chaque modèle est réentraîné
-\textbf{from scratch} sur \textbf{5 seeds indépendantes}
-($\{42,\ 123,\ 456,\ 789,\ 1337\}$) avec 500\,000 pas de temps
-d'entraînement, puis évalué sur 20 épisodes.
-
-\paragraph{Évaluation déterministe.}
-L'évaluation est conduite en mode \textbf{déterministe}, ce qui diffère du
-comportement adopté durant l'entraînement selon l'algorithme :
-
-\begin{itemize}
-  \item \textbf{PPO} : pendant l'entraînement, PPO échantillonne ses actions
-        depuis une distribution de probabilités (gaussienne pour le continu,
-        catégorielle pour le discret) afin d'explorer. En mode déterministe,
-        l'action retenue est le \textit{mode} de cette distribution ---
-        l'action de probabilité maximale --- sans aucun échantillonnage.
-
-  \item \textbf{SAC} : de même, SAC paramétrise une distribution gaussienne
-        et échantillonne lors de l'entraînement pour maximiser l'entropie.
-        En mode déterministe, il retourne la moyenne de cette distribution,
-        ce qui correspond à la politique la plus probable sans bruit
-        d'exploration.
-
-  \item \textbf{DQN} : le mode déterministe consiste à sélectionner
-        systématiquement l'action de Q-valeur maximale (argmax), avec
-        $\varepsilon = 0$. C'est déjà le comportement naturel de DQN
-        lors de l'exploitation ; le mode déterministe ne change donc pas
-        fondamentalement la politique évaluée.
-\end{itemize}
-
-Ce choix d'évaluation déterministe est standard dans la littérature RL : il
-mesure la politique \textit{apprise} sans bruit d'exploration, offrant une
-estimation plus fidèle des performances en déploiement réel.
-
-\paragraph{Métriques rapportées.}
-Les métriques suivantes sont calculées sur les 20 épisodes d'évaluation, puis
-agrégées sur les 5 seeds :
-
-\begin{itemize}
-  \item Récompense moyenne et écart-type inter-seeds,
-  \item Récompense minimale et maximale observées,
-  \item Taux de succès : fraction d'épisodes avec une récompense $\geq 200$
-        (seuil de résolution officiel de LunarLander),
-  \item Nombre de seeds pour lesquelles la récompense moyenne atteint le seuil
-        de résolution.
-\end{itemize}
-
-Cette procédure multi-seeds permet de distinguer les configurations robustes
---- qui convergent systématiquement --- des configurations qui réussissent de
-manière occasionnelle en raison de la stochasticité de l'entraînement.
-
-% -----------------------------------------------------------------------------
-\subsection{Monitoring}
-% -----------------------------------------------------------------------------
-
-L'ensemble des expériences est suivi en temps réel via \textbf{Weights \&
-Biases} (WandB). Les métriques suivantes sont enregistrées à chaque pas de
-temps :
-
-\begin{itemize}
-  \item \texttt{rollout/ep\_rew\_mean} et \texttt{rollout/ep\_rew\_std} :
-        récompense moyenne et écart-type calculés sur une fenêtre glissante
-        des derniers épisodes complétés (buffer circulaire interne à SB3,
-        de taille \texttt{stats\_window\_size}),
-  \item \texttt{rollout/ep\_len\_mean} : longueur moyenne des derniers
-        épisodes,
-  \item \texttt{dqn/exploration\_rate} : décroissance de $\varepsilon$
-        (DQN uniquement),
-  \item \texttt{sac/entropy\_coef} : coefficient d'entropie adaptatif
-        (SAC uniquement).
-\end{itemize}
-
-Les hyperparamètres clés de chaque essai sont enregistrés dans le résumé
-WandB (\texttt{run.summary}), permettant de générer des visualisations de
-type \textit{Parallel Coordinates Plot} pour identifier les configurations
-les plus performantes.
-
-% -----------------------------------------------------------------------------
-\subsection{Résultats}
+\subsection{Résultats de l'optimisation}
 % -----------------------------------------------------------------------------
 
 Cette section présente les résultats obtenus pour chaque algorithme sur les
@@ -499,7 +417,6 @@ l'algorithme aux deux types d'espaces d'action sur cet environnement.
 %   4\tabcolsep = 2 séparateurs × 2 colonnes.
 \newlength{\hpOptA}\setlength{\hpOptA}{5.5cm}
  
-\newpage
 % -----------------------------------------------------------------------------
 \subsubsection{DQN --- LunarLander discret}
 % -----------------------------------------------------------------------------
@@ -602,9 +519,7 @@ valeur standard de $0.2$ \parencite{schulmanProximalPolicyOptimization2017}.
 Un \texttt{clip\_range} élevé autorise des mises à jour de politique plus
 importantes à chaque gradient step, tout en conservant la garantie de
 stabilité propre à PPO grâce au mécanisme de clipping. Cette valeur, associée
-à \texttt{n\_epochs = 20} et \texttt{n\_steps = 2048}, indique que PPO effectue $\lfloor 2048 / 256 \rfloor = 8$ mini-batches\footnote{256 étant la taille d'un batch} par époque,
-répétés sur \texttt{n\_epochs = 20} passes, soit 160 mises à jour du réseau
-pour chaque rollout de 2048 transitions.
+à \texttt{n\_epochs = 20} et \texttt{n\_steps = 2048}, indique que PPO effectue $\lfloor 2048 / 256 \rfloor = 8$ mini-batches\footnote{256 étant la taille d'un batch} par époque, soit 160 mises à jour du réseau pour chaque rollout de 2048 transitions.
  
 % -----------------------------------------------------------------------------
 \subsubsection{PPO --- LunarLanderContinuous}
@@ -719,10 +634,68 @@ d'action continus : le bruit d'exploration structuré en fonction de l'état
 permet une exploration plus cohérente que le bruit gaussien indépendant de l'état.
 
 % -----------------------------------------------------------------------------
-\subsubsection{Évaluation finale multi-seeds}
+\subsection{Évaluation finale multi-seeds}
 \label{sec:eval_finale}
 % -----------------------------------------------------------------------------
 
+% -----------------------------------------------------------------------------
+\subsubsection{Protocole d'évaluation finale}
+% -----------------------------------------------------------------------------
+
+Une fois les hyperparamètres optimaux identifiés pour chaque combinaison
+algorithme/environnement, une évaluation finale est conduite pour mesurer la
+robustesse des configurations retenues. Chaque modèle est réentraîné
+\textbf{from scratch} sur \textbf{5 seeds indépendantes}
+($\{42,\ 123,\ 456,\ 789,\ 1337\}$) avec 500\,000 pas de temps
+d'entraînement, puis évalué sur 20 épisodes.
+
+\paragraph{Évaluation déterministe.}
+L'évaluation est conduite en mode \textbf{déterministe}, ce qui diffère du
+comportement adopté durant l'entraînement selon l'algorithme :
+
+\begin{itemize}
+  \item \textbf{PPO} : pendant l'entraînement, PPO échantillonne ses actions
+        depuis une distribution de probabilités (gaussienne pour le continu,
+        catégorielle pour le discret) afin d'explorer. En mode déterministe,
+        l'action retenue est le \textit{mode} de cette distribution ---
+        l'action de probabilité maximale --- sans aucun échantillonnage.
+
+  \item \textbf{SAC} : de même, SAC paramétrise une distribution gaussienne
+        et échantillonne lors de l'entraînement pour maximiser l'entropie.
+        En mode déterministe, il retourne la moyenne de cette distribution,
+        ce qui correspond à la politique la plus probable sans bruit
+        d'exploration.
+
+  \item \textbf{DQN} : le mode déterministe consiste à sélectionner
+        systématiquement l'action de Q-valeur maximale (argmax), avec
+        $\varepsilon = 0$. C'est déjà le comportement naturel de DQN
+        lors de l'exploitation ; le mode déterministe ne change donc pas
+        fondamentalement la politique évaluée.
+\end{itemize}
+
+Ce choix d'évaluation déterministe est standard dans la littérature RL : il
+mesure la politique \textit{apprise} sans bruit d'exploration, offrant une
+estimation plus fidèle des performances en déploiement réel.
+
+\paragraph{Métriques rapportées.}
+Les métriques suivantes sont calculées sur les 20 épisodes d'évaluation, puis
+agrégées sur les 5 seeds :
+
+\begin{itemize}
+  \item Récompense moyenne et écart-type inter-seeds,
+  \item Récompense minimale et maximale observées,
+  \item Taux de succès : fraction d'épisodes avec une récompense $\geq 200$
+        (seuil de résolution officiel de LunarLander),
+  \item Nombre de seeds pour lesquelles la récompense moyenne atteint le seuil
+        de résolution.
+\end{itemize}
+
+Cette procédure multi-seeds permet de distinguer les configurations robustes
+--- qui convergent systématiquement --- des configurations qui réussissent de
+manière occasionnelle en raison de la stochasticité de l'entraînement.
+
+
+\subsubsection{Résultats de l'évaluation multi-seeds}
 % À compléter une fois evaluate.py terminé.
 % Structure suggérée :
 %

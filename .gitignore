@@ -341,3 +341,6 @@ models/
 
 # Weight and biases files
 wandb/
+
+models_saved/
+videos/
