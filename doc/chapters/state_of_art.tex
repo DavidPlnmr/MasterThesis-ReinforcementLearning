@@ -391,49 +391,175 @@ Les méthodes modernes de l'état de l'art fusionnent l'apprentissage de la fonc
 
 L'avantage majeur de ce duo est qu'il paramètre intrinsèquement très bien la nature des actions (discrètes ou continues). Pour un problème \textit{discret}, la couche de sortie de l'Acteur applique une fonction \textit{Softmax} définissant la probabilité de tirer chaque action de la liste. Pour un espace \textit{continu}, l'Acteur va générer non pas des actions brutes, mais les paramètres statistiques d'une loi de distribution continue (typiquement la moyenne $\mu$ et l'écart-type $\sigma$ d'une variable gaussienne), au sein de laquelle l'action réelle sera piochée aléatoirement.
 
+% -----------------------------------------------------------------------------
 \subsubsection{Proximal Policy Optimization (PPO)}
-
-L'algorithme \textbf{PPO} \parencite{schulmanProximalPolicyOptimization2017} est devenu un standard industriel pour son équilibre entre simplicité et grande robustesse. 
-En pratique, PPO est quasi-systématiquement combiné avec l'estimateur \textbf{GAE} (\textit{Generalized Advantage Estimation}) \parencite{schulmanHighDimensionalContinuousControl2018}, qui généralise le retour à $n$ pas pour l'estimation de l'avantage. Plutôt que de choisir un horizon fixe $n$, GAE calcule une moyenne pondérée de tous les retours possibles, contrôlée par un paramètre $\lambda_{GAE} \in [0,1]$ :
-
+% -----------------------------------------------------------------------------
+ 
+L'algorithme \textbf{PPO} \parencite{schulmanProximalPolicyOptimization2017}
+est devenu un standard industriel du RL pour son équilibre entre simplicité
+d'implémentation et grande robustesse empirique.
+ 
+\paragraph{Estimation de l'avantage via GAE.}
+PPO est quasi-systématiquement combiné avec l'estimateur \textbf{GAE}
+(\textit{Generalized Advantage Estimation})
+\parencite{schulmanHighDimensionalContinuousControl2018}, qui généralise
+le retour à $n$ pas pour l'estimation de l'avantage. Plutôt que de fixer
+un horizon $n$ arbitraire, GAE calcule une moyenne pondérée exponentiellement
+de toutes les erreurs TD successives, contrôlée par un paramètre
+$\lambda_{\text{GAE}} \in [0,1]$ :
+ 
 \begin{equation}
-    \hat{A}_t^{GAE(\gamma, \lambda_{GAE})} = \sum_{l=0}^{\infty} (\gamma \lambda_{GAE})^l \delta_{t+l}
+    \hat{A}_t^{\text{GAE}(\gamma,\,\lambda_{\text{GAE}})}
+    = \sum_{l=0}^{\infty} (\gamma\lambda_{\text{GAE}})^l\,\delta_{t+l}
 \end{equation}
-
-\noindent où $\delta_t = R_{t+1} + \gamma V(S_{t+1}) - V(S_t)$ est l'erreur TD locale. Ce paramètre $\lambda_{GAE}$ offre un curseur analogue à celui de $TD(\lambda)$ : une valeur proche de $0$ produit une estimation à faible variance mais potentiellement biaisée (horizon court), tandis qu'une valeur proche de $1$ réduit le biais au prix d'une variance plus élevée (horizon long). Ce paramètre sera directement retrouvé lors de la configuration expérimentale de PPO. 
-
-PPO cible précisément un problème grave inhérent au gradient de politique : 
-un pas d'optimisation trop grand peut radicalement "détruire" une politique 
-pourtant fonctionnelle que le réseau ne parviendrait plus à retrouver.
-
-PPO sécurise l'apprentissage en introduisant une fonction objectif "écrêtée" (\textit{Clipped Surrogate Objective}) limitant strictement le volume de modification de la politique entre deux mises à jour :
+ 
+\noindent où $\delta_t = R_{t+1} + \gamma V(S_{t+1}) - V(S_t)$ est l'erreur
+TD locale. $\lambda_{\text{GAE}}$ joue le même rôle que $\lambda$ dans
+$\text{TD}(\lambda)$ : une valeur proche de $0$ produit une estimation à
+faible variance mais potentiellement biaisée (horizon court), tandis qu'une
+valeur proche de $1$ réduit le biais au prix d'une variance plus élevée
+(horizon long). Ce paramètre sera directement retrouvé lors de la
+configuration expérimentale de PPO (section~\ref{sec:hparams}).
+ 
+\paragraph{Clipped Surrogate Objective.}
+Un problème fondamental du gradient de politique est que des mises à jour trop
+importantes peuvent détruire une politique fonctionnelle de manière
+irréversible. PPO sécurise l'apprentissage en introduisant une fonction
+objectif \textbf{écrêtée} (\textit{Clipped Surrogate Objective}) qui limite
+strictement l'amplitude des modifications entre deux mises à jour de la
+politique :
+ 
 \begin{equation}
-    L^{CLIP}(\theta) = \hat{\mathbb{E}}_t \left[ \min\Big(r_t(\theta)\hat{A}_t, \;\text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t\Big) \right]
+    L^{\text{CLIP}}(\theta) = \hat{\mathbb{E}}_t \left[
+        \min\!\Big(r_t(\theta)\,\hat{A}_t,\;
+        \text{clip}\!\big(r_t(\theta),\,1-\varepsilon,\,1+\varepsilon\big)\,\hat{A}_t
+        \Big)
+    \right]
 \end{equation}
-
-Pour interpréter rigoureusement cette formule (que l'on cherche à maximiser) : 
+ 
+\noindent Les trois termes de cette expression (que l'on cherche à maximiser)
+s'interprètent comme suit :
 \begin{itemize}
-    \item $r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)}$ représente le ratio de probabilité. Il quantifie si l'action $a_t$ est plus (ratio $>1$) ou moins (ratio $<1$) probable d'être choisie par la nouvelle politique en cours d'optimisation qu'elle ne l'était sous l'ancienne.
-    \item $\hat{A}_t$ est l'avantage délivré par le Critique, indiquant à quel point l'action s'est révélée judicieuse.
-    \item La fonction $\text{clip}$ compresse mathématiquement ce ratio dans la fenêtre bornée $[1-\epsilon, 1+\epsilon]$ (avec typiquement $\epsilon = 0.2$).
+    \item $r_t(\theta) = \dfrac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\text{old}}}(a_t|s_t)}$
+          est le ratio de probabilité. Il quantifie si l'action $a_t$ est plus
+          ($r_t > 1$) ou moins ($r_t < 1$) probable sous la nouvelle politique
+          que sous l'ancienne.
+    \item $\hat{A}_t$ est l'avantage estimé par le Critique, indiquant si
+          l'action s'est révélée meilleure ou pire que l'espérance de l'état.
+    \item La fonction $\text{clip}$ borne ce ratio dans l'intervalle
+          $[1-\varepsilon,\, 1+\varepsilon]$ (typiquement $\varepsilon = 0.2$),
+          supprimant toute incitation à s'en écarter davantage.
 \end{itemize}
-
-Grâce à l'opérateur $\min$, PPO applique une politique conservatrice. Si une action a été très bonne ($\hat{A}_t > 0$), on cherche à augmenter son ratio de probabilité pour la sélectionner davantage à l'avenir. Cependant, l'algorithme "coupe" les incitations au-delà de la borne permise : il empêche l'acteur de bouleverser tout son réseau de neurones d'un coup pour cette seule action. C'est un processus algorithmique de type \textbf{On-Policy} très fiable. PPO compense partiellement sa \textit{sample efficiency} médiocre — inhérente à toute méthode On-Policy — en autorisant plusieurs passes d'optimisation (\textit{epochs}) sur le même batch de trajectoires collectées, là où un algorithme de gradient de politique classique ne réalise qu'une seule mise à jour par batch. Néanmoins, ce batch doit être intégralement renouvelé après chaque cycle de mise à jour, car les nouvelles données générées par la politique légèrement modifiée ne seraient plus représentatives de l'ancienne \parencite{schulmanProximalPolicyOptimization2017}.
-
+ 
+L'opérateur $\min$ garantit une politique conservatrice dans les deux sens :
+si une action a été bonne ($\hat{A}_t > 0$), on cherche à augmenter sa
+probabilité, mais uniquement dans la limite autorisée~; si elle a été mauvaise
+($\hat{A}_t < 0$), on la pénalise, là encore dans la même fenêtre bornée.
+ 
+\paragraph{Notion de rollout et efficacité des données.}
+En pratique, PPO collecte un \textbf{rollout} --- une séquence de
+\texttt{n\_steps} transitions consécutives --- avant d'effectuer ses mises
+à jour. Ce batch de données est exploité sur plusieurs passes d'optimisation
+(\texttt{n\_epochs}), découpé en mini-batchs de taille \texttt{batch\_size}.
+Pour un rollout de 2\,048 steps, des mini-batchs de 256 et 20 époques, PPO
+effectue ainsi $\lfloor 2048/256 \rfloor \times 20 = 160$ mises à jour du
+réseau par rollout. Ce mécanisme compense partiellement la
+\textit{sample efficiency} structurellement limitée des méthodes
+\textit{on-policy}~; néanmoins, le batch doit être intégralement renouvelé
+après chaque cycle de mise à jour, car les données générées par la politique
+modifiée ne seraient plus représentatives de la politique ayant produit les
+estimations d'avantage \parencite{schulmanProximalPolicyOptimization2017}.
+ 
+% -----------------------------------------------------------------------------
 \subsubsection{Soft Actor-Critic (SAC)}
-
-À l'inverse, \textbf{SAC} \parencite{haarnojaSoftActorCriticOffPolicy2018} mise sur l'efficacité et l'exploration en intégrant l'\textbf{entropie} ($\mathcal{H}$) à la récompense. L'agent cherche à maximiser un compromis entre ses récompenses et son "aléatoire" (via l'entropie de sa politique) pour rester curieux et éviter de se figer dans une stratégie sous-optimale. La fonction objectif de SAC s'écrit ainsi :
+% -----------------------------------------------------------------------------
+ 
+\textbf{SAC} \parencite{haarnojaSoftActorCriticOffPolicy2018} étend le cadre
+actor-critic en intégrant l'\textbf{entropie} de la politique à la fonction
+objectif. L'agent cherche à maximiser simultanément les récompenses
+accumulées et le caractère aléatoire de sa politique, afin de rester
+exploratoire et d'éviter une convergence prématurée vers une stratégie
+sous-optimale :
+ 
 \begin{equation}
-    J(\pi) = \sum_{t=0}^{T} \mathbb{E}_{(s_t, a_t)} \Big[ r(s_t, a_t) + \alpha \mathcal{H}\big(\pi(\cdot|s_t)\big) \Big]
+    J(\pi) = \sum_{t=0}^{T} \mathbb{E}_{(s_t,a_t)\sim\pi}
+    \Big[\,r(s_t, a_t) + \alpha\,\mathcal{H}\!\big(\pi(\cdot|s_t)\big)\,\Big]
 \end{equation}
+ 
+\noindent où $\mathcal{H}(\pi(\cdot|s_t)) = -\mathbb{E}_{a\sim\pi}[\log\pi(a|s_t)]$
+est l'entropie de Shannon de la politique en l'état $s_t$, et $\alpha > 0$
+est un coefficient de température pondérant l'importance relative de l'entropie.
+ 
+\paragraph{Ajustement automatique du coefficient d'entropie.}
+Le coefficient $\alpha$ peut être fixé manuellement ou ajusté automatiquement.
+\textcite{haarnojaSoftActorCriticAlgorithms2019} proposent d'optimiser
+$\alpha$ à chaque step de gradient pour maintenir une entropie cible
+$\mathcal{H}^*$, définie par défaut comme l'opposé de la dimension de
+l'espace d'action :
+ 
+\begin{equation}
+    \mathcal{H}^* = -\dim(\mathcal{A})
+\end{equation}
+ 
+Ce choix correspond approximativement à l'entropie d'une distribution
+uniforme sur un espace d'action normalisé, garantissant une exploration
+suffisante sans sur-contraindre la politique.
+ 
+\paragraph{Reparameterization trick.}
+SAC exploite le \textbf{reparameterization trick} pour rendre son
+optimisation différentiable. Échantillonner directement une action aléatoire
+$a \sim \pi_\theta(\cdot|s)$ est une opération non différentiable qui bloque
+la rétropropagation du gradient. 
+ 
+\paragraph{State Dependent Exploration (SDE).}
+Par défaut, SAC rééchantillonne un bruit gaussien indépendant à
+chaque pas de temps, ce qui peut produire une exploration sans cohérence
+temporelle. \textcite{raffinSmoothExplorationRobotic2021} proposent une
+alternative, l'\textbf{State Dependent Exploration} (SDE) : plutôt que de
+tirer un nouveau bruit à chaque step, SDE maintient un vecteur de bruit
+$\varepsilon$ fixe pendant plusieurs steps consécutifs et apprend un mapping
+$f(s, \varepsilon)$ dépendant de l'état courant. L'exploration devient ainsi
+cohérente dans le temps --- l'agent explore des trajectoires entières plutôt
+que des actions isolées --- et structurée par l'état, ce qui est
+particulièrement adapté aux tâches de contrôle continu nécessitant des
+séquences d'actions coordonnées. 
+ 
+\paragraph{Double réseau critique.}
+Pour contenir le biais de surestimation des valeurs Q
+(\textit{overestimation bias}) --- problème structurel des méthodes
+actor-critic identifié par \textcite{fujimotoAddressingFunctionApproximation2018}
+--- SAC adopte le principe du \textbf{double réseau critique} hérité de TD3 :
+deux réseaux $Q_{\phi_1}$ et $Q_{\phi_2}$ sont entraînés indépendamment sur
+les mêmes transitions, et la cible de mise à jour utilise systématiquement
+le minimum des deux estimations :
+ 
+\begin{equation}
+    y = r + \gamma \min_{i=1,2} Q_{\phi_i}(s', \tilde{a}')
+        - \alpha\log\pi_\theta(\tilde{a}'|s'),
+    \quad \tilde{a}' \sim \pi_\theta(\cdot|s')
+\end{equation}
+ 
+En prenant le minimum, on pénalise les états sur-estimés plutôt que de les
+amplifier, ce qui stabilise l'apprentissage du critique et, par ricochet,
+celui de l'acteur.
+ 
+\paragraph{Soft target update.}
+Contrairement à DQN qui synchronise périodiquement son réseau cible par
+copie intégrale des poids, SAC adopte une mise à jour \textbf{douce}
+(\textit{soft update}) à chaque step de gradient pour chacun de ses deux
+réseaux cibles :
+ 
+\begin{equation}
+    \phi_{\text{cible}} \leftarrow \tau\,\phi + (1-\tau)\,\phi_{\text{cible}}
+\end{equation}
+ 
+\noindent où $\tau \ll 1$ (valeur standard : $0.005$) est le taux
+d'interpolation. Cette approche produit une cible évoluant lentement et
+continûment, offrant un signal d'apprentissage plus stable que les mises
+à jour discrètes de DQN. C'est l'ensemble de cette architecture --- deux
+critiques, deux réseaux cibles, un acteur, et le mécanisme d'entropie
+adaptative --- qui explique généralement le coût computationnel structurellement plus élevé de SAC par rapport à des algorithmes n'entretenant qu'un seul réseau critique.
 
-Cette approche offre deux arguments majeurs pour notre étude :
-\begin{enumerate}
-    \item \textbf{Exploration robuste} : L'agent est récompensé à rester "curieux". En diversifiant ses trajectoires, il évite de converger prématurément vers une stratégie médiocre.
-    \item \textbf{Efficacité d'interaction} : Étant \textbf{Off-Policy}, SAC stocke l'intégralité de ses transitions $(s, a, r, s')$ dans un \textit{Replay Buffer} — exactement comme DQN — et peut réutiliser massivement ces expériences passées pour s'entraîner, indépendamment de la politique courante. Cette propriété lui confère une bien meilleure \textit{sample efficiency} que PPO, un atout décisif pour la robotique où chaque interaction physique est coûteuse.
-\end{enumerate}
-
-Enfin, SAC exploite le \textbf{\textit{reparameterization trick}} pour rendre son optimisation différentiable : plutôt que d'échantillonner directement une action aléatoire $a \sim \pi_\theta(\cdot|s)$ — opération non différentiable bloquant la rétropropagation — l'action est exprimée comme une transformation déterministe d'un bruit aléatoire externe $\epsilon \sim \mathcal{N}(0,1)$, soit $a = \mu_\theta(s) + \sigma_\theta(s) \cdot \epsilon$. Cette reformulation découple la source d'aléatoire des paramètres $\theta$, permettant le calcul du gradient par rapport à ces derniers. Cette propriété rend SAC très efficace en espace continu, mais difficilement adaptable aux environnements purement discrets.
 
 \subsection{Synthèse et positionnement des algorithmes étudiés}
 
@@ -461,16 +587,25 @@ Replay Buffer & \checkmark & $\times$ & \checkmark \\
 \hline
 Stabilité & Moyenne & Élevée & Élevée \\
 \hline
-Exploration & $\epsilon$-greedy & $\epsilon$-greedy / stochastique & Maximisation d'entropie \\
+Exploration & $\epsilon$-greedy & Stochastique (distribution apprise) & Maximisation d'entropie \\
+
 \hline
 Référence fondatrice & \textcite{mnihHumanlevelControlDeep2015} & \textcite{schulmanProximalPolicyOptimization2017} & \textcite{haarnojaSoftActorCriticOffPolicy2018} \\
 \hline
 \end{tabular}%
 }
-
-
-
 \end{table}
+
+\begin{flushleft}
+\footnotesize
+\textit{Note} --- L'exploration de PPO est intrinsèquement stochastique :
+la politique paramétrise une distribution de probabilités (catégorielle en
+discret, gaussienne en continu) depuis laquelle les actions sont
+échantillonnées à chaque step. Contrairement à DQN, aucun mécanisme
+$\varepsilon$-greedy n'est nécessaire. Le paramètre $\varepsilon$ de PPO
+désigne le seuil d'écrêtage du Clipped Surrogate Objective, sans lien avec
+la stratégie d'exploration.
+\end{flushleft}
 
 
 \noindent Cette diversité de paradigmes permet une comparaison expérimentale riche : DQN sert de référence tabulaire profonde, PPO représente l'approche On-Policy de l'état de l'art, et SAC incarne l'efficacité Off-Policy avec exploration intrinsèque. Leur confrontation sur des environnements Gymnasium standardisés, puis sur un environnement complexe avec \textit{reward shaping}, constituera le cœur de l'analyse empirique de ce mémoire.

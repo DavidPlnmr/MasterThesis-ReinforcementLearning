@@ -694,14 +694,109 @@ Cette procédure multi-seeds permet de distinguer les configurations robustes
 --- qui convergent systématiquement --- des configurations qui réussissent de
 manière occasionnelle en raison de la stochasticité de l'entraînement.
 
-
+% -----------------------------------------------------------------------------
 \subsubsection{Résultats de l'évaluation multi-seeds}
-% À compléter une fois evaluate.py terminé.
-% Structure suggérée :
-%
-% \begin{table}
-%   algo | env | mean ± std | min | max | success_rate | seeds résolues
-% \end{table}
-%
-% Puis paragraphe d'analyse par algo (en s'appuyant sur les commentaires
-% FIX ci-dessus), et synthèse comparative finale.
+\label{sec:eval_finale}
+% -----------------------------------------------------------------------------
+
+Les résultats de l'évaluation multi-seeds sont présentés dans le
+tableau~\ref{tab:eval_finale}. Chaque configuration optimale est réentraînée
+sur 5 seeds indépendantes ($\{42, 123, 456, 789, 1337\}$) pendant 500\,000
+steps, puis évaluée de manière déterministe sur 20 épisodes. Les métriques
+rapportées sont la récompense moyenne et son écart-type inter-seeds (std
+échantillon, $n-1$), les récompenses extrêmes observées, le taux de succès
+(fraction d'épisodes avec une récompense $\geq 200$) et le nombre de seeds
+pour lesquelles la récompense moyenne dépasse le seuil de résolution.
+
+\begin{table}[h!]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.3}
+\caption{Résultats de l'évaluation multi-seeds (500\,000 steps,
+         récompense moyenne sur 20 épisodes déterministes, std échantillon)}
+\label{tab:eval_finale}
+\newlength{\evalColB}\setlength{\evalColB}{3.2cm}
+\newlength{\evalColSide}\setlength{\evalColSide}{1.4cm}
+\begin{tabular}{%
+  p{1.5cm}%
+  p{1.5cm}%
+  p{\evalColB}%
+  p{\evalColSide}%
+  p{\evalColSide}%
+  p{\evalColSide}%
+  p{\evalColSide}%
+}
+\toprule
+\textbf{Algo.} & \textbf{Env.}
+  & \textbf{Mean $\pm$ Std}
+  & \textbf{Min}
+  & \textbf{Max}
+  & \textbf{Succès}
+  & \textbf{Seeds} \\
+\midrule
+DQN & Discret  & $145.19 \pm 45.76$ & $101.26$ & $231.89$ & $39\%$ & $1/5$ \\
+PPO & Discret  & $218.58 \pm 50.72$ & $143.95$ & $278.76$ & $77\%$ & $3/5$ \\
+PPO & Continu  & $208.67 \pm 50.17$ & $159.60$ & $278.96$ & $74\%$ & $2/5$ \\
+SAC & Continu  & $233.44 \pm 52.50$ & $132.67$ & $281.01$ & $79\%$ & $4/5$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{SAC et PPO --- configurations robustes.}
+SAC obtient la meilleure récompense moyenne ($233.44 \pm 52.50$) et le taux
+de succès le plus élevé ($79\%$, 4 seeds sur 5 résolues), confirmant la
+supériorité de l'algorithme à entropie maximale sur la variante continue.
+PPO affiche des performances solides dans les deux variantes, avec des
+récompenses moyennes supérieures au seuil de résolution ($218.58$ en discret,
+$208.67$ en continu) et des taux de succès proches de $75\%$. La variante
+discrète résout légèrement plus de seeds (3/5 contre 2/5), bien que les scores
+moyens soient proches, ce qui suggère une variance inter-seeds plus favorable
+en espace discret.
+
+\paragraph{DQN --- fragilité de la configuration optimale.}
+DQN présente un écart marqué entre son score Optuna ($275.14$) et sa
+récompense moyenne en évaluation finale ($145.19$), soit une chute de plus de
+130 points. Cet écart s'explique vraisemblablement par la nature de la
+configuration retenue : un \textit{replay buffer} de $10^4$ transitions et
+un \texttt{train\_freq = 1} constituent une configuration agressive, optimisée
+pour converger rapidement sur 250\,000 steps de tuning, mais qui ne se
+généralise pas sur les 500\,000 steps de l'évaluation finale. Le ratio élevé
+mise-à-jour/données induit une variance importante dans les gradients, ce qui
+se traduit par une instabilité inter-seeds (écart-type de $45.76$, une seule
+seed résolue sur 5).
+
+\paragraph{Écarts-types élevés --- limite de l'évaluation à 5 seeds.}
+Les écarts-types inter-seeds sont importants pour tous les algorithmes
+($45$--$52$ points), ce qui reflète la stochasticité inhérente à
+l'entraînement par renforcement. Avec seulement 5 seeds, ces estimations
+restent bruitées. Cette phase ayant pour vocation la validation du protocole
+d'optimisation plutôt qu'une évaluation exhaustive, ce nombre de seeds est
+néanmoins suffisant pour dégager les tendances principales.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\textwidth]{img/model_convergence_boxplot.png}
+\caption{Distribution du temps de convergence (en minutes) pour chaque
+         combinaison algorithme/environnement, sur les 5 seeds indépendantes.}
+\label{fig:convergence_boxplot}
+\end{figure}
+
+La figure~\ref{fig:convergence_boxplot} illustre la distribution des temps
+de convergence inter-seeds. SAC requiert globalement un temps d'entraînement
+plus important que PPO et DQN, ce qui s'explique par le coût computationnel
+de ses mises à jour : SAC maintient simultanément deux réseaux Q (double
+critic) et un acteur, et calcule à chaque step la mise à jour du coefficient
+d'entropie adaptatif --- un coût par update structurellement plus élevé que
+celui des autres algorithmes, indépendamment de la fréquence des mises à jour.
+
+\paragraph{Synthèse.}
+Ces résultats mettent en évidence deux enseignements principaux. D'une part,
+le score Optuna n'est pas un prédicteur fiable de la robustesse inter-seeds :
+DQN en est l'illustration la plus nette, avec le deuxième meilleur score de
+tuning mais les performances finales les plus faibles. D'autre part, SAC et
+PPO représentent des compromis distincts : SAC offre les meilleures
+performances sur la variante continue au prix d'un coût computationnel plus
+élevé, tandis que PPO, applicable aux deux types d'espaces d'action avec des
+performances stables, constitue un choix plus polyvalent pour des contextes
+aux ressources limitées.
