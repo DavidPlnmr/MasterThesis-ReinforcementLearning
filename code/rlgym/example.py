@@ -100,6 +100,6 @@ if __name__ == "__main__":
                       save_every_ts=1_000_000,  # save every 1M steps
                       timestep_limit=1_000_000_000,  # Train for 1B steps
                       log_to_wandb=True, # Set this to True if you want to use Weights & Biases for logging.
-                      render=True
+                      render=False
                       ) 
     learner.learn()
