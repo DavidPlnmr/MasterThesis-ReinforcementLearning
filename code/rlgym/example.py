@@ -1,3 +1,4 @@
+import patch_kbhit # Patch pour éviter les problèmes de KBHit sur Slurm qui attendent une entrée clavier. Doit être importé avant rlgym_ppo.
 import argparse
 
 
