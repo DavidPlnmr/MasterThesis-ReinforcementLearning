@@ -346,3 +346,5 @@ models_saved/
 videos/
 
 __pycache__/
+
+data/
