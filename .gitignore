@@ -344,3 +344,5 @@ wandb/
 
 models_saved/
 videos/
+
+__pycache__/
