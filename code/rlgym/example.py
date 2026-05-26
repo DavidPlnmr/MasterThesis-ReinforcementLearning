@@ -6,7 +6,7 @@ import os
 
 def build_rlgym_v2_env():
     
-    from rewards import InAirReward, FaceBallReward
+    from rewards import InAirReward, FaceBallReward, VelocityBallToGoalReward
     from statemutator import RandomStateMutator
 
     import numpy as np
@@ -44,7 +44,8 @@ def build_rlgym_v2_env():
     )
 
     reward_fn = CombinedReward(
-        (TouchReward(), 50),
+        (VelocityBallToGoalReward(), 8),
+        (TouchReward(), 3),
         (VelocityPlayerToBallReward(), 5),
         (FaceBallReward(), 1),
         (InAirReward(), 0.15)
