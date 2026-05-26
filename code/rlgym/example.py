@@ -78,12 +78,7 @@ def build_rlgym_v2_env():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train an RLGym PPO agent.")
-    parser.add_argument(
-        "--checkpoints-folder",
-        type=str,
-        default="data/checkpoints/rlgym-ppo-run",
-        help="Dossier où sauvegarder les checkpoints du modèle.",
-    )
+    
     parser.add_argument(
         "--n-proc", 
         type=int,
@@ -112,16 +107,6 @@ if __name__ == "__main__":
     # educated guess - could be slightly higher or lower
     min_inference_size = max(1, int(round(n_proc * 0.9)))
 
-    # Note: You MUST disable the "add_unix_timestamp" learner setting for this to work properly
-    os.makedirs(args.checkpoints_folder, exist_ok=True)
-
-    # Load the latest checkpoint if it exists, otherwise start fresh. This allows for seamless resumption of training across Slurm job restarts.
-    checkpoints = [d for d in os.listdir(args.checkpoints_folder) if d.isdigit()]
-    if checkpoints:
-        latest_checkpoint_dir = args.checkpoints_folder + "/" + str(max(checkpoints, key=lambda d: int(d)))
-    else:
-        latest_checkpoint_dir = None  
-
     learner = Learner(build_rlgym_v2_env,
                       n_proc=n_proc,
                       min_inference_size=min_inference_size,
@@ -144,8 +129,5 @@ if __name__ == "__main__":
                       timestep_limit=args.timesteps_limit,  # Train for 1B steps
                       log_to_wandb=True, # Set this to True if you want to use Weights & Biases for logging.
                       render=False,
-                      checkpoints_save_folder=args.checkpoints_folder,
-                      checkpoints_load_folder=latest_checkpoint_dir,
-                      add_unix_timestamp_to_checkpoints_folder=False
                       ) 
     learner.learn()
