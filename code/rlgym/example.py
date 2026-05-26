@@ -113,7 +113,14 @@ if __name__ == "__main__":
     min_inference_size = max(1, int(round(n_proc * 0.9)))
 
     # Note: You MUST disable the "add_unix_timestamp" learner setting for this to work properly
-    latest_checkpoint_dir = args.checkpoints_folder + "/" + str(max(os.listdir(args.checkpoints_folder), key=lambda d: int(d)))
+    os.makedirs(args.checkpoints_folder, exist_ok=True)
+
+    # Load the latest checkpoint if it exists, otherwise start fresh. This allows for seamless resumption of training across Slurm job restarts.
+    checkpoints = [d for d in os.listdir(args.checkpoints_folder) if d.isdigit()]
+    if checkpoints:
+        latest_checkpoint_dir = args.checkpoints_folder + "/" + str(max(checkpoints, key=lambda d: int(d)))
+    else:
+        latest_checkpoint_dir = None  
 
     learner = Learner(build_rlgym_v2_env,
                       n_proc=n_proc,
