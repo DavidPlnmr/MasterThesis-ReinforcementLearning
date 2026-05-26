@@ -1,6 +1,6 @@
 import patch_kbhit # Patch pour éviter les problèmes de KBHit sur Slurm qui attendent une entrée clavier. Doit être importé avant rlgym_ppo.
 import argparse
-
+import os
 
 def build_rlgym_v2_env():
     
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--checkpoints-folder",
         type=str,
-        default="checkpoints",
+        default="data/checkpoints/rlgym-ppo-run",
         help="Dossier où sauvegarder les checkpoints du modèle.",
     )
     parser.add_argument(
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--timesteps-limit",
         type=int,
-        default=1_000_000_000,
+        default=10e15,
         help="Limite de timesteps pour l'entraînement."
     )
     args = parser.parse_args()
@@ -112,20 +112,25 @@ if __name__ == "__main__":
     # educated guess - could be slightly higher or lower
     min_inference_size = max(1, int(round(n_proc * 0.9)))
 
+    # Note: You MUST disable the "add_unix_timestamp" learner setting for this to work properly
+    latest_checkpoint_dir = args.checkpoints_folder + "/" + str(max(os.listdir(args.checkpoints_folder), key=lambda d: int(d)))
+
     learner = Learner(build_rlgym_v2_env,
                       n_proc=n_proc,
                       min_inference_size=min_inference_size,
                       metrics_logger=None, # Leave this empty for now.
-                      ppo_batch_size=100_000,  # batch size - much higher than 300K doesn't seem to help most people
+                      ppo_batch_size=50_000,  # batch size - much higher than 300K doesn't seem to help most people
                     #   policy_layer_sizes=[2048, 2048, 1024, 1024],  # policy network
                     #   critic_layer_sizes=[2048, 2048, 1024, 1024],  # critic network
-                      ts_per_iteration=100_000,  # timesteps per training iteration - set this equal to the batch size
-                      exp_buffer_size=300_000,  # size of experience buffer - keep this 2 - 3x the batch size
-                      ppo_minibatch_size=50_000,  # minibatch size - set this as high as your GPU can handle
-                      ppo_ent_coef=0.001,  # entropy coefficient - this determines the impact of exploration
+                      ts_per_iteration=50_000,  # timesteps per training iteration - set this equal to the batch size
+                      exp_buffer_size=150_000,  # size of experience buffer - keep this 2 - 3x the batch size
+                      ppo_minibatch_size=25_000,  # minibatch size - set this as high as your GPU can handle
+                      ppo_ent_coef=0.01,  # entropy coefficient - this determines the impact of exploration
                       policy_lr=2e-4,  # policy learning rate
                       critic_lr=2e-4,  # critic learning rate
                       ppo_epochs=2,   # number of PPO epochs
+                      policy_layer_sizes=[2048, 2048, 1024, 1024],  # policy network
+                      critic_layer_sizes=[2048, 2048, 1024, 1024],  # critic network making it the same size as the policy 
                       standardize_returns=True, # Don't touch these.
                       standardize_obs=False, # Don't touch these.
                       save_every_ts=args.save_every_ts,  # save every 1M steps
@@ -133,6 +138,7 @@ if __name__ == "__main__":
                       log_to_wandb=True, # Set this to True if you want to use Weights & Biases for logging.
                       render=False,
                       checkpoints_save_folder=args.checkpoints_folder,
-                      checkpoints_load_folder=args.checkpoints_folder
+                      checkpoints_load_folder=latest_checkpoint_dir
+                      add_unix_timestamp_to_checkpoints_folder=False
                       ) 
     learner.learn()
