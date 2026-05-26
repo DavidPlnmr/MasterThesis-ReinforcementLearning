@@ -1,3 +1,6 @@
+import argparse
+
+
 def build_rlgym_v2_env():
     
     from rewards import InAirReward, FaceBallReward
@@ -73,10 +76,37 @@ def build_rlgym_v2_env():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Train an RLGym PPO agent.")
+    parser.add_argument(
+        "--checkpoints-folder",
+        type=str,
+        default="checkpoints",
+        help="Dossier où sauvegarder les checkpoints du modèle.",
+    )
+    parser.add_argument(
+        "--n-proc", 
+        type=int,
+        default=8,
+        help="Nombre de processus d'environnement à utiliser pour l'entraînement."
+    )
+    parser.add_argument(
+        "--save-every-ts",
+        type=int,
+        default=1_000_000,
+        help="Sauvegarder le modèle tous les N timesteps."
+    )
+    parser.add_argument(
+        "--timesteps-limit",
+        type=int,
+        default=1_000_000_000,
+        help="Limite de timesteps pour l'entraînement."
+    )
+    args = parser.parse_args()
+
     from rlgym_ppo import Learner
 
-    # 32 processes
-    n_proc = 32
+    # processes
+    n_proc = args.n_proc
 
     # educated guess - could be slightly higher or lower
     min_inference_size = max(1, int(round(n_proc * 0.9)))
@@ -97,9 +127,11 @@ if __name__ == "__main__":
                       ppo_epochs=2,   # number of PPO epochs
                       standardize_returns=True, # Don't touch these.
                       standardize_obs=False, # Don't touch these.
-                      save_every_ts=1_000_000,  # save every 1M steps
-                      timestep_limit=1_000_000_000,  # Train for 1B steps
+                      save_every_ts=args.save_every_ts,  # save every 1M steps
+                      timestep_limit=args.timesteps_limit,  # Train for 1B steps
                       log_to_wandb=True, # Set this to True if you want to use Weights & Biases for logging.
-                      render=False
+                      render=False,
+                      checkpoints_save_folder=args.checkpoints_folder,
+                      checkpoints_load_folder=args.checkpoints_folder
                       ) 
     learner.learn()
