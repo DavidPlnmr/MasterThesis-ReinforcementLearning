@@ -1,6 +1,8 @@
 import patch_kbhit # Patch pour éviter les problèmes de KBHit sur Slurm qui attendent une entrée clavier. Doit être importé avant rlgym_ppo.
+# import patch_torch_gpu # Patch pour éviter les problèmes de checkpoints de GPU/CPU tensors. Doit être importé avant rlgym_ppo.
 import argparse
 import os
+
 
 def build_rlgym_v2_env():
     
@@ -112,8 +114,6 @@ if __name__ == "__main__":
                       min_inference_size=min_inference_size,
                       metrics_logger=None, # Leave this empty for now.
                       ppo_batch_size=50_000,  # batch size - much higher than 300K doesn't seem to help most people
-                    #   policy_layer_sizes=[2048, 2048, 1024, 1024],  # policy network
-                    #   critic_layer_sizes=[2048, 2048, 1024, 1024],  # critic network
                       ts_per_iteration=50_000,  # timesteps per training iteration - set this equal to the batch size
                       exp_buffer_size=150_000,  # size of experience buffer - keep this 2 - 3x the batch size
                       ppo_minibatch_size=25_000,  # minibatch size - set this as high as your GPU can handle

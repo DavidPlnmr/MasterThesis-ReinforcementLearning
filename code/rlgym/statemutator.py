@@ -10,9 +10,9 @@ class RandomStateMutator(StateMutator[GameState]):
     def apply(self, state: GameState, shared_info: Dict[str, Any]) -> None:
         # Define spawn location and orientation
 
-        car_x = np.random.uniform(-common_values.SIDE_WALL_X, common_values.SIDE_WALL_X)
-        car_y = np.random.uniform(-common_values.BACK_NET_Y, common_values.BACK_NET_Y)
-        car_z = np.random.uniform(0, common_values.CEILING_Z)
+        car_x = np.random.uniform(-common_values.SIDE_WALL_X * 0.75, common_values.SIDE_WALL_X * 0.75)
+        car_y = np.random.uniform(-common_values.BACK_NET_Y * 0.75, common_values.BACK_NET_Y * 0.75)
+        car_z = np.random.uniform(0, common_values.CEILING_Z * 0.75)
         desired_car_pos = np.array([car_x, car_y, car_z], dtype=np.float32)  # x, y, z
         desired_yaw = np.random.uniform(-np.pi, np.pi)  # yaw angle in radians
 
@@ -35,9 +35,9 @@ class RandomStateMutator(StateMutator[GameState]):
             # car.boost = np.random.uniform(0, 100)  # random boost amount
 
         # Set ball physics state
-        ball_x = np.random.uniform(-common_values.SIDE_WALL_X, common_values.SIDE_WALL_X)
-        ball_y = np.random.uniform(-common_values.BACK_NET_Y, common_values.BACK_NET_Y)
-        ball_z = np.random.uniform(0, common_values.CEILING_Z)
+        ball_x = np.random.uniform(-common_values.SIDE_WALL_X * 0.75, common_values.SIDE_WALL_X * 0.75)
+        ball_y = np.random.uniform(-common_values.BACK_NET_Y * 0.75, common_values.BACK_NET_Y * 0.75)
+        ball_z = np.random.uniform(0, common_values.CEILING_Z * 0.75)  
 
         state.ball.position = np.array([ball_x, ball_y, ball_z], dtype=np.float32)
 
