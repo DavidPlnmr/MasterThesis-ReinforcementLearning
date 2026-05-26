@@ -138,7 +138,7 @@ if __name__ == "__main__":
                       log_to_wandb=True, # Set this to True if you want to use Weights & Biases for logging.
                       render=False,
                       checkpoints_save_folder=args.checkpoints_folder,
-                      checkpoints_load_folder=latest_checkpoint_dir
+                      checkpoints_load_folder=latest_checkpoint_dir,
                       add_unix_timestamp_to_checkpoints_folder=False
                       ) 
     learner.learn()
