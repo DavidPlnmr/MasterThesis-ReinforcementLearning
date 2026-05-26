@@ -50,4 +50,4 @@ class RandomStateMutator(StateMutator[GameState]):
         ball_lin_vel_z = np.random.uniform(-speed, speed)
 
         state.ball.linear_velocity = np.array([ball_lin_vel_x, ball_lin_vel_y, ball_lin_vel_z], dtype=np.float32)
-        state.ball.angular_velocity = np.random.zeros(3, dtype=np.float32)
+        state.ball.angular_velocity = np.zeros(3, dtype=np.float32)
