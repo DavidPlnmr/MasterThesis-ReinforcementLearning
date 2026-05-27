@@ -44,9 +44,10 @@ def build_rlgym_v2_env():
     )
 
     reward_fn = CombinedReward(
-        (VelocityBallToGoalReward(), 8),
-        (TouchReward(), 3),
-        (VelocityPlayerToBallReward(), 5),
+        (VelocityBallToGoalReward(own_goal=False), 8),
+        (VelocityBallToGoalReward(own_goal=True), -3),
+        (TouchReward(), 5),
+        (VelocityPlayerToBallReward(), 3),
         (FaceBallReward(), 1),
         (InAirReward(), 0.15)
     )
@@ -62,7 +63,7 @@ def build_rlgym_v2_env():
 
     state_mutator = MutatorSequence(
         FixedTeamSizeMutator(blue_size=blue_team_size, orange_size=orange_team_size),
-        RandomStateMutator()
+        KickoffMutator()
     )
 
     rlgym_env = RLGym(
