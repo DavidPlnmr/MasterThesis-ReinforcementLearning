@@ -3,6 +3,7 @@ import patch_kbhit # Patch pour éviter les problèmes de KBHit sur Slurm qui at
 import argparse
 import os
 
+project_name = "rlgym_ppo_example"
 
 def build_rlgym_v2_env():
     
@@ -90,7 +91,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--save-every-ts",
         type=int,
-        default=1_000_000,
+        default=10_000_000,
         help="Sauvegarder le modèle tous les N timesteps."
     )
     parser.add_argument(
@@ -109,6 +110,13 @@ if __name__ == "__main__":
     # educated guess - could be slightly higher or lower
     min_inference_size = max(1, int(round(n_proc * 0.9)))
 
+    checkpoint_folder = f"data/checkpoints/{project_name}"
+    if not os.path.exists(checkpoint_folder):
+        os.makedirs(checkpoint_folder)
+    
+    checkpoint_files = os.listdir(checkpoint_folder)
+    checkpoint_load_folder = os.path.join(checkpoint_folder, max(checkpoint_files)) if checkpoint_files else None
+
     learner = Learner(build_rlgym_v2_env,
                       n_proc=n_proc,
                       min_inference_size=min_inference_size,
@@ -116,7 +124,7 @@ if __name__ == "__main__":
                       ppo_batch_size=50_000,  # batch size - much higher than 300K doesn't seem to help most people
                       ts_per_iteration=50_000,  # timesteps per training iteration - set this equal to the batch size
                       exp_buffer_size=150_000,  # size of experience buffer - keep this 2 - 3x the batch size
-                      ppo_minibatch_size=25_000,  # minibatch size - set this as high as your GPU can handle
+                      ppo_minibatch_size=50_000,  # minibatch size - set this as high as your GPU can handle
                       ppo_ent_coef=0.01,  # entropy coefficient - this determines the impact of exploration
                       policy_lr=2e-4,  # policy learning rate
                       critic_lr=2e-4,  # critic learning rate
@@ -127,6 +135,9 @@ if __name__ == "__main__":
                       standardize_obs=False, # Don't touch these.
                       save_every_ts=args.save_every_ts,  # save every 1M steps
                       timestep_limit=args.timesteps_limit,  # Train for 1B steps
+                      checkpoint_load_folder=checkpoint_load_folder,  # Automatically load the latest checkpoint if it exists
+                      checkpoints_save_folder=checkpoint_folder,
+                      add_unix_timestamp=False,
                       log_to_wandb=True, # Set this to True if you want to use Weights & Biases for logging.
                       render=False,
                       ) 
