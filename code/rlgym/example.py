@@ -1,4 +1,4 @@
-# import patch_kbhit # Patch pour éviter les problèmes de KBHit sur Slurm qui attendent une entrée clavier. Doit être importé avant rlgym_ppo.
+import patch_kbhit # Patch pour éviter les problèmes de KBHit sur Slurm qui attendent une entrée clavier. Doit être importé avant rlgym_ppo.
 # import patch_torch_gpu # Patch pour éviter les problèmes de checkpoints de GPU/CPU tensors. Doit être importé avant rlgym_ppo.
 import argparse
 import os
@@ -127,7 +127,7 @@ if __name__ == "__main__":
                       standardize_obs=False, # Don't touch these.
                       save_every_ts=args.save_every_ts,  # save every 1M steps
                       timestep_limit=args.timesteps_limit,  # Train for 1B steps
-                      log_to_wandb=False, # Set this to True if you want to use Weights & Biases for logging.
-                      render=True,
+                      log_to_wandb=True, # Set this to True if you want to use Weights & Biases for logging.
+                      render=False,
                       ) 
     learner.learn()
