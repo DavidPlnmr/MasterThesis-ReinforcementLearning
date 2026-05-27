@@ -14,48 +14,58 @@ class InAirReward(RewardFunction[AgentID, GameState, float]):
                     is_truncated: Dict[AgentID, bool], shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
         return {agent: float(not state.cars[agent].on_ground) for agent in agents}
     
-class FaceBallReward(RewardFunction[AgentID, GameState, float]):
+class FaceBallReward(RewardFunction):
     """Rewards the agent for facing the ball"""
-    
     def reset(self, agents: List[AgentID], initial_state: GameState, shared_info: Dict[str, Any]) -> None:
         pass
-    
+
+
     def get_rewards(self, agents: List[AgentID], state: GameState, is_terminated: Dict[AgentID, bool],
                     is_truncated: Dict[AgentID, bool], shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
         rewards = {}
+
         for agent in agents:
             car = state.cars[agent]
-            pos_diff = state.ball.position - car.physics.position
-            norm_pos_diff = pos_diff / np.linalg.norm(pos_diff)
-            rewards[agent] = float(np.dot(car.physics.forward, norm_pos_diff))
+            ball = state.ball
+
+            car_pos = car.physics.position
+            ball_pos = ball.position
+            direction_to_ball = ball_pos - car_pos
+            norm = np.linalg.norm(direction_to_ball)
+
+            if norm > 0:
+                direction_to_ball /= norm
+
+            car_forward = car.physics.forward
+            dot_product = np.dot(car_forward, direction_to_ball)
+
+            reward = dot_product  # Dot product directly indicates alignment (-1 to 1)
+            rewards[agent] = reward
+
         return rewards
 
 class VelocityBallToGoalReward(RewardFunction[AgentID, GameState, float]):
-    """Rewards the agent for the velocity of the ball towards the opponent's goal"""
+    """Rewards the agent for hitting the ball toward the opponent's goal"""
     
-    def __init__(self, own_goal=False):
-        self.own_goal = own_goal
-
     def reset(self, agents: List[AgentID], initial_state: GameState, shared_info: Dict[str, Any]) -> None:
         pass
-
+    
     def get_rewards(self, agents: List[AgentID], state: GameState, is_terminated: Dict[AgentID, bool],
                     is_truncated: Dict[AgentID, bool], shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
         rewards = {}
         for agent in agents:
             car = state.cars[agent]
-            
-            # Détermine l'objectif selon l'équipe
-            if car.team_num == 0 and not self.own_goal or car.team_num == 1 and self.own_goal:
-                objective = np.array([0, common_values.BACK_NET_Y, 0])   # but orange
+            ball = state.ball
+            if car.is_orange:
+                goal_y = -common_values.BACK_NET_Y
             else:
-                objective = np.array([0, -common_values.BACK_NET_Y, 0])  # but bleu
+                goal_y = common_values.BACK_NET_Y
 
-            vel = state.ball.linear_velocity
-            pos_diff = objective - state.ball.position
-            norm_pos_diff = pos_diff / np.linalg.norm(pos_diff)
-            norm_vel = vel / common_values.BALL_MAX_SPEED
-
-            rewards[agent] = float(np.dot(norm_pos_diff, norm_vel))
-        
+            ball_vel = ball.linear_velocity
+            pos_diff = np.array([0, goal_y, 0]) - ball.position
+            dist = np.linalg.norm(pos_diff)
+            dir_to_goal = pos_diff / dist
+            
+            vel_toward_goal = np.dot(ball_vel, dir_to_goal)
+            rewards[agent] = max(vel_toward_goal / common_values.BALL_MAX_SPEED, 0)
         return rewards

@@ -4,50 +4,80 @@ from rlgym.api import StateMutator
 from rlgym.rocket_league.api import GameState
 from rlgym.rocket_league import common_values
 
-class RandomStateMutator(StateMutator[GameState]):
-    """A StateMutator that sets random positions for cars and the ball."""
-    
+from rlgym.rocket_league.common_values import SIDE_WALL_X, BACK_WALL_Y, CEILING_Z
+from rlgym.rocket_league.math import rand_vec3, rand_uvec3, normalize
+from rlgym_tools.rocket_league.reward_functions.aerial_distance_reward import RAMP_HEIGHT
+
+from rlgym_tools.rocket_league.state_mutators.weighted_sample_mutator import WeightedSampleMutator
+from rlgym.rocket_league.state_mutators import MutatorSequence, KickoffMutator
+
+class RandomPhysicsMutator(StateMutator[GameState]):  #taken from rlgym tools, slightly modified
     def apply(self, state: GameState, shared_info: Dict[str, Any]) -> None:
-        # Define spawn location and orientation
+        padding = 100  # Ball radius and car hitbox with biggest radius are both below this
+        goal_line_y = 5120
+        min_goal_dist = 2000
+        i = 0
 
-        car_x = np.random.uniform(-common_values.SIDE_WALL_X * 0.75, common_values.SIDE_WALL_X * 0.75)
-        car_y = np.random.uniform(-common_values.BACK_NET_Y * 0.75, common_values.BACK_NET_Y * 0.75)
-        car_z = np.random.uniform(0, common_values.CEILING_Z * 0.75)
-        desired_car_pos = np.array([car_x, car_y, car_z], dtype=np.float32)  # x, y, z
-        desired_yaw = np.random.uniform(-np.pi, np.pi)  # yaw angle in radians
+        for po in [state.ball] + [car.physics for car in state.cars.values()]:
+            while True:
+                if i == 0:
+                    max_z = CEILING_Z - padding
+                else:
+                    # Cars spawn at max 1/6 ceiling height, because falling from the sky is pointless
+                    max_z = (CEILING_Z / 6) - padding
 
-        # Iterate over all cars in the game
-        for car in state.cars.values():
-            if car.is_orange:
-                # Orange team positions
-                pos = desired_car_pos
-                yaw = desired_yaw
-            else:
-                # Blue team positions (inverted)
-                pos = -desired_car_pos
-                yaw = -desired_yaw
+                new_pos = np.random.uniform(
+                    [-SIDE_WALL_X + padding, -BACK_WALL_Y + padding, 0 + padding],
+                    [SIDE_WALL_X - padding, BACK_WALL_Y - padding, max_z]
+                )
 
-            # Set car physics state
-            car.physics.position = pos
-            car.physics.euler_angles = np.array([0, 0, yaw], dtype=np.float32)
-            car.physics.linear_velocity = np.zeros(3, dtype=np.float32)
-            car.physics.angular_velocity = np.zeros(3, dtype=np.float32)
-            # car.boost = np.random.uniform(0, 100)  # random boost amount
+               #Make sure ball spawns at least 2000 uu from both goal lines
+                if i == 0 and (abs(new_pos[1]) > goal_line_y - min_goal_dist):
+                    continue
 
-        # Set ball physics state
-        ball_x = np.random.uniform(-common_values.SIDE_WALL_X * 0.75, common_values.SIDE_WALL_X * 0.75)
-        ball_y = np.random.uniform(-common_values.BACK_NET_Y * 0.75, common_values.BACK_NET_Y * 0.75)
-        ball_z = np.random.uniform(0, common_values.CEILING_Z * 0.75)  
+                # Field edge checks
+                if abs(new_pos[0]) + abs(new_pos[1]) >= 8064 - padding:
+                    continue
 
-        state.ball.position = np.array([ball_x, ball_y, ball_z], dtype=np.float32)
+                close_to_wall = (
+                    abs(new_pos[0]) >= SIDE_WALL_X - RAMP_HEIGHT or
+                    abs(new_pos[1]) >= BACK_WALL_Y - RAMP_HEIGHT or
+                    abs(new_pos[0]) + abs(new_pos[1]) >= 8064 - RAMP_HEIGHT
+                )
+                close_to_floor_or_ceiling = (
+                    new_pos[2] <= RAMP_HEIGHT or
+                    new_pos[2] >= CEILING_Z - RAMP_HEIGHT
+                )
 
-        # Randomize ball velocity as well, but you can set this to zero if you want
+                if close_to_wall and close_to_floor_or_ceiling:
+                    continue
 
-        speed = common_values.BALL_MAX_SPEED / 10
+                break
 
-        ball_lin_vel_x = np.random.uniform(-speed, speed)
-        ball_lin_vel_y = np.random.uniform(-speed, speed)
-        ball_lin_vel_z = np.random.uniform(-speed, speed)
+            # Assign position and random motion
+            po.position = new_pos
+            po.linear_velocity = rand_vec3(2300)
+            po.angular_velocity = rand_vec3(5)
 
-        state.ball.linear_velocity = np.array([ball_lin_vel_x, ball_lin_vel_y, ball_lin_vel_z], dtype=np.float32)
-        state.ball.angular_velocity = np.zeros(3, dtype=np.float32)
+            # Set rotation matrix for cars only
+            if i > 0:
+                fw = rand_uvec3()
+                up = rand_uvec3()
+                right = normalize(np.cross(up, fw))
+                up = normalize(np.cross(fw, right))
+                rot_mat = np.stack([fw, right, up])
+                po.rotation_mtx = rot_mat
+
+            i += 1
+
+
+    
+class RandomStateMutator(StateMutator[GameState]):
+    def __init__(self):
+        self.mutator = WeightedSampleMutator.from_zipped(
+            (KickoffMutator(), 0.6),  #this means that 60% of the time, the ball and the cars will be in kickoff positions
+            (RandomPhysicsMutator(), 0.4)   #this means that 40% of the time, the ball and the cars will be in random positions         
+        )
+
+    def apply(self, state: GameState, shared_info: Dict[str, Any]) -> None:
+        self.mutator.apply(state, shared_info)
