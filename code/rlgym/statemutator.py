@@ -14,7 +14,7 @@ from rlgym.rocket_league.state_mutators import MutatorSequence, KickoffMutator
 class RandomPhysicsMutator(StateMutator[GameState]):  #taken from rlgym tools, slightly modified
     def apply(self, state: GameState, shared_info: Dict[str, Any]) -> None:
         padding = 100  # Ball radius and car hitbox with biggest radius are both below this
-        goal_line_y = 5120
+        goal_line_y = BACK_WALL_Y # The y-coordinate of the goal line, used to ensure the ball doesn't spawn too close to it
         min_goal_dist = 2000
         i = 0
 
