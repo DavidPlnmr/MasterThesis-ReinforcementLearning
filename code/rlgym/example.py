@@ -148,8 +148,8 @@ if __name__ == "__main__":
                       policy_lr=2e-4,  # policy learning rate
                       critic_lr=2e-4,  # critic learning rate
                       ppo_epochs=2,   # number of PPO epochs
-                      policy_layer_sizes=[2048, 2048, 1024, 1024],  # policy network
-                      critic_layer_sizes=[2048, 2048, 1024, 1024],  # critic network making it the same size as the policy 
+                      policy_layer_sizes=[1024, 1024, 512, 512],  # policy network
+                      critic_layer_sizes=[1024, 1024, 512, 512],  # critic network making it the same size as the policy 
                       standardize_returns=True, # Don't touch these.
                       standardize_obs=False, # Don't touch these.
                       save_every_ts=args.save_every_ts,  # save every 1M steps
