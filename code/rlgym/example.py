@@ -1,11 +1,11 @@
-import patch_kbhit # Patch pour éviter les problèmes de KBHit sur Slurm qui attendent une entrée clavier. Doit être importé avant rlgym_ppo.
-# import patch_torch_gpu # Patch pour éviter les problèmes de checkpoints de GPU/CPU tensors. Doit être importé avant rlgym_ppo.
+# import patch_kbhit # Patch pour éviter les problèmes de KBHit sur Slurm qui attendent une entrée clavier. Doit être importé avant rlgym_ppo.
+import patch_torch_gpu # Patch pour éviter les problèmes de checkpoints de GPU/CPU tensors. Doit être importé avant rlgym_ppo.
 
 
 import argparse
 import os
 
-# os.environ["WANDB_MODE"] = "disabled"  # Disable WandB logging output
+os.environ["WANDB_MODE"] = "disabled"  # Disable WandB logging output
 
 project_name = "rlgym_ppo_example"
 
@@ -122,7 +122,11 @@ if __name__ == "__main__":
         os.makedirs(checkpoint_folder)
     
     checkpoint_files = os.listdir(checkpoint_folder)
-    checkpoint_load_folder = os.path.join(checkpoint_folder, max(checkpoint_files)) if checkpoint_files else None
+    valid_checkpoints = [f for f in checkpoint_files if f.isdigit()]
+    checkpoint_load_folder = os.path.join(checkpoint_folder, max(valid_checkpoints, key=int)) if valid_checkpoints else None
+
+    print(f"Loading checkpoint: {checkpoint_load_folder}")
+
 
 
     learner = Learner(build_rlgym_v2_env,
@@ -147,8 +151,8 @@ if __name__ == "__main__":
                       checkpoint_load_folder=checkpoint_load_folder,  # Automatically load the latest checkpoint if it exists
                       checkpoints_save_folder=checkpoint_folder,
                       add_unix_timestamp=False,
-                      log_to_wandb=True, # Set this to True if you want to use Weights & Biases for logging.
-                      render=False,
+                      log_to_wandb=False, # Set this to True if you want to use Weights & Biases for logging.
+                      render=True,
                       render_delay=1/120,
                       )
 
