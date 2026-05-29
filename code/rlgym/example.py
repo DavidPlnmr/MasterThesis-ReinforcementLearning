@@ -16,7 +16,7 @@ def build_rlgym_v2_env():
 
     import numpy as np
     from rlgym.api import RLGym
-    from rlgym.rocket_league.action_parsers import LookupTableAction
+    from rlgym.rocket_league.action_parsers import LookupTableAction, RepeatAction
     from rlgym.rocket_league.done_conditions import GoalCondition, NoTouchTimeoutCondition, TimeoutCondition, AnyCondition
     from rlgym.rocket_league.obs_builders import DefaultObs
     from rlgym.rocket_league.reward_functions import CombinedReward, GoalReward, TouchReward
@@ -41,8 +41,9 @@ def build_rlgym_v2_env():
     action_repeat = 8
     no_touch_timeout_seconds = 30
     game_timeout_seconds = 300
+    
 
-    action_parser = LookupTableAction()
+    action_parser = RepeatAction(LookupTableAction(), action_repeat=action_repeat)
     termination_condition = GoalCondition()
     truncation_condition = AnyCondition(
         NoTouchTimeoutCondition(timeout_seconds=no_touch_timeout_seconds),
@@ -144,7 +145,6 @@ if __name__ == "__main__":
                       exp_buffer_size=150_000,  # size of experience buffer - keep this 2 - 3x the batch size
                       ppo_minibatch_size=50_000,  # minibatch size - set this as high as your GPU can handle
                       ppo_ent_coef=0.01,  # entropy coefficient - this determines the impact of exploration
-                      
                       policy_lr=2e-4,  # policy learning rate
                       critic_lr=2e-4,  # critic learning rate
                       ppo_epochs=2,   # number of PPO epochs
