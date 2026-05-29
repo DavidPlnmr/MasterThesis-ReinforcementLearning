@@ -43,7 +43,7 @@ def build_rlgym_v2_env():
     game_timeout_seconds = 300
     
 
-    action_parser = RepeatAction(LookupTableAction(), action_repeat=action_repeat)
+    action_parser = RepeatAction(LookupTableAction(), repeats=action_repeat)
     termination_condition = GoalCondition()
     truncation_condition = AnyCondition(
         NoTouchTimeoutCondition(timeout_seconds=no_touch_timeout_seconds),
