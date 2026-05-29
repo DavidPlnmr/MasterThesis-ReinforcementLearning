@@ -50,7 +50,7 @@ def build_rlgym_v2_env():
     )
 
     reward_fn = CombinedReward(
-        (AdvancedTouchReward(touch_reward=0.5, acceleration_reward=1.0), 75),
+        (AdvancedTouchReward(touch_reward=0.3, acceleration_reward=1.0), 75),
         (VelocityBallToGoalReward(), 10),
         (GoalReward(), 500),
         (VelocityPlayerToBallReward(), 5),
