@@ -7,6 +7,8 @@ import os
 
 # os.environ["WANDB_MODE"] = "disabled"  # Disable WandB logging output
 
+import wandb
+
 project_name = "rlgym_ppo_example"
 
 def build_rlgym_v2_env():
@@ -30,10 +32,6 @@ def build_rlgym_v2_env():
     from rlgym_tools.rocket_league.reward_functions.velocity_player_to_ball_reward import VelocityPlayerToBallReward
     from rlgym_tools.rocket_league.reward_functions.advanced_touch_reward import AdvancedTouchReward
 
-
-
-
-
     spawn_opponents = True
     team_size = 1
     blue_team_size = team_size
@@ -50,19 +48,19 @@ def build_rlgym_v2_env():
         TimeoutCondition(timeout_seconds=game_timeout_seconds)
     )
 
-    reward_fn = CombinedReward(
-        (AdvancedTouchReward(touch_reward=0.3, acceleration_reward=1.0), 75),
-        (VelocityBallToGoalReward(), 10),
-        (VelocityPlayerToBallReward(), 5),
-        (FaceBallReward(), 1),
-        (InAirReward(), 0.15)
-    )
     # reward_fn = CombinedReward(
-    #     (AdvancedTouchReward(touch_reward=1.0, acceleration_reward=0.0), 50),
-    #     (VelocityPlayerToBallReward(include_negative_values=False), 5),
+    #     (AdvancedTouchReward(touch_reward=0.3, acceleration_reward=1.0), 75),
+    #     (VelocityBallToGoalReward(), 10),
+    #     (VelocityPlayerToBallReward(), 5),
     #     (FaceBallReward(), 1),
     #     (InAirReward(), 0.15)
     # )
+    reward_fn = CombinedReward(
+        (AdvancedTouchReward(touch_reward=1.0, acceleration_reward=0.0), 50),
+        (VelocityPlayerToBallReward(include_negative_values=False), 5),
+        (FaceBallReward(), 1),
+        (InAirReward(), 0.15)
+    )
 
     obs_builder = DefaultObs(zero_padding=None,
                            pos_coef=np.asarray([1 / common_values.SIDE_WALL_X, 
@@ -104,13 +102,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--save-every-ts",
         type=int,
-        default=10_000_000,
+        default=25_000_000,
         help="Sauvegarder le modèle tous les N timesteps."
     )
     parser.add_argument(
         "--timesteps-limit",
         type=int,
-        default=10e15,
+        default=200_000_000,
         help="Limite de timesteps pour l'entraînement."
     )
     args = parser.parse_args()
@@ -139,15 +137,15 @@ if __name__ == "__main__":
                       n_proc=n_proc,
                       min_inference_size=min_inference_size,
                       metrics_logger=None, # Leave this empty for now.
-                      ppo_batch_size=100_000,  # batch size - much higher than 300K doesn't seem to help most people
-                      ts_per_iteration=100_000,  # timesteps per training iteration - set this equal to the batch size
-                      exp_buffer_size=300_000,  # size of experience buffer - keep this 2 - 3x the batch size
+                      ppo_batch_size=50_000,  # batch size - much higher than 300K doesn't seem to help most people
+                      ts_per_iteration=50_000,  # timesteps per training iteration - set this equal to the batch size
+                      exp_buffer_size=150_000,  # size of experience buffer - keep this 2 - 3x the batch size
                       ppo_minibatch_size=50_000,  # minibatch size - set this as high as your GPU can handle
                       ppo_ent_coef=0.01,  # entropy coefficient - this determines the impact of exploration
-                      policy_lr=1.5e-4,  # policy learning rate
-                      critic_lr=1.5e-4,  # critic learning rate
+                      policy_lr=2e-4,  # policy learning rate
+                      critic_lr=2e-4,  # critic learning rate
                       ppo_epochs=2,   # number of PPO epochs
-                      gae_gamma=0.99,  # GAE gamma - discount factor for rewards
+                    #   gae_gamma=0.99,  # GAE gamma - discount factor for rewards
                       policy_layer_sizes=[1024, 1024, 512, 512],  # policy network
                       critic_layer_sizes=[1024, 1024, 512, 512],  # critic network making it the same size as the policy 
                       standardize_returns=True, # Don't touch these.
