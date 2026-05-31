@@ -105,7 +105,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--timesteps-limit",
         type=int,
-        default=350_000_000,
+        default=1_000_000_000,
         help="Limite de timesteps pour l'entraînement."
     )
     args = parser.parse_args()
@@ -139,8 +139,8 @@ if __name__ == "__main__":
                       exp_buffer_size=300_000,  # size of experience buffer - keep this 2 - 3x the batch size
                       ppo_minibatch_size=50_000,  # minibatch size - set this as high as your GPU can handle
                       ppo_ent_coef=0.01,  # entropy coefficient - this determines the impact of exploration
-                      policy_lr=1.5e-4,  # policy learning rate
-                      critic_lr=1.5e-4,  # critic learning rate
+                      policy_lr=2e-4,  # policy learning rate
+                      critic_lr=2e-4,  # critic learning rate
                       ppo_epochs=2,   # number of PPO epochs
                       gae_gamma=0.99,  # GAE gamma - discount factor for rewards
                       policy_layer_sizes=[1024, 1024, 512, 512],  # policy network
