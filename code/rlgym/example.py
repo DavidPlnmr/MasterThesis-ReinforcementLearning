@@ -51,11 +51,12 @@ def build_rlgym_v2_env():
     
     reward_fn = CombinedReward(
         (GoalReward(), 10),
-        (AdvancedTouchReward(touch_reward=0.3, acceleration_reward=1.0), 25),
-        (VelocityBallToGoalReward(), 2),        
-        (VelocityPlayerToBallReward(), 3),
-        (FaceBallReward(), 0.5),
-        (InAirReward(), 0.1)
+        (AdvancedTouchReward(touch_reward=1.0, acceleration_reward=0.0), 50), # Garde Phase 1
+        (VelocityPlayerToBallReward(include_negative_values=False), 5),       # Garde Phase 1
+        (FaceBallReward(), 1),
+        (InAirReward(), 0.15),
+        # Ajoute doucement les nouveaux signals
+        (VelocityBallToGoalReward(), 1),  # Poids très faible
     )
 
     obs_builder = DefaultObs(zero_padding=None,
@@ -104,7 +105,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--timesteps-limit",
         type=int,
-        default=700_000_000,
+        default=350_000_000,
         help="Limite de timesteps pour l'entraînement."
     )
     args = parser.parse_args()
