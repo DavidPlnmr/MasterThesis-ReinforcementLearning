@@ -1,11 +1,11 @@
-import patch_kbhit # Patch pour éviter les problèmes de KBHit sur Slurm qui attendent une entrée clavier. Doit être importé avant rlgym_ppo.
-# import patch_torch_gpu # Patch pour éviter les problèmes de checkpoints de GPU/CPU tensors. Doit être importé avant rlgym_ppo.
+# import patch_kbhit # Patch pour éviter les problèmes de KBHit sur Slurm qui attendent une entrée clavier. Doit être importé avant rlgym_ppo.
+import patch_torch_gpu # Patch pour éviter les problèmes de checkpoints de GPU/CPU tensors. Doit être importé avant rlgym_ppo.
 
 
 import argparse
 import os
 
-# os.environ["WANDB_MODE"] = "disabled"  # Disable WandB logging output
+os.environ["WANDB_MODE"] = "disabled"  # Disable WandB logging output
 
 import wandb
 
@@ -50,13 +50,12 @@ def build_rlgym_v2_env():
 
     
     reward_fn = CombinedReward(
-        (GoalReward(), 10),
-        (AdvancedTouchReward(touch_reward=1.0, acceleration_reward=0.0), 50), # Garde Phase 1
+        (GoalReward(), 1000),
+        (AdvancedTouchReward(touch_reward=0.3, acceleration_reward=1.0), 50), # Garde Phase 1
         (VelocityPlayerToBallReward(include_negative_values=False), 5),       # Garde Phase 1
         (FaceBallReward(), 1),
         (InAirReward(), 0.15),
-        # Ajoute doucement les nouveaux signals
-        (VelocityBallToGoalReward(), 1),  # Poids très faible
+        (VelocityBallToGoalReward(), 30),  # Poids très faible
     )
 
     obs_builder = DefaultObs(zero_padding=None,
@@ -152,8 +151,8 @@ if __name__ == "__main__":
                       checkpoint_load_folder=checkpoint_load_folder,  # Automatically load the latest checkpoint if it exists
                       checkpoints_save_folder=checkpoint_folder,
                       add_unix_timestamp=False,
-                      log_to_wandb=True, # Set this to True if you want to use Weights & Biases for logging.
-                      render=False,
+                      log_to_wandb=False, # Set this to True if you want to use Weights & Biases for logging.
+                      render=True,
                       render_delay=8/120,
                       )
 
