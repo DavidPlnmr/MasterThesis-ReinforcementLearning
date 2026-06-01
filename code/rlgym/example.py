@@ -1,13 +1,13 @@
-# import patch_kbhit # Patch pour éviter les problèmes de KBHit sur Slurm qui attendent une entrée clavier. Doit être importé avant rlgym_ppo.
-import patch_torch_gpu # Patch pour éviter les problèmes de checkpoints de GPU/CPU tensors. Doit être importé avant rlgym_ppo.
-
-
 import argparse
 import os
 
-os.environ["WANDB_MODE"] = "disabled"  # Disable WandB logging output
+RUN_ON_SLURM = True
 
-import wandb
+if RUN_ON_SLURM:
+    import patch_kbhit # Patch pour éviter les problèmes de KBHit sur Slurm qui attendent une entrée clavier. Doit être importé avant rlgym_ppo.
+else :
+    import patch_torch_gpu # Patch pour éviter les problèmes de checkpoints de GPU/CPU tensors. Doit être importé avant rlgym_ppo.
+    os.environ["WANDB_MODE"] = "disabled"  # Disable WandB logging output
 
 project_name = "rlgym_ppo_example"
 
@@ -55,7 +55,7 @@ def build_rlgym_v2_env():
         (VelocityPlayerToBallReward(include_negative_values=False), 5),
         (FaceBallReward(), 1),
         (InAirReward(), 0.15),
-        (VelocityBallToGoalReward(), 30),  
+        (VelocityBallToGoalReward(zero_sum=True), 30),  
     )
 
     obs_builder = DefaultObs(zero_padding=None,
@@ -151,8 +151,8 @@ if __name__ == "__main__":
                       checkpoint_load_folder=checkpoint_load_folder,  # Automatically load the latest checkpoint if it exists
                       checkpoints_save_folder=checkpoint_folder,
                       add_unix_timestamp=False,
-                      log_to_wandb=False, # Set this to True if you want to use Weights & Biases for logging.
-                      render=True,
+                      log_to_wandb=RUN_ON_SLURM, # Set this to True if you want to use Weights & Biases for logging.
+                      render=not RUN_ON_SLURM,  # Disable rendering if running on Slurm to avoid issues.
                       render_delay=8/120,
                       )
 
