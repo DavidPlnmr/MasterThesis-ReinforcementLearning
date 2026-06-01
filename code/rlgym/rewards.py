@@ -47,6 +47,9 @@ class FaceBallReward(RewardFunction):
 class VelocityBallToGoalReward(RewardFunction[AgentID, GameState, float]):
     """Rewards the agent for hitting the ball toward the opponent's goal"""
     
+    def __init__(self, zero_sum: bool = False):
+        self.zero_sum = zero_sum
+
     def reset(self, agents: List[AgentID], initial_state: GameState, shared_info: Dict[str, Any]) -> None:
         pass
     
@@ -67,5 +70,10 @@ class VelocityBallToGoalReward(RewardFunction[AgentID, GameState, float]):
             dir_to_goal = pos_diff / dist
             
             vel_toward_goal = np.dot(ball_vel, dir_to_goal)
-            rewards[agent] = max(vel_toward_goal / common_values.BALL_MAX_SPEED, 0)
+
+            if self.zero_sum:
+                rewards[agent] = vel_toward_goal / common_values.BALL_MAX_SPEED
+            else:
+                rewards[agent] = max(vel_toward_goal / common_values.BALL_MAX_SPEED, 0)
+            
         return rewards
