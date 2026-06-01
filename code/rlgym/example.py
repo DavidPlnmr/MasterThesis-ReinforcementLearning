@@ -1,7 +1,7 @@
 import argparse
 import os
 
-RUN_ON_SLURM = True
+RUN_ON_SLURM = True # If I run this on Slurm, I set this to True to avoid issues with KBHit and GPU/CPU tensor checkpoints. If I run it locally, I set this to False to disable WandB logging and enable rendering.
 
 if RUN_ON_SLURM:
     import patch_kbhit # Patch pour éviter les problèmes de KBHit sur Slurm qui attendent une entrée clavier. Doit être importé avant rlgym_ppo.
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--timesteps-limit",
         type=int,
-        default=1_000_000_000,
+        default=2_000_000_000,
         help="Limite de timesteps pour l'entraînement."
     )
     args = parser.parse_args()
