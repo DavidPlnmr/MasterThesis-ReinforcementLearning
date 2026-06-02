@@ -18,7 +18,10 @@ class RewardMetricsLogger(MetricsLogger):
             avg_rewards += metric_array[0]
         avg_rewards /= len(collected_metrics)
 
-        report = {"Cumulative Timesteps": cumulative_timesteps}
+        days = cumulative_timesteps / (120 * 60 * 60)  # Convert timesteps to in-game days (assuming 120 steps/s)
+
+        report = {"Days": days,
+                  "Years": days / 365}  # Convert timesteps to in-game days (assuming 120 steps/s)
         for i in range(len(g_combined_reward.reward_functions)):
             name = g_combined_reward.reward_functions[i].__class__.__name__
             report["reward/" + name] = avg_rewards[i]
