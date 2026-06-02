@@ -46,37 +46,26 @@ class FaceBallReward(RewardFunction):
         return rewards
 
 class VelocityBallToGoalReward(RewardFunction[AgentID, GameState, float]):
-    """Rewards the agent for hitting the ball toward the opponent's goal"""
-    
-    def __init__(self, zero_sum: bool = False):
-        self.zero_sum = zero_sum
+    """Rewards the agent for hitting the ball toward the opponent's goal (signal brut, non zero-sum)."""
 
-    def reset(self, agents: List[AgentID], initial_state: GameState, shared_info: Dict[str, Any]) -> None:
+    def reset(self, agents, initial_state, shared_info) -> None:
         pass
-    
-    def get_rewards(self, agents: List[AgentID], state: GameState, is_terminated: Dict[AgentID, bool],
-                    is_truncated: Dict[AgentID, bool], shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
+
+    def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
         rewards = {}
         for agent in agents:
             car = state.cars[agent]
             ball = state.ball
-            if car.is_orange:
-                goal_y = -common_values.BACK_NET_Y
-            else:
-                goal_y = common_values.BACK_NET_Y
+            goal_y = -common_values.BACK_NET_Y if car.is_orange else common_values.BACK_NET_Y
 
-            ball_vel = ball.linear_velocity
             pos_diff = np.array([0, goal_y, 0]) - ball.position
             dist = np.linalg.norm(pos_diff)
+            if dist < 1e-6:
+                rewards[agent] = 0.0
+                continue
             dir_to_goal = pos_diff / dist
-            
-            vel_toward_goal = np.dot(ball_vel, dir_to_goal)
-
-            if self.zero_sum:
-                rewards[agent] = vel_toward_goal / common_values.BALL_MAX_SPEED
-            else:
-                rewards[agent] = max(vel_toward_goal / common_values.BALL_MAX_SPEED, 0)
-            
+            vel_toward_goal = np.dot(ball.linear_velocity, dir_to_goal)
+            rewards[agent] = vel_toward_goal / common_values.BALL_MAX_SPEED
         return rewards
 
 class ZeroSumReward(RewardFunction[AgentID, GameState, float]):

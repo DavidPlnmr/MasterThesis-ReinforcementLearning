@@ -21,7 +21,7 @@ project_name = "rlgym_ppo_example"
 
 def build_rlgym_v2_env():
     
-    from rewards import InAirReward, FaceBallReward, VelocityBallToGoalReward, LogCombinedReward
+    from rewards import InAirReward, FaceBallReward, VelocityBallToGoalReward, LogCombinedReward, ZeroSumReward
     import metrics_logger
     from statemutator import RandomStateMutator
     
@@ -59,14 +59,15 @@ def build_rlgym_v2_env():
         TimeoutCondition(timeout_seconds=game_timeout_seconds)
     )
 
-    
+    VelocityBallToGoalRewardZS = ZeroSumReward(VelocityBallToGoalReward(), team_spirit=0.0, opp_scale=1.0)
+
     reward_fn = LogCombinedReward(
         (GoalReward(), 1000),
         (AdvancedTouchReward(touch_reward=0.3, acceleration_reward=1.0), 50), 
         (VelocityPlayerToBallReward(include_negative_values=False), 5),
         (FaceBallReward(), 1),
         (InAirReward(), 0.15),
-        (VelocityBallToGoalReward(zero_sum=True), 30),  
+        (VelocityBallToGoalRewardZS, 30),  
     )
     metrics_logger.g_combined_reward = reward_fn
 
