@@ -126,14 +126,6 @@ class ZeroSumReward(RewardFunction[AgentID, GameState, float]):
 
         return final_rewards
 
-
-# rewards.py (ajoute ceci à côté de tes autres rewards)
-from typing import Dict, List, Any, Tuple, Optional
-import numpy as np
-from rlgym.api import RewardFunction, AgentID
-from rlgym.rocket_league.api import GameState
-
-
 class LogCombinedReward(RewardFunction[AgentID, GameState, float]):
     """
     Équivalent de CombinedReward (rlgym v2) qui mémorise la dernière
