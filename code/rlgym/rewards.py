@@ -125,3 +125,64 @@ class ZeroSumReward(RewardFunction[AgentID, GameState, float]):
             )
 
         return final_rewards
+
+
+# rewards.py (ajoute ceci à côté de tes autres rewards)
+from typing import Dict, List, Any, Tuple, Optional
+import numpy as np
+from rlgym.api import RewardFunction, AgentID
+from rlgym.rocket_league.api import GameState
+
+
+class LogCombinedReward(RewardFunction[AgentID, GameState, float]):
+    """
+    Équivalent de CombinedReward (rlgym v2) qui mémorise la dernière
+    contribution (pondérée) de chaque sous-reward dans self.prev_rewards,
+    pour pouvoir les logger individuellement.
+    """
+
+    def __init__(self, *rewards_and_weights):
+        self.reward_functions = []
+        weights = []
+        for value in rewards_and_weights:
+            if isinstance(value, tuple):
+                r, w = value
+            else:
+                r, w = value, 1.0
+            self.reward_functions.append(r)
+            weights.append(w)
+        self.reward_weights = np.array(weights, dtype=np.float32)
+        # prev_rewards[i] = contribution pondérée moyenne du reward i au dernier step
+        self.prev_rewards = np.zeros(len(self.reward_functions), dtype=np.float32)
+
+    def reset(self, agents: List[AgentID], initial_state: GameState,
+              shared_info: Dict[str, Any]) -> None:
+        for func in self.reward_functions:
+            func.reset(agents, initial_state, shared_info)
+        self.prev_rewards = np.zeros(len(self.reward_functions), dtype=np.float32)
+
+    def get_rewards(self, agents: List[AgentID], state: GameState,
+                    is_terminated: Dict[AgentID, bool],
+                    is_truncated: Dict[AgentID, bool],
+                    shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
+
+        # Chaque sous-reward renvoie un dict {agent: valeur}
+        sub_rewards = [
+            func.get_rewards(agents, state, is_terminated, is_truncated, shared_info)
+            for func in self.reward_functions
+        ]
+
+        # Pour le logging : on stocke la contribution pondérée moyennée sur les agents
+        for i, rew_dict in enumerate(sub_rewards):
+            self.prev_rewards[i] = self.reward_weights[i] * np.mean(
+                [rew_dict[agent] for agent in agents]
+            )
+
+        # Reward combiné par agent
+        combined = {}
+        for agent in agents:
+            total = 0.0
+            for i, rew_dict in enumerate(sub_rewards):
+                total += self.reward_weights[i] * rew_dict[agent]
+            combined[agent] = total
+        return combined

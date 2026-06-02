@@ -22,6 +22,7 @@ project_name = "rlgym_ppo_example"
 def build_rlgym_v2_env():
     
     from rewards import InAirReward, FaceBallReward, VelocityBallToGoalReward, LogCombinedReward
+    import metrics_logger
     from statemutator import RandomStateMutator
     
 
@@ -59,7 +60,7 @@ def build_rlgym_v2_env():
     )
 
     
-    reward_fn = CombinedReward(
+    reward_fn = LogCombinedReward(
         (GoalReward(), 1000),
         (AdvancedTouchReward(touch_reward=0.3, acceleration_reward=1.0), 50), 
         (VelocityPlayerToBallReward(include_negative_values=False), 5),
@@ -67,6 +68,7 @@ def build_rlgym_v2_env():
         (InAirReward(), 0.15),
         (VelocityBallToGoalReward(zero_sum=True), 30),  
     )
+    metrics_logger.g_combined_reward = reward_fn
 
     
 
@@ -99,6 +101,8 @@ def build_rlgym_v2_env():
 
 
 if __name__ == "__main__":
+    from metrics_logger import RewardMetricsLogger
+
     parser = argparse.ArgumentParser(description="Train an RLGym PPO agent.")
     
     parser.add_argument(
@@ -144,7 +148,7 @@ if __name__ == "__main__":
     learner = Learner(build_rlgym_v2_env,
                       n_proc=n_proc,
                       min_inference_size=min_inference_size,
-                      metrics_logger=None, # Leave this empty for now.
+                      metrics_logger=RewardMetricsLogger(), # Use the custom metrics logger
                       ppo_batch_size=100_000,  # batch size - much higher than 300K doesn't seem to help most people
                       ts_per_iteration=100_000,  # timesteps per training iteration - set this equal to the batch size
                       exp_buffer_size=300_000,  # size of experience buffer - keep this 2 - 3x the batch size
@@ -168,5 +172,6 @@ if __name__ == "__main__":
                       render_delay=8/120,
                       )
 
+    build_rlgym_v2_env()
 
     learner.learn()
