@@ -1,4 +1,5 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple, Optional
+from rlgym.rocket_league.reward_functions import CombinedReward
 from rlgym.api import RewardFunction, AgentID
 from rlgym.rocket_league.api import GameState
 from rlgym.rocket_league import common_values
@@ -122,5 +123,57 @@ class ZeroSumReward(RewardFunction[AgentID, GameState, float]):
                 + team_rewards[team] * self.team_spirit
                 - team_rewards[opp_team] * self.opp_scale
             )
+
+        return final_rewards
+
+class LogCombinedReward(RewardFunction[AgentID, GameState, float]):
+    def __init__(
+        self,
+        reward_functions: Tuple[RewardFunction, ...],
+        reward_weights: Optional[Tuple[float, ...]] = None
+    ):
+        self.reward_functions = reward_functions
+        self.reward_weights = reward_weights or np.ones(len(reward_functions))
+        self.prev_rewards = None  # Shape: (n_rewards,) — moyenne sur les agents du dernier step
+
+        if len(self.reward_functions) != len(self.reward_weights):
+            raise ValueError("Reward functions and weights must have the same length")
+
+    @classmethod
+    def from_zipped(cls, *rewards_and_weights):
+        rewards, weights = [], []
+        for value in rewards_and_weights:
+            if isinstance(value, tuple):
+                r, w = value
+            else:
+                r, w = value, 1.0
+            rewards.append(r)
+            weights.append(w)
+        return cls(tuple(rewards), tuple(weights))
+
+    def reset(self, agents, initial_state, shared_info):
+        for func in self.reward_functions:
+            func.reset(agents, initial_state, shared_info)
+
+    def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
+        # Récupère les rewards de chaque fonction pour tous les agents
+        all_rewards = [
+            func.get_rewards(agents, state, is_terminated, is_truncated, shared_info)
+            for func in self.reward_functions
+        ]
+
+        # Stocke la moyenne par reward function pour le logging
+        self.prev_rewards = np.array([
+            np.mean([r[agent] for agent in agents])
+            for r in all_rewards
+        ])
+
+        # Combine les rewards pondérées
+        final_rewards = {}
+        for agent in agents:
+            final_rewards[agent] = float(sum(
+                w * r[agent]
+                for w, r in zip(self.reward_weights, all_rewards)
+            ))
 
         return final_rewards

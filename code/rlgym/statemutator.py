@@ -8,10 +8,15 @@ from rlgym.rocket_league.common_values import SIDE_WALL_X, BACK_WALL_Y, CEILING_
 from rlgym.rocket_league.math import rand_vec3, rand_uvec3, normalize
 from rlgym_tools.rocket_league.reward_functions.aerial_distance_reward import RAMP_HEIGHT
 
+
 from rlgym_tools.rocket_league.state_mutators.weighted_sample_mutator import WeightedSampleMutator
 from rlgym.rocket_league.state_mutators import MutatorSequence, KickoffMutator
 
 class RandomPhysicsMutator(StateMutator[GameState]):  #taken from rlgym tools, slightly modified
+
+    """State mutator that randomizes the positions and velocities of the ball and cars, while ensuring they spawn in valid locations on the field.
+    Specifically, it ensures that the ball doesn't spawn too close to the goal lines, that cars and the ball don't spawn outside the field boundaries, and that they don't spawn in the corners where the walls meet the floor or ceiling. Also the cars do not spawn higher than 1/6 of the ceiling height, because falling from the sky is not useful for learning. This mutator can be used to add more variety to the training data and encourage the agent to learn how to play from different positions on the field, rather than just from the standard kickoff position.
+    """
     def apply(self, state: GameState, shared_info: Dict[str, Any]) -> None:
         padding = 100  # Ball radius and car hitbox with biggest radius are both below this
         goal_line_y = BACK_WALL_Y # The y-coordinate of the goal line, used to ensure the ball doesn't spawn too close to it
