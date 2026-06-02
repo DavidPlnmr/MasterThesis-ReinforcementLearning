@@ -2,12 +2,11 @@ import argparse
 import os
 
 
-RUN_ON_SLURM = True # If I run this on Slurm, I set this to True to avoid issues with KBHit and GPU/CPU tensor checkpoints. If I run it locally, I set this to False to disable WandB logging and enable rendering.
+RUN_ON_SLURM = False # If I run this on Slurm, I set this to True to avoid issues with KBHit and GPU/CPU tensor checkpoints. If I run it locally, I set this to False to disable WandB logging and enable rendering.
 
 if RUN_ON_SLURM:
     import patch_kbhit # Patch pour éviter les problèmes de KBHit sur Slurm qui attendent une entrée clavier. Doit être importé avant rlgym_ppo.
-    from metrics_logger import RewardMetricsLogger
-    import metrics_logger
+    
     
 else :
     import patch_torch_gpu # Patch pour éviter les problèmes de checkpoints de GPU/CPU tensors. Doit être importé avant rlgym_ppo.
@@ -15,6 +14,8 @@ else :
 
 project_name = "rlgym_ppo_example"
 
+# from metrics_logger import RewardMetricsLogger
+# import metrics_logger
 
 
 
@@ -58,25 +59,16 @@ def build_rlgym_v2_env():
     )
 
     
-    # reward_fn = CombinedReward(
-    #     (GoalReward(), 1000),
-    #     (AdvancedTouchReward(touch_reward=0.3, acceleration_reward=1.0), 50), 
-    #     (VelocityPlayerToBallReward(include_negative_values=False), 5),
-    #     (FaceBallReward(), 1),
-    #     (InAirReward(), 0.15),
-    #     (VelocityBallToGoalReward(zero_sum=True), 30),  
-    # )
-
-    reward_fn = LogCombinedReward.from_zipped(
+    reward_fn = CombinedReward(
         (GoalReward(), 1000),
-        (AdvancedTouchReward(touch_reward=0.3, acceleration_reward=1.0), 50),
+        (AdvancedTouchReward(touch_reward=0.3, acceleration_reward=1.0), 50), 
         (VelocityPlayerToBallReward(include_negative_values=False), 5),
         (FaceBallReward(), 1),
         (InAirReward(), 0.15),
-        (VelocityBallToGoalReward(zero_sum=True), 30),
+        (VelocityBallToGoalReward(zero_sum=True), 30),  
     )
 
-    metrics_logger.g_combined_reward = reward_fn
+    
 
     obs_builder = DefaultObs(zero_padding=None,
                            pos_coef=np.asarray([1 / common_values.SIDE_WALL_X, 
@@ -152,7 +144,7 @@ if __name__ == "__main__":
     learner = Learner(build_rlgym_v2_env,
                       n_proc=n_proc,
                       min_inference_size=min_inference_size,
-                      metrics_logger=RewardMetricsLogger(), # Leave this empty for now.
+                      metrics_logger=None, # Leave this empty for now.
                       ppo_batch_size=100_000,  # batch size - much higher than 300K doesn't seem to help most people
                       ts_per_iteration=100_000,  # timesteps per training iteration - set this equal to the batch size
                       exp_buffer_size=300_000,  # size of experience buffer - keep this 2 - 3x the batch size
