@@ -67,7 +67,7 @@ def build_rlgym_v2_env():
         (VelocityPlayerToBallReward(include_negative_values=False), 5),
         (FaceBallReward(), 1),
         (InAirReward(), 0.15),
-        (VelocityBallToGoalRewardZS, 30),  
+        (VelocityBallToGoalRewardZS, 30, "VelocityBallToGoal_ZS"),  
     )
     metrics_logger.g_combined_reward = reward_fn
 

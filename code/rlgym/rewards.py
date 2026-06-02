@@ -124,16 +124,26 @@ class LogCombinedReward(RewardFunction[AgentID, GameState, float]):
 
     def __init__(self, *rewards_and_weights):
         self.reward_functions = []
+        self.reward_names = []
         weights = []
+        
         for value in rewards_and_weights:
             if isinstance(value, tuple):
-                r, w = value
+                if len(value) == 3:
+                    r, w, name = value
+                elif len(value) == 2:
+                    r, w = value
+                    name = r.__class__.__name__
+                else:
+                    raise ValueError(f"Tuple doit avoir 2 ou 3 éléments, reçu {len(value)}")
             else:
-                r, w = value, 1.0
+                r, w, name = value, 1.0, value.__class__.__name__
+            
             self.reward_functions.append(r)
+            self.reward_names.append(name)
             weights.append(w)
+        
         self.reward_weights = np.array(weights, dtype=np.float32)
-        # prev_rewards[i] = contribution pondérée moyenne du reward i au dernier step
         self.prev_rewards = np.zeros(len(self.reward_functions), dtype=np.float32)
 
     def reset(self, agents: List[AgentID], initial_state: GameState,

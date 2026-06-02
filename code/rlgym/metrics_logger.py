@@ -23,8 +23,8 @@ class RewardMetricsLogger(MetricsLogger):
         report = {"Days": num_days_played,
                   "Years": num_days_played / 365}  # Convert timesteps to in-game days (assuming 120 steps/s)
         for i in range(len(g_combined_reward.reward_functions)):
-            name = g_combined_reward.reward_functions[i].__class__.__name__
-            report["reward/" + name] = avg_rewards[i]
+            
+            report["reward/" + g_combined_reward.reward_names[i]] = avg_rewards[i]
 
         if wandb_run is not None:
             wandb_run.log(report)
