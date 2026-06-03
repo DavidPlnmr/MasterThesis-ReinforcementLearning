@@ -256,7 +256,7 @@ class KickoffFirstTouchReward(RewardFunction[AgentID, GameState, float]):
                     reward += 4.0
 
             # 2. Premier contact sur le kickoff (le 50/50)
-            if car.ball_touched and not p_mem["contact_rewarded"]:
+            if car.ball_touches > 0 and not p_mem["contact_rewarded"]:
                 p_mem["contact_rewarded"] = True
                 reward += 2.0
 
