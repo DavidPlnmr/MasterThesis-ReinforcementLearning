@@ -21,7 +21,7 @@ project_name = "rlgym_ppo_example"
 
 def build_rlgym_v2_env():
     
-    from rewards import InAirReward, FaceBallReward, VelocityBallToGoalReward, LogCombinedReward, ZeroSumReward
+    from rewards import InAirReward, CloseRangeFaceBallReward, VelocityBallToGoalReward, LogCombinedReward, ZeroSumReward, KickoffFirstTouchReward, MomentumFlipReward
     import metrics_logger
     from statemutator import RandomStateMutator
     
@@ -44,6 +44,7 @@ def build_rlgym_v2_env():
     from rlgym_tools.rocket_league.reward_functions.advanced_touch_reward import AdvancedTouchReward
     from rlgym_tools.rocket_league.reward_functions.aerial_distance_reward import AerialDistanceReward
     from rlgym_tools.rocket_league.reward_functions.boost_keep_reward import BoostKeepReward
+    from rlgym_tools.rocket_league.reward_functions.boost_change_reward import BoostChangeReward
 
     spawn_opponents = True
     team_size = 1
@@ -69,11 +70,15 @@ def build_rlgym_v2_env():
         (GoalReward(), 1500),
         (AdvancedTouchReward(touch_reward=0.3, acceleration_reward=1.0), 30), 
         (VelocityPlayerToBallReward(include_negative_values=False), 5),
-        (FaceBallReward(), 0.5),
+        (CloseRangeFaceBallReward(), 0.5),
         (InAirReward(), 0.1),
         (VelocityBallToGoalRewardZS, 30, "VelocityBallToGoal_ZS"),
-        (AerialDistanceReward(), 100),
-        (BoostKeepRewardZS, 2, "BoostKeep_ZS")
+        (AerialDistanceReward(), 150),
+        (BoostKeepRewardZS, 20, "BoostKeep_ZS"),
+        (MomentumFlipReward(), 1)
+        (KickoffFirstTouchReward(), 12)
+        (BoostChangeReward(gain_weight=1.0, lose_weight=0.0), 30)
+
     )
     metrics_logger.g_combined_reward = reward_fn
 
@@ -148,9 +153,8 @@ if __name__ == "__main__":
     valid_checkpoints = [f for f in checkpoint_files if f.isdigit()]
     checkpoint_load_folder = os.path.join(checkpoint_folder, max(valid_checkpoints, key=int)) if valid_checkpoints else None
 
+
     print(f"Loading checkpoint: {checkpoint_load_folder}")
-
-
 
     learner = Learner(build_rlgym_v2_env,
                       n_proc=n_proc,
@@ -164,7 +168,7 @@ if __name__ == "__main__":
                       policy_lr=1e-4,  # policy learning rate
                       critic_lr=1e-4,  # critic learning rate
                       ppo_epochs=2,   # number of PPO epochs
-                      gae_gamma=0.995,  # GAE gamma - discount factor for rewards
+                      gae_gamma=0.991,  # GAE gamma - discount factor for rewards
                       policy_layer_sizes=[1024, 1024, 512, 512],  # policy network
                       critic_layer_sizes=[1024, 1024, 512, 512],  # critic network making it the same size as the policy 
                       standardize_returns=True, # Don't touch these.
@@ -177,7 +181,8 @@ if __name__ == "__main__":
                       log_to_wandb=RUN_ON_SLURM, # Set this to True if you want to use Weights & Biases for logging.
                       render=not RUN_ON_SLURM,  # Disable rendering if running on Slurm to avoid issues.
                       render_delay=8/120,
-                      load_wandb=False
+                      load_wandb=False,
+                      n_checkpoints_to_keep=10
                       )
 
     build_rlgym_v2_env()
