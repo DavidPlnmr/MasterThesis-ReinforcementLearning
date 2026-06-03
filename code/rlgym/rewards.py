@@ -177,3 +177,4 @@ class LogCombinedReward(RewardFunction[AgentID, GameState, float]):
                 total += self.reward_weights[i] * rew_dict[agent]
             combined[agent] = total
         return combined
+    
