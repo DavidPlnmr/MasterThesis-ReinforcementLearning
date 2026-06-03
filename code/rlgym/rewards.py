@@ -338,15 +338,15 @@ class EnergyReward(RewardFunction[AgentID, GameState, float]):
     """
 
     CAR_MASS = common_values.CAR_MASS  # masse approximative en rlgym
-    GRAVITY_Z = -common_values.GRAVITY  # gravité approximative
+
     JUMP_VEL = 292.0
 
     PER_BOOST_POTENTIAL = (0.5 * CAR_MASS * 3000.0 ** 2) / 100.0
-    JUMP_POTENTIAL = 0.5 * CAR_MASS * JUMP_VEL ** 2 * 4
+    JUMP_POTENTIAL = 0.5 * CAR_MASS * JUMP_VEL ** 2 * 4 # equivalent à faire (JUMP_VEL * 2)^2
     MAX_ENERGY = (
         100 * PER_BOOST_POTENTIAL
         + JUMP_POTENTIAL
-        + (CAR_MASS * -GRAVITY_Z * (common_values.CEILING_Z - 17))
+        + (CAR_MASS * common_values.GRAVITY * (common_values.CEILING_Z - 17))
         + (0.5 * CAR_MASS * common_values.CAR_MAX_SPEED ** 2)
     )
 
@@ -373,7 +373,7 @@ class EnergyReward(RewardFunction[AgentID, GameState, float]):
             energy = 0.0
 
             # Énergie potentielle gravitationnelle (surpondérée x1.1 pour encourager le jeu aérien)
-            energy += 1.1 * self.CAR_MASS * -self.GRAVITY_Z * height
+            energy += 1.1 * self.CAR_MASS * common_values.GRAVITY * height
 
             # Énergie cinétique
             energy += 0.5 * self.CAR_MASS * velocity ** 2
