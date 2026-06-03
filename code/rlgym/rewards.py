@@ -310,9 +310,9 @@ class MomentumFlipReward(RewardFunction[AgentID, GameState, float]):
         self.last_has_flip = {}
 
     def reset(self, agents: List[AgentID], initial_state: GameState,
-              shared_info: Dict[str, Any]) -> None:
+          shared_info: Dict[str, Any]) -> None:
         self.last_speed = {
-            agent: float(np.linalg.norm(initial_state.cars[agent].linear_velocity))
+            agent: float(np.linalg.norm(initial_state.cars[agent].physics.linear_velocity))
             for agent in agents
         }
         self.last_has_flip = {
@@ -328,7 +328,7 @@ class MomentumFlipReward(RewardFunction[AgentID, GameState, float]):
 
         for agent in agents:
             car = state.cars[agent]
-            curr_speed = float(np.linalg.norm(car.linear_velocity))
+            curr_speed = float(np.linalg.norm(car.physics.linear_velocity))
             last_speed = self.last_speed.get(agent, curr_speed)
             last_flip = self.last_has_flip.get(agent, True)
 
