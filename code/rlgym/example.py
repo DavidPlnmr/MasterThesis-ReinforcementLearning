@@ -67,13 +67,13 @@ def build_rlgym_v2_env():
 
     reward_fn = LogCombinedReward(
         (GoalReward(), 1500),
-        (AdvancedTouchReward(touch_reward=0.3, acceleration_reward=1.0), 50), 
+        (AdvancedTouchReward(touch_reward=0.3, acceleration_reward=1.0), 30), 
         (VelocityPlayerToBallReward(include_negative_values=False), 5),
         (FaceBallReward(), 0.5),
         (InAirReward(), 0.1),
         (VelocityBallToGoalRewardZS, 30, "VelocityBallToGoal_ZS"),
         (AerialDistanceReward(), 100),
-        (BoostKeepRewardZS, 0.3, "BoostKeep_ZS")
+        (BoostKeepRewardZS, 2, "BoostKeep_ZS")
     )
     metrics_logger.g_combined_reward = reward_fn
 
