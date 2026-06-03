@@ -223,8 +223,8 @@ class KickoffFirstTouchReward(RewardFunction[AgentID, GameState, float]):
                 "contact_rewarded": False
             })
 
-            car_pos = car.position
-            car_vel = car.linear_velocity
+            car_pos = car.physics.position
+            car_vel = car.physics.linear_velocity
             ball_pos = ball.position
             ball_vel = ball.linear_velocity
 
@@ -250,7 +250,7 @@ class KickoffFirstTouchReward(RewardFunction[AgentID, GameState, float]):
                 and not car.on_ground
                 and not p_mem["approach_flip_rewarded"]
             ):
-                forward_alignment = float(np.dot(car.rotation_mtx()[:, 0], norm_pos_diff))
+                forward_alignment = float(np.dot(car.physics.rotation_mtx()[:, 0], norm_pos_diff))
                 if forward_speed > 0.65 and forward_alignment > 0.7:
                     p_mem["approach_flip_rewarded"] = True
                     reward += 4.0
@@ -265,7 +265,7 @@ class KickoffFirstTouchReward(RewardFunction[AgentID, GameState, float]):
                     reward += 4.0
 
                 # Qualité du contact nez en avant
-                contact_quality = max(0.0, float(np.dot(car.rotation_mtx()[:, 0], norm_pos_diff)))
+                contact_quality = max(0.0, float(np.dot(car.physics.rotation_mtx()[:, 0], norm_pos_diff)))
                 reward += contact_quality * 2.0
 
                 # Direction favorable de la balle après contact
@@ -359,12 +359,12 @@ class CloseRangeFaceBallReward(RewardFunction[AgentID, GameState, float]):
 
         for agent in agents:
             car = state.cars[agent]
-            pos_diff = state.ball.position - car.position
+            pos_diff = state.ball.position - car.physics.position
             dist = float(np.linalg.norm(pos_diff))
 
             if dist < 1000.0:
                 norm_pos_diff = pos_diff / dist if dist > 0 else pos_diff
-                alignment = float(np.dot(car.rotation_mtx()[:, 0], norm_pos_diff))
+                alignment = float(np.dot(car.physics.rotation_mtx()[:, 0], norm_pos_diff))
                 rewards[agent] = alignment
             else:
                 rewards[agent] = 0.0
