@@ -250,7 +250,7 @@ class KickoffFirstTouchReward(RewardFunction[AgentID, GameState, float]):
                 and not car.on_ground
                 and not p_mem["approach_flip_rewarded"]
             ):
-                forward_alignment = float(np.dot(car.physics.rotation_mtx()[:, 0], norm_pos_diff))
+                forward_alignment = float(np.dot(car.physics.rotation_mtx[:, 0], norm_pos_diff))
                 if forward_speed > 0.65 and forward_alignment > 0.7:
                     p_mem["approach_flip_rewarded"] = True
                     reward += 4.0
@@ -265,7 +265,7 @@ class KickoffFirstTouchReward(RewardFunction[AgentID, GameState, float]):
                     reward += 4.0
 
                 # Qualité du contact nez en avant
-                contact_quality = max(0.0, float(np.dot(car.physics.rotation_mtx()[:, 0], norm_pos_diff)))
+                contact_quality = max(0.0, float(np.dot(car.physics.rotation_mtx[:, 0], norm_pos_diff)))
                 reward += contact_quality * 2.0
 
                 # Direction favorable de la balle après contact
@@ -302,47 +302,7 @@ class KickoffFirstTouchReward(RewardFunction[AgentID, GameState, float]):
 
         return rewards
     
-class MomentumFlipReward(RewardFunction[AgentID, GameState, float]):
-    """Récompense les flips qui augmentent la vitesse vers la balle. Pénalise les flips inutiles ou qui ralentissent l'approche. Inspiré de Neil Surya."""
-    
-    def __init__(self) -> None:
-        self.last_speed = {}
-        self.last_has_flip = {}
 
-    def reset(self, agents: List[AgentID], initial_state: GameState,
-          shared_info: Dict[str, Any]) -> None:
-        self.last_speed = {
-            agent: float(np.linalg.norm(initial_state.cars[agent].physics.linear_velocity))
-            for agent in agents
-        }
-        self.last_has_flip = {
-            agent: initial_state.cars[agent].has_flip
-            for agent in agents
-        }
-
-    def get_rewards(self, agents: List[AgentID], state: GameState,
-                    is_terminated: Dict[AgentID, bool],
-                    is_truncated: Dict[AgentID, bool],
-                    shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
-        rewards = {}
-
-        for agent in agents:
-            car = state.cars[agent]
-            curr_speed = float(np.linalg.norm(car.physics.linear_velocity))
-            last_speed = self.last_speed.get(agent, curr_speed)
-            last_flip = self.last_has_flip.get(agent, True)
-
-            reward = 0.0
-            # Détecte le frame exact où le flip est exécuté
-            if last_flip and not car.has_flip and not car.on_ground:
-                speed_diff = (curr_speed - last_speed) / common_values.CAR_MAX_SPEED
-                reward = speed_diff * 3.0
-
-            self.last_speed[agent] = curr_speed
-            self.last_has_flip[agent] = car.has_flip
-            rewards[agent] = reward
-
-        return rewards
     
 class CloseRangeFaceBallReward(RewardFunction[AgentID, GameState, float]):
     """Forces the bot to turn and face the ball only when preparing to strike."""
@@ -364,9 +324,73 @@ class CloseRangeFaceBallReward(RewardFunction[AgentID, GameState, float]):
 
             if dist < 1000.0:
                 norm_pos_diff = pos_diff / dist if dist > 0 else pos_diff
-                alignment = float(np.dot(car.physics.rotation_mtx()[:, 0], norm_pos_diff))
+                alignment = float(np.dot(car.physics.rotation_mtx[:, 0], norm_pos_diff))
                 rewards[agent] = alignment
             else:
                 rewards[agent] = 0.0
+
+        return rewards
+    
+class EnergyReward(RewardFunction[AgentID, GameState, float]):
+    """
+    Récompense l'agent pour maintenir un haut niveau d'énergie mécanique totale.
+    Combine hauteur, vitesse, boost, et flip/jump disponible en un signal unifié.
+    """
+
+    CAR_MASS = common_values.CAR_MASS  # masse approximative en rlgym
+    GRAVITY_Z = -common_values.GRAVITY  # gravité approximative
+    JUMP_VEL = 292.0
+
+    PER_BOOST_POTENTIAL = (0.5 * CAR_MASS * 3000.0 ** 2) / 100.0
+    JUMP_POTENTIAL = 0.5 * CAR_MASS * JUMP_VEL ** 2 * 4
+    MAX_ENERGY = (
+        100 * PER_BOOST_POTENTIAL
+        + JUMP_POTENTIAL
+        + (CAR_MASS * -GRAVITY_Z * (common_values.CEILING_Z - 17))
+        + (0.5 * CAR_MASS * common_values.CAR_MAX_SPEED ** 2)
+    )
+
+    def reset(self, agents: List[AgentID], initial_state: GameState,
+              shared_info: Dict[str, Any]) -> None:
+        pass
+
+    def get_rewards(self, agents: List[AgentID], state: GameState,
+                    is_terminated: Dict[AgentID, bool],
+                    is_truncated: Dict[AgentID, bool],
+                    shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
+        rewards = {}
+
+        for agent in agents:
+            car = state.cars[agent]
+
+            if car.is_demoed:
+                rewards[agent] = 0.0
+                continue
+
+            height = car.physics.position[2]
+            velocity = float(np.linalg.norm(car.physics.linear_velocity))
+
+            energy = 0.0
+
+            # Énergie potentielle gravitationnelle (surpondérée x1.1 pour encourager le jeu aérien)
+            energy += 1.1 * self.CAR_MASS * -self.GRAVITY_Z * height
+
+            # Énergie cinétique
+            energy += 0.5 * self.CAR_MASS * velocity ** 2
+
+            # Énergie stockée dans le boost
+            energy += self.PER_BOOST_POTENTIAL * car.boost_amount
+
+            # Énergie potentielle du saut (si pas encore sauté)
+            if not car.has_jumped:
+                energy += self.JUMP_POTENTIAL
+
+            # Énergie potentielle du flip/dodge
+            if car.has_flip:
+                dodge_impulse = (500.0 + velocity / 17.0) if velocity <= 1700.0 else (600.0 - (velocity - 1700.0))
+                dodge_impulse = max(dodge_impulse - 25.0, 0.0)
+                energy += 0.9 * 0.5 * self.CAR_MASS * dodge_impulse ** 2
+
+            rewards[agent] = energy / self.MAX_ENERGY
 
         return rewards
