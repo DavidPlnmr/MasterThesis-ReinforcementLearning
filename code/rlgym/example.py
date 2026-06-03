@@ -75,8 +75,8 @@ def build_rlgym_v2_env():
         (VelocityBallToGoalRewardZS, 30, "VelocityBallToGoal_ZS"),
         (AerialDistanceReward(), 150),
         (BoostKeepRewardZS, 20, "BoostKeep_ZS"),
-        (MomentumFlipReward(), 1)
-        (KickoffFirstTouchReward(), 12)
+        (MomentumFlipReward(), 1),
+        (KickoffFirstTouchReward(), 12),
         (BoostChangeReward(gain_weight=1.0, lose_weight=0.0), 30)
 
     )
