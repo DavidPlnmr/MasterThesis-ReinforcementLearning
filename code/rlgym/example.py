@@ -126,7 +126,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--save-every-ts",
         type=int,
-        default=50_000_000,
+        default=25_000_000,
         help="Sauvegarder le modèle tous les N timesteps."
     )
     parser.add_argument(
