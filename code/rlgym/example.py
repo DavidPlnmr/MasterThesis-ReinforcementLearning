@@ -72,10 +72,10 @@ def build_rlgym_v2_env():
         (VelocityPlayerToBallReward(include_negative_values=False), 0.2),
         (CloseRangeFaceBallReward(), 0.5),
         (VelocityBallToGoalRewardZS, 30, "VelocityBallToGoal_ZS"),
-        (AerialDistanceReward(), 150),
+        (AerialDistanceReward(), 300),
         (KickoffFirstTouchReward(), 12),
         (EnergyReward(), 5),
-        (BoostChangeReward(gain_weight=1.0, lose_weight=0.0), 30)
+        (BoostChangeReward(gain_weight=1.0, lose_weight=0.3), 30)
 
     )
     metrics_logger.g_combined_reward = reward_fn
@@ -130,7 +130,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--timesteps-limit",
         type=int,
-        default=3_000_000_000,
+        default=4_000_000_000,
         help="Limite de timesteps pour l'entraînement."
     )
     args = parser.parse_args()
