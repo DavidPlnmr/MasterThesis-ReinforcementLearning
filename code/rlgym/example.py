@@ -21,7 +21,7 @@ project_name = "rlgym_ppo_example"
 
 def build_rlgym_v2_env():
     
-    from rewards import CloseRangeFaceBallReward, VelocityBallToGoalReward, LogCombinedReward, ZeroSumReward, KickoffFirstTouchReward, EnergyReward
+    from rewards import CloseRangeFaceBallReward, VelocityBallToGoalReward, LogCombinedReward, ZeroSumReward, KickoffReward, EnergyReward, InAirReward, FaceBallReward
     import metrics_logger
     from statemutator import RandomStateMutator
     
@@ -62,20 +62,13 @@ def build_rlgym_v2_env():
         TimeoutCondition(timeout_seconds=game_timeout_seconds)
     )
 
-    VelocityBallToGoalRewardZS = ZeroSumReward(VelocityBallToGoalReward(), team_spirit=0.0, opp_scale=1.0)
-
-    BoostKeepRewardZS = ZeroSumReward(BoostKeepReward(), team_spirit=0.0, opp_scale=1.0)
+    
 
     reward_fn = LogCombinedReward(
-        (GoalReward(), 1500),
-        (AdvancedTouchReward(touch_reward=0.3, acceleration_reward=1.0), 30), 
-        (VelocityPlayerToBallReward(include_negative_values=False), 0.2),
-        (CloseRangeFaceBallReward(), 0.5),
-        (VelocityBallToGoalRewardZS, 30, "VelocityBallToGoal_ZS"),
-        (AerialDistanceReward(), 300),
-        (KickoffFirstTouchReward(), 12),
-        (EnergyReward(), 5),
-        (BoostChangeReward(gain_weight=1.0, lose_weight=0.3), 30)
+        (AdvancedTouchReward(touch_reward=1.0, acceleration_reward=0.0), 5),
+        (VelocityPlayerToBallReward(), 1),
+        (InAirReward(), 0.1),
+        (FaceBallReward(), 0.1),
 
     )
     metrics_logger.g_combined_reward = reward_fn
@@ -124,13 +117,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--save-every-ts",
         type=int,
-        default=25_000_000,
+        default=10_000_000,
         help="Sauvegarder le modèle tous les N timesteps."
     )
     parser.add_argument(
         "--timesteps-limit",
         type=int,
-        default=4_000_000_000,
+        default=150_000_000_000,
         help="Limite de timesteps pour l'entraînement."
     )
     args = parser.parse_args()
@@ -154,19 +147,20 @@ if __name__ == "__main__":
 
     print(f"Loading checkpoint: {checkpoint_load_folder}")
 
+    ts_per_it = 100_000
     learner = Learner(build_rlgym_v2_env,
                       n_proc=n_proc,
                       min_inference_size=min_inference_size,
                       metrics_logger=RewardMetricsLogger(), # Use the custom metrics logger
-                      ppo_batch_size=200_000,  # batch size - much higher than 300K doesn't seem to help most people
-                      ts_per_iteration=200_000,  # timesteps per training iteration - set this equal to the batch size
-                      exp_buffer_size=600_000,  # size of experience buffer - keep this 2 - 3x the batch size
+                      ppo_batch_size=ts_per_it,  # batch size - much higher than 300K doesn't seem to help most people
+                      ts_per_iteration=ts_per_it,  # timesteps per training iteration - set this equal to the batch size
+                      exp_buffer_size=ts_per_it * 3,  # size of experience buffer - keep this 2 - 3x the batch size
                       ppo_minibatch_size=50_000,  # minibatch size - set this as high as your GPU can handle
                       ppo_ent_coef=0.01,  # entropy coefficient - this determines the impact of exploration
-                      policy_lr=1e-4,  # policy learning rate
-                      critic_lr=1e-4,  # critic learning rate
+                      policy_lr=2e-4,  # policy learning rate
+                      critic_lr=2e-4,  # critic learning rate
                       ppo_epochs=2,   # number of PPO epochs
-                      gae_gamma=0.991,  # GAE gamma - discount factor for rewards
+                      gae_gamma=0.99,  # GAE gamma - discount factor for rewards
                       policy_layer_sizes=[1024, 1024, 512, 512],  # policy network
                       critic_layer_sizes=[1024, 1024, 512, 512],  # critic network making it the same size as the policy 
                       standardize_returns=True, # Don't touch these.
@@ -179,7 +173,7 @@ if __name__ == "__main__":
                       log_to_wandb=RUN_ON_SLURM, # Set this to True if you want to use Weights & Biases for logging.
                       render=not RUN_ON_SLURM,  # Disable rendering if running on Slurm to avoid issues.
                       render_delay=8/120,
-                      load_wandb=False,
+                      load_wandb=True,
                       n_checkpoints_to_keep=10
                       )
 
