@@ -65,8 +65,10 @@ def build_rlgym_v2_env():
     
 
     reward_fn = LogCombinedReward(
-        (AdvancedTouchReward(touch_reward=1.0, acceleration_reward=0.0), 5),
+        (GoalReward(), 150),
+        (AdvancedTouchReward(touch_reward=0.8, acceleration_reward=1.0), 5),
         (VelocityPlayerToBallReward(), 1),
+        (VelocityBallToGoalReward(), 6),
         (InAirReward(), 0.1),
         (FaceBallReward(), 0.1),
 
@@ -157,8 +159,8 @@ if __name__ == "__main__":
                       exp_buffer_size=ts_per_it * 3,  # size of experience buffer - keep this 2 - 3x the batch size
                       ppo_minibatch_size=50_000,  # minibatch size - set this as high as your GPU can handle
                       ppo_ent_coef=0.01,  # entropy coefficient - this determines the impact of exploration
-                      policy_lr=2e-4,  # policy learning rate
-                      critic_lr=2e-4,  # critic learning rate
+                      policy_lr=1e-4,  # policy learning rate
+                      critic_lr=1e-4,  # critic learning rate
                       ppo_epochs=2,   # number of PPO epochs
                       gae_gamma=0.99,  # GAE gamma - discount factor for rewards
                       policy_layer_sizes=[1024, 1024, 512, 512],  # policy network
