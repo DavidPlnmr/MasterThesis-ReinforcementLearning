@@ -62,17 +62,17 @@ def build_rlgym_v2_env():
         TimeoutCondition(timeout_seconds=game_timeout_seconds)
     )
 
-    
+    VelocityBallToGoalReward_ZS = ZeroSumReward(VelocityBallToGoalReward(), team_spirit=0, opp_scale=1)
 
     reward_fn = LogCombinedReward(
         (GoalReward(), 150),
-        (AdvancedTouchReward(touch_reward=0.8, acceleration_reward=1.0), 5),
+        (AdvancedTouchReward(touch_reward=0.2, acceleration_reward=1.0), 5),
         (VelocityPlayerToBallReward(), 1),
-        (VelocityBallToGoalReward(), 6),
+        (VelocityBallToGoalReward_ZS, 6, "VelocityBallToGoalReward_ZS"),
         (InAirReward(), 0.1),
         (FaceBallReward(), 0.1),
-
     )
+
     metrics_logger.g_combined_reward = reward_fn
 
     
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--timesteps-limit",
         type=int,
-        default=150_000_000_000,
+        default=1_000_000_000_000,
         help="Limite de timesteps pour l'entraînement."
     )
     args = parser.parse_args()
