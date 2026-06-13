@@ -2,7 +2,7 @@ import argparse
 import os
 
 
-RUN_ON_SLURM = True # If I run this on Slurm, I set this to True to avoid issues with KBHit and GPU/CPU tensor checkpoints. If I run it locally, I set this to False to disable WandB logging and enable rendering.
+RUN_ON_SLURM = False # If I run this on Slurm, I set this to True to avoid issues with KBHit and GPU/CPU tensor checkpoints. If I run it locally, I set this to False to disable WandB logging and enable rendering.
 
 if RUN_ON_SLURM:
     import patch_kbhit # Patch pour éviter les problèmes de KBHit sur Slurm qui attendent une entrée clavier. Doit être importé avant rlgym_ppo.
@@ -66,7 +66,7 @@ def build_rlgym_v2_env():
 
     reward_fn = LogCombinedReward(
         (GoalReward(), 150),
-        (AdvancedTouchReward(touch_reward=0.3, acceleration_reward=1.0), 3),
+        (AdvancedTouchReward(touch_reward=0.3, acceleration_reward=1.0, use_touch_count=False), 3),
         (VelocityBallToGoalReward_ZS, 3, "VelocityBallToGoalReward_ZS"),
         (InAirReward(), 0.1),
         (KickoffReward(), 3),
