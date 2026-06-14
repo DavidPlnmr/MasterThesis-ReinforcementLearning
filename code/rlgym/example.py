@@ -177,7 +177,7 @@ if __name__ == "__main__":
                       log_to_wandb=RUN_ON_SLURM, # Set this to True if you want to use Weights & Biases for logging.
                       render=not RUN_ON_SLURM,  # Disable rendering if running on Slurm to avoid issues.
                       render_delay=8/120,
-                      load_wandb=True,
+                      load_wandb=False,
                       n_checkpoints_to_keep=10
                       )
 
