@@ -164,7 +164,7 @@ if __name__ == "__main__":
                       policy_lr=1e-4,  # policy learning rate
                       critic_lr=1e-4,  # critic learning rate
                       ppo_epochs=2,   # number of PPO epochs
-                      gae_gamma=0.993,  # GAE gamma - discount factor for rewards
+                      gae_gamma=0.995,  # GAE gamma - discount factor for rewards
                       policy_layer_sizes=[1024, 1024, 512, 512],  # policy network
                       critic_layer_sizes=[1024, 1024, 512, 512],  # critic network making it the same size as the policy 
                       standardize_returns=True, # Don't touch these.
