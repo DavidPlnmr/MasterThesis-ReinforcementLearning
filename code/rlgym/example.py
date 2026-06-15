@@ -127,7 +127,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--timesteps-limit",
         type=int,
-        default=5_000_000_000,
+        default=12_500_000_000,
         help="Limite de timesteps pour l'entraînement."
     )
     args = parser.parse_args()

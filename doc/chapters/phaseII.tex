@@ -93,3 +93,7 @@ Le vecteur d'observation décrit chaque entité de jeu — la voiture de l'agent
 Ce vecteur est de taille fixe, ce qui est cohérent avec le mode 1v1 retenu : le nombre d'entités étant constant à chaque pas de temps, aucun rembourrage dynamique n'est nécessaire.
 
 Cet espace d'observation est dit \textit{omniscient} : l'agent dispose en permanence d'informations complètes sur l'ensemble de l'environnement, ce qui le place dans des conditions bien plus favorables qu'un joueur humain. En particulier, la position et la vitesse exactes de la balle, ainsi que le positionnement et le niveau de boost de l'adversaire, sont accessibles à tout moment — des informations qu'un joueur humain ne peut qu'estimer visuellement et imparfaitement.
+
+% Next needs to be written :
+% The main goal of the game (score a goal in the opponent's net)
+% Also talk about the reward sparse if i only include a reward for scoring a goal, and how that is not sufficient for learning. And include the refs for the reward shaping as a method to address the reward sparsity problem. Then talk about the different types of rewards that I used, and how I iteratively adjusted them to improve learning. Also talk about the specific rewards that I used to encourage specific behaviors, like the touch reward, the velocity reward, etc. Also talk about the challenges I faced with reward shaping, like the fact that some rewards could lead to undesired behaviors (reward hacking) and how I had to adjust those rewards to avoid that (AdvancedTouchReward, EnergyReward, KickoffReward).
