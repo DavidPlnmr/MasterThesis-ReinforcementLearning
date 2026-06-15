@@ -15,10 +15,11 @@ Par ailleurs, Optuna intègre un mécanisme d'élagage (\textit{pruning}) qui pe
 Weights \& Biases (WandB) est une plateforme de suivi et de visualisation des expériences d'apprentissage automatique. Elle permet d'enregistrer les métriques d'entraînement, de visualiser les courbes d'apprentissage et de comparer les performances de différents modèles et configurations. WandB facilite par ailleurs la collaboration en centralisant l'ensemble des résultats expérimentaux et en offrant des outils de partage adaptés au travail en équipe. \parencite{WeightsBiasesAI}
 
 \subsection{RLgym}
-RLgym est une bibliothèque de simulation d'environnements pour l'apprentissage par renforcement, initialement conçue pour le jeu Rocket League\footnote{\url{https://www.rocketleague.com}}, mais désormais indépendante de celui-ci. Elle s'appuie sur les abstractions de Gymnasium et propose des outils spécifiques à la simulation de physique de jeu pour l'entraînement d'agents. \parencite{RLGymRLGym}
+RLgym est une bibliothèque de simulation d'environnements pour l'apprentissage par renforcement, initialement conçue pour le jeu Rocket League, mais désormais indépendante de celui-ci. Elle s'appuie sur les abstractions de Gymnasium et propose des outils spécifiques à la simulation de physique de jeu pour l'entraînement d'agents. \parencite{RLGymRLGym}
 
 \subsubsection{RocketSim}
+\label{sec:rocketsim}
 RocketSim est une bibliothèque de simulation physique de Rocket League, optimisée pour les scénarios d'entraînement intensif. Son principal atout réside dans la prise en charge du \textit{headless training} — un entraînement sans interface graphique — qui supprime toute charge de rendu visuel et accélère considérablement les cycles d'expérimentation. \parencite{zealanlZealanLRocketSim2026}
 
-\subsubsection{RLViser}
-RLViser est une bibliothèque de visualisation complémentaire à RocketSim. Elle permet de rejouer et d'inspecter visuellement les parties simulées, ce qui s'avère précieux pour analyser les comportements des agents et appréhender les dynamiques de l'environnement. \parencite{veilleuxVirxECRlviser2026}
+\subsubsection{RocketSimVis}
+RocketSimVis est une bibliothèque de visualisation complémentaire à RocketSim. Elle permet de rejouer et d'inspecter visuellement les parties simulées, ce qui s'avère précieux pour analyser les comportements des agents et appréhender les dynamiques de l'environnement. \parencite{zealanlZealanLRocketSimVis2026}

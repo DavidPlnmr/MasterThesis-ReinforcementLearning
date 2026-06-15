@@ -1,3 +1,16 @@
+@inproceedings{645528.657613,
+  title = {Policy Invariance under Reward Transformations: {{Theory}} and Application to Reward Shaping},
+  booktitle = {Proceedings of the Sixteenth International Conference on Machine Learning},
+  author = {Ng, Andrew Y. and Harada, Daishi and Russell, Stuart J.},
+  date = {1999},
+  series = {Icml '99},
+  pages = {278--287},
+  publisher = {Morgan Kaufmann Publishers Inc.},
+  location = {San Francisco, CA, USA},
+  isbn = {1-55860-612-2},
+  pagetotal = {10}
+}
+
 @online{akibaOptunaNextgenerationHyperparameter2019,
   title = {Optuna: {{A Next-generation Hyperparameter Optimization Framework}}},
   shorttitle = {Optuna},
@@ -150,6 +163,15 @@
   file = {/Users/davidpaulino/Zotero/storage/C529PLVQ/Lillicrap et al. - 2015 - Continuous control with deep reinforcement learning.pdf}
 }
 
+@online{ListGameValues,
+  title = {List of {{Game Values}} | {{RLGym}}},
+  url = {https://rlgym.org/Cheatsheets/game_values},
+  urldate = {2026-06-15},
+  abstract = {This document provides a reference for constant values used in Rocket League. All spatial measurements are in Unreal Units (uu), where 1 uu = 1 centimeter.},
+  langid = {english},
+  file = {/Users/davidpaulino/Zotero/storage/AUBVHS23/game_values.html}
+}
+
 @inproceedings{maoResourceManagementDeep2016,
   title = {Resource {{Management}} with {{Deep Reinforcement Learning}}},
   booktitle = {Proceedings of the 15th {{ACM Workshop}} on {{Hot Topics}} in {{Networks}}},
@@ -194,6 +216,22 @@
   abstract = {Our team of five neural networks, OpenAI Five, has started to defeat amateur human teams at Dota~2.},
   langid = {american},
   file = {/Users/davidpaulino/Zotero/storage/GGZVYAAS/openai-five.html}
+}
+
+@online{pathakCuriositydrivenExplorationSelfsupervised2017,
+  title = {Curiosity-Driven {{Exploration}} by {{Self-supervised Prediction}}},
+  author = {Pathak, Deepak and Agrawal, Pulkit and Efros, Alexei A. and Darrell, Trevor},
+  date = {2017-05-15},
+  eprint = {1705.05363},
+  eprinttype = {arXiv},
+  eprintclass = {cs},
+  doi = {10.48550/arXiv.1705.05363},
+  url = {http://arxiv.org/abs/1705.05363},
+  urldate = {2026-06-11},
+  abstract = {In many real-world scenarios, rewards extrinsic to the agent are extremely sparse, or absent altogether. In such cases, curiosity can serve as an intrinsic reward signal to enable the agent to explore its environment and learn skills that might be useful later in its life. We formulate curiosity as the error in an agent's ability to predict the consequence of its own actions in a visual feature space learned by a self-supervised inverse dynamics model. Our formulation scales to high-dimensional continuous state spaces like images, bypasses the difficulties of directly predicting pixels, and, critically, ignores the aspects of the environment that cannot affect the agent. The proposed approach is evaluated in two environments: VizDoom and Super Mario Bros. Three broad settings are investigated: 1) sparse extrinsic reward, where curiosity allows for far fewer interactions with the environment to reach the goal; 2) exploration with no extrinsic reward, where curiosity pushes the agent to explore more efficiently; and 3) generalization to unseen scenarios (e.g. new levels of the same game) where the knowledge gained from earlier experience helps the agent explore new places much faster than starting from scratch. Demo video and code available at https://pathak22.github.io/noreward-rl/},
+  pubstate = {prepublished},
+  keywords = {Computer Science - Artificial Intelligence,Computer Science - Computer Vision and Pattern Recognition,Computer Science - Machine Learning,Computer Science - Robotics,Statistics - Machine Learning},
+  file = {/Users/davidpaulino/Zotero/storage/BNUFBEBH/Pathak et al. - 2017 - Curiosity-driven Exploration by Self-supervised Prediction.pdf;/Users/davidpaulino/Zotero/storage/E5BGDT6C/1705.html}
 }
 
 @online{raffinSmoothExplorationRobotic2021,
@@ -283,17 +321,6 @@
   file = {/Users/davidpaulino/Zotero/storage/QPW7W95S/Tang et al. - 2024 - Deep Reinforcement Learning for Robotics A Survey of Real-World Successes.pdf;/Users/davidpaulino/Zotero/storage/PLAVE9ZF/2408.html}
 }
 
-@software{veilleuxVirxECRlviser2026,
-  title = {{{VirxEC}}/Rlviser},
-  author = {Veilleux, Eric},
-  date = {2026-03-01T00:48:57Z},
-  origdate = {2023-03-27T18:43:13Z},
-  url = {https://github.com/VirxEC/rlviser},
-  urldate = {2026-04-22},
-  abstract = {A visualizer for the RocketSim project},
-  keywords = {bevy,rocket-league,rocketsim,rust}
-}
-
 @online{WeightsBiasesAI,
   title = {Weights \& {{Biases}}: {{The AI Developer Platform}}},
   shorttitle = {Weights \& {{Biases}}},
@@ -345,4 +372,14 @@
   urldate = {2026-04-22},
   abstract = {A C++ library for simulating Rocket League games at maximum efficiency},
   keywords = {cpp,physics-simulation,rocket-league,rust,simulation}
+}
+
+@software{zealanlZealanLRocketSimVis2026,
+  title = {{{ZealanL}}/{{RocketSimVis}}},
+  author = {ZealanL},
+  date = {2026-06-08T23:30:53Z},
+  origdate = {2024-02-07T23:42:42Z},
+  url = {https://github.com/ZealanL/RocketSimVis},
+  urldate = {2026-06-11},
+  abstract = {An easy-to-use cool-looking visualizer for RocketSim}
 }

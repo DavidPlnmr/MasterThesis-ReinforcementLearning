@@ -4,3 +4,92 @@
 % - Enfin, je peux parler des résultats que j'ai obtenus et de ce que j'ai appris de cette phase 2. Par exemple, j'ai pu constater que le reward shaping était vraiment crucial pour faire fonctionner l'agent, et que sans un bon reward shaping, l'agent avait du mal à apprendre même les bases du jeu. Egalement, amener des types de récompenses spécifiques dépendant de la phase d'entraînement : apprendre à d'abord toucher la balle, ensuite à marquer, ensuite introduire les mécaniques supplémentaires du jeu. Egalement, parler des récompenses spécifiques que j'ai utilisées pour encourager des comportements spécifiques, comme les récompenses pour les touches de balle, les récompenses pour la vitesse de la balle vers le but, etc. Je peux aussi parler des défis que j'ai rencontrés avec le reward shaping, comme le fait que certaines récompenses pouvaient conduire à des comportements indésirables (reward hacking) et comment j'ai dû ajuster ces récompenses pour éviter cela (AdvancedTouchReward, EnergyReward, KickoffReward).
 % - Egalement, un point qui peut être important est le fait de commencer avec un état aléatoire. Ex : le jeu commence constamment dans un état de kickoff (balle au milieu du terrain et les joueurs symétriques de chaque côté). Cela peut être un défi pour l'apprentissage, car l'agent doit apprendre à gérer cette situation spécifique avant de pouvoir apprendre d'autres aspects du jeu. Donc j'ai dû introduire des variations dans les états de départ pour permettre à l'agent d'apprendre à gérer différentes situations plus tôt et ainsi accélérer l'apprentissage. Cela permet également d'amener l'agent à apprendre des comportements plus généraux plutôt que de se spécialiser dans une situation spécifique (le kickoff)/meilleure exploration.
 % - Aussi parler du fait que le choix se fait sur PPO pour l'instant (SAC dans le futur). Qu'ensuite, c'est une situation de 1v1 donc multi-agent mais il s'entraîne contre lui même. Egalement, parler du ZeroSumReward qui est une technique que j'ai utilisée pour encourager l'agent à apprendre à contrer les actions de l'adversaire, en lui donnant une récompense négative lorsque l'adversaire fait quelque chose de bien (ex : faire avancer la balle vers le but adverse) et une récompense positive lorsque l'adversaire fait quelque chose de mal (ex : faire reculer la balle vers son propre but). Cela permet d'encourager l'agent à apprendre des stratégies plus compétitives et à mieux gérer les interactions avec l'adversaire.
+
+Pour cette phase 2, le but est de travailler sur un environnement bien plus complexe que LunarLander, nécessitant la maîtrise de mécaniques avancées et une stratégie à long terme. J'ai choisi de travailler sur Rocket League, un jeu de football avec des voitures développé par Psyonix, qui constitue un défi particulièrement riche pour l'apprentissage par renforcement en raison de sa physique réaliste, de la grande variété de situations de jeu possibles et de la nécessité de coordonner des séquences d'actions complexes pour être compétitif.
+
+\subsection{Environnement de jeu}
+Rocket League est un jeu de football avec des voitures dans lequel les joueurs contrôlent des véhicules pour frapper une balle et marquer des buts dans le camp adverse. L'environnement est particulièrement exigeant pour un agent de RL pour plusieurs raisons. D'une part, le jeu tourne nativement à 120 images par seconde, ce qui implique qu'un agent devrait théoriquement prendre 120 décisions par seconde pour interagir avec l'environnement à sa pleine résolution temporelle. D'autre part, les mécaniques de jeu sont nombreuses et interdépendantes : les voitures peuvent récupérer du boost sur le terrain, effectuer des sauts simples ou doubles, réaliser des \textit{flips} (rotations rapides en l'air pouvant conférer une impulsion de vitesse supplémentaire), et coller aux murs ou au plafond de l'arène.
+
+Le jeu peut se pratiquer en mode 1v1, 2v2, 3v3 ou 4v4. Afin de limiter la complexité liée à la coordination entre plusieurs agents, ce travail se concentre exclusivement sur le mode 1v1, où un seul agent affronte un adversaire unique. Ce cadre permet d'isoler les défis liés à l'apprentissage individuel — contrôle du véhicule, gestion du boost, positionnement tactique — sans introduire la dimension supplémentaire de la collaboration multi-agents.
+
+Dans cette phase, ce n'est pas le jeu officiel qui est utilisé, mais un environnement de simulation appelé RocketSim (Section~\ref{sec:rocketsim}), qui reproduit fidèlement la physique du jeu officiel tout en permettant un entraînement en \textit{headless mode} — sans rendu graphique — ce qui accélère considérablement les cycles d'expérimentation. RLGym fournit l'interface entre RocketSim et les algorithmes d'apprentissage par renforcement, en exposant les observations, les récompenses et les actions dans un format standardisé compatible avec les bibliothèques de RL modernes \parencite{RLGymRLGym}.
+
+
+\subsubsection{Espace d'actions}
+\label{sec:action_space}
+Le vecteur d'action complet dans RLGym est composé de huit dimensions, décrites dans le tableau~\ref{tab:action_space}. Cinq d'entre elles sont continues (throttle, steer, pitch, yaw, roll) et trois sont discrètes (jump, boost, handbrake).
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|p{5cm}|}
+\hline
+\textbf{Action} & \textbf{Plage} & \textbf{Type} & \textbf{Description} \\
+\hline
+Throttle & [-1,1] & Continu & Accélération/décélération du véhicule \\
+\hline
+Steer & [-1,1] & Continu & Direction de braquage au sol \\
+\hline
+Pitch & [-1,1] & Continu & Rotation verticale avant/arrière (en l'air) \\
+\hline
+Yaw & [-1,1] & Continu & Rotation horizontale (en l'air) \\
+\hline
+Roll & [-1,1] & Continu & Rotation latérale (en l'air) \\
+\hline
+Jump & {0,1} & Discret & Saut simple ou double \\
+\hline
+Boost & {0,1} & Discret & Utilisation du boost \\
+\hline
+Handbrake & {0,1} & Discret & Frein à main (déraper) \\
+\hline
+\end{tabular}
+\caption{Espace d'actions dans RLGym \parencite{RLGymRLGym}}
+\label{tab:action_space}
+\end{table}
+
+
+L'espace d'actions brut, en considérant toutes les combinaisons discrétisées possibles de ces huit dimensions, atteint 1944 combinaisons. Entraîner un agent sur un espace aussi vaste ralentirait considérablement la convergence, car une grande partie de ces combinaisons est redondante ou mécaniquement incohérente (par exemple, utiliser le boost sans accélérer, ou effectuer un yaw et un jump simultanément en l'air).
+
+
+Pour remédier à cela, une \textit{lookup table} d'actions est utilisée via le parser \texttt{LookupTableAction} de RLGym \parencite{RLGymRLGym}, qui réduit l'espace d'actions à \textbf{90 combinaisons discrètes} en ne conservant que les actions mécaniquement pertinentes. Ces 90 actions se décomposent en deux blocs : 
+
+\paragraph{Actions au sol (18 actions).} 
+Elles couvrent toutes les combinaisons utiles de throttle $\in \{-1, 0, 1\}$, steer $\in \{-1, 0, 1\}$, boost $\in \{0, 1\}$ et handbrake $\in \{0, 1\}$, sous la contrainte que le boost n'est activé que si le throttle est au maximum ($\text{boost} = 1 \Rightarrow \text{throttle} = 1$), ce qui correspond au comportement physique réel du jeu :
+
+\begin{equation}
+|\mathcal{A}_{\text{sol}}| = |\text{throttle}| \times |\text{steer}| \times |\text{boost}| \times |\text{handbrake}| - \text{cas invalides} = 18
+\end{equation}
+
+\paragraph{Actions aériennes (72 actions).} Elles couvrent les combinaisons de pitch, yaw, roll, jump et boost lorsque le véhicule est en l'air. Les doublons avec les actions au sol sont supprimés, ainsi que les combinaisons yaw+jump (remplacées par roll pour les flips horizontaux) :
+\begin{equation}
+|\mathcal{A}_{\text{air}}| = 72
+\end{equation}
+Au total : $|\mathcal{A}| = 18 + 72 = 90$ actions discrètes.
+
+Ce choix d'un espace discret réduit présente deux avantages majeurs. D'une part, il est directement compatible avec PPO, dont la couche de sortie applique une distribution catégorielle sur les actions discrètes (Section~\ref{sec:ppo}). D'autre part, il réduit significativement la complexité de l'exploration, ce qui favorise une convergence plus rapide — particulièrement important dans un environnement qui nécessite plusieurs milliards de pas d'entraînement pour atteindre un niveau de jeu compétitif.
+
+SAC ne sera pas exploré dans cette phase pour deux raisons complémentaires. Premièrement, comme établi en Section~\ref{sec:sac}, SAC est conçu pour les espaces d'actions continus et repose sur la maximisation de l'entropie d'une distribution gaussienne sur les actions. Il n'est donc pas directement applicable à un espace d'actions discret tel que celui retenu ici. Deuxièmement, les résultats de la Phase~I ont mis en évidence que SAC présente un coût computationnel structurellement plus élevé que PPO, indépendamment de la nature de l'espace d'action : la maintenance simultanée de deux réseaux Q, de deux réseaux cibles et du mécanisme d'ajustement adaptatif du coefficient d'entropie implique un coût par mise à jour significativement supérieur. Dans un environnement nécessitant plusieurs milliards de pas d'entraînement, ce surcoût devient prohibitif au regard des ressources de calcul disponibles. PPO constitue donc le choix naturel pour cette phase, à la fois pour sa compatibilité native avec les espaces discrets et pour son efficacité computationnelle démontrée.
+
+\paragraph{Répétition d'actions (\textit{action repeat}).} 
+À la fréquence native de 120 ticks par seconde, un agent devrait théoriquement prendre 120 décisions distinctes par seconde. En pratique, cette granularité temporelle est contre-productive pour l'apprentissage : elle génère un signal de récompense extrêmement bruité, rend le problème d'assignation de crédit (\textit{credit assignment}) particulièrement difficile — il devient ardu pour l'agent de déterminer quelle action parmi les 120 a réellement contribué à une récompense donnée — et s'éloigne considérablement de la fréquence décisionnelle humaine.
+
+Pour remédier à cela, un mécanisme de répétition d'actions (\texttt{RepeatAction}) est appliqué avec un facteur de 8 ticks, ramenant la fréquence décisionnelle effective de l'agent à 120/8=15 Hz. Chaque action sélectionnée par la politique est ainsi maintenue pendant 8 ticks consécutifs avant qu'une nouvelle décision soit prise. Ce principe, connu sous le nom de \textit{frame skipping} dans la littérature du Deep RL appliqué aux jeux vidéo, a été introduit et validé empiriquement par \textcite{mnihHumanlevelControlDeep2015} dans le cadre d'Atari, où un facteur de répétition de 4 frames est appliqué. Il est depuis devenu une pratique standard dans les environnements à haute fréquence de simulation.
+
+\subsubsection{Espace d'observation}
+\label{sec:obs_space}
+
+L'espace d'observation fournit à l'agent un vecteur d'état normalisé décrivant la situation de jeu à chaque pas de temps. Toutes les valeurs sont normalisées pour être contenues dans l'intervalle $[-1, 1]$, ce qui est une pratique standard en Deep RL pour stabiliser l'apprentissage et éviter que certaines dimensions ne dominent numériquement les autres \parencite{suttonReinforcementLearningIntroduction2015}.
+
+Le vecteur d'observation décrit chaque entité de jeu — la voiture de l'agent, la voiture adverse et la balle — à travers les informations suivantes :
+
+\begin{itemize}
+    \item \textbf{Position} $(x, y, z)$ normalisée par les dimensions de l'arène.
+    \item \textbf{Orientation} du véhicule dans l'espace 3D, encodée sous forme des vecteurs \textit{forward}, \textit{up} et \textit{right}.
+    \item \textbf{Vitesse linéaire} $(v_x, v_y, v_z)$ normalisée par la vitesse maximale atteignable.
+    \item \textbf{Vitesse angulaire} $(\omega_x, \omega_y, \omega_z)$ normalisée par la vitesse angulaire maximale.
+    \item \textbf{Quantité de boost} disponible, normalisée sur $[0, 1]$.
+    \item \textbf{Variables d'état booléennes} : contact avec le sol, disponibilité du saut, état de démolition du véhicule.
+\end{itemize}
+
+Ce vecteur est de taille fixe, ce qui est cohérent avec le mode 1v1 retenu : le nombre d'entités étant constant à chaque pas de temps, aucun rembourrage dynamique n'est nécessaire.
+
+Cet espace d'observation est dit \textit{omniscient} : l'agent dispose en permanence d'informations complètes sur l'ensemble de l'environnement, ce qui le place dans des conditions bien plus favorables qu'un joueur humain. En particulier, la position et la vitesse exactes de la balle, ainsi que le positionnement et le niveau de boost de l'adversaire, sont accessibles à tout moment — des informations qu'un joueur humain ne peut qu'estimer visuellement et imparfaitement.

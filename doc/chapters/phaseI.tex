@@ -789,6 +789,7 @@ de ses mises à jour : SAC maintient simultanément deux réseaux Q (double
 critic) et un acteur, et calcule à chaque step la mise à jour du coefficient
 d'entropie adaptatif --- un coût par update structurellement plus élevé que
 celui des autres algorithmes, indépendamment de la fréquence des mises à jour.
+Il est important de mettre en évidence que ces tests ont été réalisés sur un cluster avec des ressources partagées et donc les modèles n'ont pas forcément été entraînés dans des conditions strictement identiques, ce qui peut introduire une variance supplémentaire dans les temps de convergence observés. Cependant, la tendance générale reste claire : SAC est plus coûteux en temps d'entraînement que PPO et DQN, ce qui doit être pris en compte dans le choix de l'algorithme en fonction des contraintes de ressources disponibles.
 
 \paragraph{Synthèse.}
 Ces résultats mettent en évidence deux enseignements principaux. D'une part,
