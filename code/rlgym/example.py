@@ -70,10 +70,10 @@ def build_rlgym_v2_env():
         (GoalReward(), 150),
         (AdvancedTouchReward(touch_reward=0.3, acceleration_reward=1.0, use_touch_count=False), 3),
         (VelocityBallToGoalReward_ZS, 3, "VelocityBallToGoalReward_ZS"),
-        (InAirReward(), 0.1),
+        (InAirReward(), 0.05),
         (KickoffReward(), 3),
         (BoostKeepReward(), 1.25),
-        (EnergyReward(), 0.05),
+        (EnergyReward(), 0.1),
         (AerialDistanceReward(), 1.5),
         (WavedashReward(), 1.0),
         (DemoReward(), 0.75)
