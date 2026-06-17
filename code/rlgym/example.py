@@ -2,7 +2,7 @@ import argparse
 import os
 
 
-RUN_ON_SLURM = True # If I run this on Slurm, I set this to True to avoid issues with KBHit and GPU/CPU tensor checkpoints. If I run it locally, I set this to False to disable WandB logging and enable rendering.
+RUN_ON_SLURM = False # If I run this on Slurm, I set this to True to avoid issues with KBHit and GPU/CPU tensor checkpoints. If I run it locally, I set this to False to disable WandB logging and enable rendering.
 
 if RUN_ON_SLURM:
     import patch_kbhit # Patch pour éviter les problèmes de KBHit sur Slurm qui attendent une entrée clavier. Doit être importé avant rlgym_ppo.
@@ -45,6 +45,8 @@ def build_rlgym_v2_env():
     from rlgym_tools.rocket_league.reward_functions.aerial_distance_reward import AerialDistanceReward
     from rlgym_tools.rocket_league.reward_functions.boost_keep_reward import BoostKeepReward
     from rlgym_tools.rocket_league.reward_functions.boost_change_reward import BoostChangeReward
+    from rlgym_tools.rocket_league.reward_functions.wavedash_reward import WavedashReward
+    from rlgym_tools.rocket_league.reward_functions.demo_reward import DemoReward
 
     spawn_opponents = True
     team_size = 1
@@ -72,7 +74,9 @@ def build_rlgym_v2_env():
         (KickoffReward(), 3),
         (BoostKeepReward(), 1.25),
         (EnergyReward(), 0.05),
-        (AerialDistanceReward(), 1.5)
+        (AerialDistanceReward(), 1.5),
+        (WavedashReward(), 1.0),
+        (DemoReward(), 0.75)
     )
 
     metrics_logger.g_combined_reward = reward_fn
