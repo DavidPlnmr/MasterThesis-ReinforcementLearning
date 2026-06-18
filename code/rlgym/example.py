@@ -65,6 +65,8 @@ def build_rlgym_v2_env():
     )
 
     VelocityBallToGoalReward_ZS = ZeroSumReward(VelocityBallToGoalReward(), team_spirit=0, opp_scale=1)
+    BoostKeepReward_ZS = ZeroSumReward(BoostKeepReward(), team_spirit=0, opp_scale=1)
+    BoostChangeReward_ZS = ZeroSumReward(BoostChangeReward(gain_weight=1.0, lose_weight=0.0), team_spirit=0, opp_scale=1)
 
     reward_fn = LogCombinedReward(
         (GoalReward(), 150),
@@ -72,9 +74,10 @@ def build_rlgym_v2_env():
         (VelocityBallToGoalReward_ZS, 3, "VelocityBallToGoalReward_ZS"),
         (InAirReward(), 0.05),
         (KickoffReward(), 3),
-        (BoostKeepReward(), 1.25),
+        (BoostKeepReward_ZS, 3.0, "BoostKeepReward_ZS"),
+        (BoostChangeReward_ZS, 4.0, "BoostChangeReward_ZS"),
         (EnergyReward(), 0.1),
-        (AerialDistanceReward(), 1.5),
+        (AerialDistanceReward(), 10),
         (WavedashReward(), 1.0),
         (DemoReward(), 0.75)
     )
