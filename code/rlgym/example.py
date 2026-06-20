@@ -69,8 +69,8 @@ def build_rlgym_v2_env():
     BoostChangeReward_ZS = ZeroSumReward(BoostChangeReward(gain_weight=1.0, lose_weight=0.0), team_spirit=0, opp_scale=1)
 
     reward_fn = LogCombinedReward(
-        (GoalReward(), 500.0),
-        (AdvancedTouchReward(touch_reward=0.8, acceleration_reward=1.0, use_touch_count=False), 10.0),
+        (GoalReward(), 750.0),
+        (AdvancedTouchReward(touch_reward=0.6, acceleration_reward=1.0, use_touch_count=False), 7.5),
         (VelocityBallToGoalReward_ZS, 10.0, "VelocityBallToGoalReward_ZS"),
         (InAirReward(), 0.05),
         (KickoffReward(), 15.0),
