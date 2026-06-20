@@ -182,8 +182,9 @@ class LogCombinedReward(RewardFunction[AgentID, GameState, float]):
 class KickoffReward(RewardFunction[AgentID, GameState, float]):
     """Récompense l'agent pour aller vers la balle pendant le kickoff."""
 
-    def __init__(self):
+    def __init__(self, first_touch_reward: bool = False):
         self.vel_dir_reward = VelocityPlayerToBallReward()
+        self.first_touch_reward = first_touch_reward
 
     def reset(self, agents: List[AgentID], initial_state: GameState,
               shared_info: Dict[str, Any]) -> None:
@@ -198,8 +199,12 @@ class KickoffReward(RewardFunction[AgentID, GameState, float]):
 
         if not is_kickoff:
             return {agent: 0.0 for agent in agents}
+        else :
+            if self.first_touch_reward:
+                # Check which agent touched the ball first and give them a reward, others get 0
+                pass
 
-        return self.vel_dir_reward.get_rewards(agents, state, is_terminated, is_truncated, shared_info)
+            return self.vel_dir_reward.get_rewards(agents, state, is_terminated, is_truncated, shared_info)
     
 
     

@@ -2,7 +2,7 @@ import argparse
 import os
 
 
-RUN_ON_SLURM = True # If I run this on Slurm, I set this to True to avoid issues with KBHit and GPU/CPU tensor checkpoints. If I run it locally, I set this to False to disable WandB logging and enable rendering.
+RUN_ON_SLURM = False # If I run this on Slurm, I set this to True to avoid issues with KBHit and GPU/CPU tensor checkpoints. If I run it locally, I set this to False to disable WandB logging and enable rendering.
 
 if RUN_ON_SLURM:
     import patch_kbhit # Patch pour éviter les problèmes de KBHit sur Slurm qui attendent une entrée clavier. Doit être importé avant rlgym_ppo.
@@ -69,17 +69,17 @@ def build_rlgym_v2_env():
     BoostChangeReward_ZS = ZeroSumReward(BoostChangeReward(gain_weight=1.0, lose_weight=0.0), team_spirit=0, opp_scale=1)
 
     reward_fn = LogCombinedReward(
-        (GoalReward(), 150),
-        (AdvancedTouchReward(touch_reward=0.3, acceleration_reward=1.0, use_touch_count=False), 3),
-        (VelocityBallToGoalReward_ZS, 3, "VelocityBallToGoalReward_ZS"),
+        (GoalReward(), 500.0),
+        (AdvancedTouchReward(touch_reward=0.8, acceleration_reward=1.0, use_touch_count=False), 10.0),
+        (VelocityBallToGoalReward_ZS, 10.0, "VelocityBallToGoalReward_ZS"),
         (InAirReward(), 0.05),
-        (KickoffReward(), 12),
+        (KickoffReward(), 15.0),
         (BoostKeepReward_ZS, 3.0, "BoostKeepReward_ZS"),
         (BoostChangeReward_ZS, 4.0, "BoostChangeReward_ZS"),
-        (EnergyReward(), 0.1),
-        (AerialDistanceReward(), 10),
-        (WavedashReward(), 1.0),
-        (DemoReward(), 0.75)
+        (EnergyReward(), 0.5),
+        (AerialDistanceReward(), 12.0),
+        (WavedashReward(), 10.0),
+        (DemoReward(), 10.0)
     )
 
     metrics_logger.g_combined_reward = reward_fn
