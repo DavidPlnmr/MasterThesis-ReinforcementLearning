@@ -180,31 +180,46 @@ class LogCombinedReward(RewardFunction[AgentID, GameState, float]):
         return combined
     
 class KickoffReward(RewardFunction[AgentID, GameState, float]):
-    """Récompense l'agent pour aller vers la balle pendant le kickoff."""
+    """Récompense l'agent pour aller vers la balle pendant le kickoff,
+    avec un bonus optionnel pour le premier contact."""
 
-    def __init__(self, first_touch_reward: bool = False):
+    def __init__(self, first_touch_weight: float = 0.0):
         self.vel_dir_reward = VelocityPlayerToBallReward()
-        self.first_touch_reward = first_touch_reward
+        self.first_touch_weight = first_touch_weight
 
     def reset(self, agents: List[AgentID], initial_state: GameState,
               shared_info: Dict[str, Any]) -> None:
         self.vel_dir_reward.reset(agents, initial_state, shared_info)
 
     def get_rewards(self, agents: List[AgentID], state: GameState,
-                    is_terminated: Dict[AgentID, bool],
-                    is_truncated: Dict[AgentID, bool],
-                    shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
+                is_terminated: Dict[AgentID, bool],
+                is_truncated: Dict[AgentID, bool],
+                shared_info: Dict[str, Any]) -> Dict[AgentID, float]:
 
         is_kickoff = np.linalg.norm(state.ball.position[:2]) < 1.0
 
         if not is_kickoff:
             return {agent: 0.0 for agent in agents}
-        else :
-            if self.first_touch_reward:
-                # Check which agent touched the ball first and give them a reward, others get 0
-                pass
 
-            return self.vel_dir_reward.get_rewards(agents, state, is_terminated, is_truncated, shared_info)
+        rewards = self.vel_dir_reward.get_rewards(agents, state, is_terminated, is_truncated, shared_info)
+
+        if self.first_touch_weight > 0.0:
+            # Vérifie si quelqu'un touche la balle ce step et si personne n'a encore été récompensé
+            touched_agent = None
+            for agent in agents:
+                if state.cars[agent].ball_touches > 0:
+                    touched_agent = agent
+                    break
+
+            if touched_agent is not None and not any(self._touch_rewarded.values()):
+                for agent in agents:
+                    self._touch_rewarded[agent] = True
+                    if agent == touched_agent:
+                        rewards[agent] += self.first_touch_weight
+                    else:
+                        rewards[agent] -= self.first_touch_weight
+
+        return rewards
     
 
     
