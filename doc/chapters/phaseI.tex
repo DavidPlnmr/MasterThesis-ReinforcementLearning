@@ -98,21 +98,19 @@ de l'espace de configuration. Chaque configuration est évaluée sur
 déterministe sur \textbf{20 épisodes}. La métrique optimisée est la récompense
 moyenne obtenue lors de cette évaluation finale.
 
+Ce budget de 250 000 steps, inférieur aux 500 000 steps retenus pour l'évaluation finale (Section 8.4.1), résulte d'un compromis pragmatique : avec une cible de 150 essais par combinaison algorithme/environnement, un budget de tuning plus élevé aurait rendu la campagne d'optimisation computationnellement prohibitive. Ce choix n'est cependant pas neutre : il repose sur l'hypothèse implicite que les hyperparamètres optimaux à 250 000 steps restent valides à 500 000 steps.
+
 \subsubsection{Élagage des essais non concluants}
 
-Afin de réduire le coût computationnel, un \textbf{MedianPruner} est
+Afin de réduire le coût computationnel, un pruner médian est
 appliqué : il interrompt prématurément tout essai dont la performance
 intermédiaire (évaluée toutes les 10\,000 steps) est inférieure à la médiane
 des essais précédents au même stade d'entraînement. Deux paramètres encadrent
 ce mécanisme :
 
 \begin{itemize}
-  \item \texttt{n\_startup\_trials = 15} : les 15 premiers essais sont
-        toujours complétés afin de fournir suffisamment de données au pruner
-        pour établir une médiane de référence fiable avant d'activer l'élagage.
-  \item \texttt{n\_warmup\_steps = 30\,000} : au sein d'un essai, l'élagage
-        ne peut s'activer qu'après 30\,000 steps, laissant le temps à
-        l'agent d'amorcer sa convergence avant d'être jugé.
+  \item Les quinze premiers essais sont systématiquement menés à terme, sans élagage possible, afin de fournir au pruner une base de référence fiable avant d'activer le mécanisme.
+  \item Au sein d'un essai, l'élagage ne peut s'activer qu'après 30\,000 steps, laissant le temps à l'agent d'amorcer sa convergence avant d'être jugé.
 \end{itemize}
 
 Un essai interrompu par le pruner est enregistré avec l'état \texttt{PRUNED}
@@ -127,7 +125,7 @@ cible au minimum \textbf{150 essais} par combinaison algorithme/environnement.
 Les tableaux suivants décrivent les hyperparamètres testés pour chaque
 algorithme, leur rôle et les plages de recherche utilisées. Pour l'ensemble
 des expériences, la politique neuronale repose sur des perceptrons
-multicouches (\texttt{MlpPolicy} dans Stable-Baselines3). L'espace
+multicouches (\textit{MlpPolicy} dans Stable-Baselines3). L'espace
 d'observation de LunarLander étant un vecteur de huit dimensions, l'usage de
 réseaux convolutifs n'est pas pertinent dans ce contexte.
 
@@ -163,49 +161,49 @@ réseaux convolutifs n'est pas pertinent dans ce contexte.
   \bottomrule
 \endlastfoot
 
-\texttt{learning\_rate}
+\textit{learning\_rate}
   & Pas de gradient de l'optimiseur Adam (\textit{continu, log}).
     Une valeur trop élevée déstabilise l'entraînement~; trop faible,
     la convergence est lente.
   & $[10^{-5},\;10^{-3}]$ \\[4pt]
-\texttt{buffer\_size}
+\textit{buffer\_size}
   & Taille du \textit{replay buffer} (\textit{catégoriel}).
     Un buffer plus grand améliore la diversité des transitions
     échantillonnées, au coût d'une empreinte mémoire plus importante.
   & $\{10^4,\;5{\cdot}10^4,\;10^5\}$ \\[4pt]
-\texttt{learning\_starts}
+\textit{learning\_starts}
   & Nombre de pas avant le début des mises à jour (\textit{catégoriel}).
     Permet de pré-remplir le buffer avec des transitions aléatoires
     pour stabiliser les premières itérations.
   & $\{0,\;1000,\;5000\}$ \\[4pt]
-\texttt{batch\_size}
+\textit{batch\_size}
   & Nombre de transitions échantillonnées à chaque mise à jour
     (\textit{catégoriel}).
   & $\{32,\;64,\;128,\;256\}$ \\[4pt]
-\texttt{gamma}
+\textit{gamma}
   & Facteur d'actualisation des récompenses futures (\textit{catégoriel}).
     Proche de 1~: l'agent est prévoyant~; proche de 0~: il privilégie
     les récompenses immédiates.
   & $\{0.90,\ldots,0.999\}$ \\[4pt]
-\texttt{train\_freq}
+\textit{train\_freq}
   & Fréquence des mises à jour en nombre de pas de temps
     (\textit{catégoriel}).
   & $\{1,\;4,\;8,\;16\}$ \\[4pt]
-\texttt{target\_update\_interval}
+\textit{target\_update\_interval}
   & Nombre de mises à jour entre deux synchronisations du réseau cible
     (\textit{catégoriel}). Le \textit{target network} stabilise
     l'apprentissage en fixant temporairement les valeurs cibles.
   & $\{100,\;250,\;500,\;1000\}$ \\[4pt]
-\texttt{exploration\_fraction}
+\textit{exploration\_fraction}
   & Fraction du training durant laquelle $\varepsilon$ décroît de sa
     valeur initiale à sa valeur finale (\textit{continu}).
   & $[0.05,\;0.5]$ \\[4pt]
-\texttt{exploration\_final\_eps}
+\textit{exploration\_final\_eps}
   & Valeur minimale de $\varepsilon$ après la phase d'exploration
     (\textit{continu}). Correspond au taux d'actions aléatoires résiduel
     en exploitation.
   & $[0.01,\;0.1]$ \\[4pt]
-\texttt{net\_arch}
+\textit{net\_arch}
   & Architecture du réseau MLP --- nombre et taille des couches
     cachées (\textit{catégoriel}).
   & \textit{small} [64,64],\newline
@@ -241,53 +239,53 @@ réseaux convolutifs n'est pas pertinent dans ce contexte.
   \bottomrule
 \endlastfoot
 
-\texttt{learning\_rate}
+\textit{learning\_rate}
   & Pas de gradient de l'optimiseur Adam (\textit{continu, log}).
   & $[10^{-5},\;10^{-3}]$ \\[4pt]
-\texttt{n\_steps}
+\textit{n\_steps}
   & Nombre de pas collectés avant chaque mise à jour de la politique,
     \textit{rollout length} (\textit{catégoriel}). Doit être supérieur
     à \texttt{batch\_size}~--- les configurations invalides sont rejetées
     automatiquement lors du sampling.
   & $\{256,\;512,\;1024,\;2048\}$ \\[4pt]
-\texttt{batch\_size}
+\textit{batch\_size}
   & Taille des mini-batchs utilisés pour les mises à jour
     (\textit{catégoriel}).
   & $\{32,\;64,\;128,\;256,\;512\}$ \\[4pt]
-\texttt{n\_epochs}
+\textit{n\_epochs}
   & Nombre de passes sur les données collectées à chaque mise à jour
     (\textit{catégoriel}). Augmenter ce nombre améliore l'utilisation des
     données mais peut déstabiliser la politique.
   & $\{1,\;3,\;5,\;10,\;20\}$ \\[4pt]
-\texttt{gamma}
+\textit{gamma}
   & Facteur d'actualisation des récompenses futures (\textit{catégoriel}).
   & $\{0.90,\ldots,0.999\}$ \\[4pt]
-\texttt{gae\_lambda}
+\textit{gae\_lambda}
   & Paramètre $\lambda$ du \textit{Generalized Advantage Estimation} (GAE)
     (\textit{catégoriel}). Contrôle le compromis biais-variance dans
     l'estimation de l'avantage.
   & $\{0.80,\ldots,1.0\}$ \\[4pt]
-\texttt{ent\_coef}
+\textit{ent\_coef}
   & Coefficient de la prime d'entropie (\textit{continu, log}).
     Encourage l'exploration en pénalisant les politiques trop
     déterministes.
   & $[10^{-8},\;0.1]$ \\[4pt]
-\texttt{clip\_range}
+\textit{clip\_range}
   & Paramètre $\varepsilon$ de la contrainte PPO (\textit{catégoriel}).
     Limite l'écart entre l'ancienne et la nouvelle politique lors des
     mises à jour.
   & $\{0.1,\;0.2,\;0.3,\;0.4\}$ \\[4pt]
-\texttt{max\_grad\_norm}
+\textit{max\_grad\_norm}
   & Norme maximale du gradient --- \textit{gradient clipping}
     (\textit{continu, log}). Prévient les mises à jour explosives et
     stabilise l'entraînement.
   & $[0.3,\;5.0]$ \\[4pt]
-\texttt{vf\_coef}
+\textit{vf\_coef}
   & Coefficient de la perte du critique (\textit{continu}). Contrôle
     l'importance relative de l'erreur de prédiction de valeur par rapport
     à la perte de politique.
   & $[0.1,\;1.0]$ \\[4pt]
-\texttt{net\_arch}
+\textit{net\_arch}
   & Architecture du réseau MLP acteur-critique (\textit{catégoriel}).
   & \textit{small} [64,64],\newline
     \textit{medium} [256,256],\newline
@@ -322,45 +320,45 @@ réseaux convolutifs n'est pas pertinent dans ce contexte.
   \bottomrule
 \endlastfoot
 
-\texttt{learning\_rate}
+\textit{learning\_rate}
   & Pas de gradient commun aux réseaux acteur et critique
     (\textit{continu, log}).
   & $[10^{-5},\;10^{-3}]$ \\[4pt]
-\texttt{buffer\_size}
+\textit{buffer\_size}
   & Taille du \textit{replay buffer} (\textit{catégoriel}).
   & $\{10^4,\;5{\cdot}10^4,\;10^5\}$ \\[4pt]
-\texttt{learning\_starts}
+\textit{learning\_starts}
   & Nombre de pas avant le début des mises à jour (\textit{catégoriel}).
   & $\{1000,\;5000,\;10000\}$ \\[4pt]
-\texttt{batch\_size}
+\textit{batch\_size}
   & Taille des mini-batchs pour les mises à jour (\textit{catégoriel}).
   & $\{32,\;64,\;128,\;256,\;512\}$ \\[4pt]
-\texttt{gamma}
+\textit{gamma}
   & Facteur d'actualisation des récompenses futures (\textit{catégoriel}).
   & $\{0.90,\ldots,0.999\}$ \\[4pt]
-\texttt{tau}
+\textit{tau}
   & Taux de mise à jour \textit{soft} du réseau cible (\textit{catégoriel}).
     À chaque pas~:
     $\theta_{\text{cible}} \leftarrow \tau\,\theta + (1-\tau)\,\theta_{\text{cible}}$.
   & $\{0.001,\;0.005,\;0.01,\;0.02,\;0.05\}$ \\[4pt]
-\texttt{ent\_coef}
-  & Coefficient d'entropie géré automatiquement (\texttt{auto}) : SAC
+\textit{ent\_coef}
+  & Coefficient d'entropie géré automatiquement (\textit{auto}) : SAC
     ajuste ce coefficient à chaque pas de gradient pour maintenir une
     entropie cible $\mathcal{H}^* = -\dim(\mathcal{A})$, définie par
     \cite{haarnojaSoftActorCriticAlgorithms2019} comme l'opposé de la
     dimension de l'espace d'action.
-  & \texttt{auto} \\[4pt]
-\texttt{use\_sde}
+  & \textit{auto} \\[4pt]
+\textit{use\_sde}
   & Active l'\textit{State Dependent Exploration} (SDE)
     (\textit{catégoriel}). Le bruit d'exploration dépend de l'état courant
     ce qui peut améliorer l'exploration dans les
     espaces d'action continus. Ce bruit est maintenu pendant plusieurs steps consécutifs. Des trajectoires entières peuvent ainsi être explorées.
   & $\{\text{True},\;\text{False}\}$ \\[4pt]
-\texttt{target\_update\_interval}
+\textit{target\_update\_interval}
   & Nombre de gradient steps entre deux mises à jour du réseau cible
     (\textit{catégoriel}).
   & $\{1,\;2,\;4\}$ \\[4pt]
-\texttt{net\_arch}
+\textit{net\_arch}
   & Architecture des réseaux MLP acteur et critique (\textit{catégoriel}).
   & \textit{small} [64,64],\newline
     \textit{medium} [256,256],\newline
@@ -443,16 +441,16 @@ l'algorithme aux deux types d'espaces d'action sur cet environnement.
   \bottomrule
 \endlastfoot
  
-\texttt{learning\_rate}           & $4.73 \times 10^{-4}$ \\
-\texttt{buffer\_size}             & $10^{4}$ \\
-\texttt{learning\_starts}         & $5\,000$ \\
-\texttt{batch\_size}              & $64$ \\
-\texttt{gamma}                    & $0.99$ \\
-\texttt{train\_freq}              & $1$ \\
-\texttt{target\_update\_interval} & $250$ \\
-\texttt{exploration\_fraction}    & $0.253$ \\
-\texttt{exploration\_final\_eps}  & $0.075$ \\
-\texttt{net\_arch}                & \textit{medium} $[256,\;256]$ \\
+\textit{learning\_rate}           & $4.73 \times 10^{-4}$ \\
+\textit{buffer\_size}             & $10^{4}$ \\
+\textit{learning\_starts}         & $5\,000$ \\
+\textit{batch\_size}              & $64$ \\
+\textit{gamma}                    & $0.99$ \\
+\textit{train\_freq}              & $1$ \\
+\textit{target\_update\_interval} & $250$ \\
+\textit{exploration\_fraction}    & $0.253$ \\
+\textit{exploration\_final\_eps}  & $0.075$ \\
+\textit{net\_arch}                & \textit{medium} $[256,\;256]$ \\
 \end{longtable}
 \endgroup
  
@@ -465,11 +463,7 @@ inférieure aux valeurs typiques de la littérature ($10^5$ à $10^6$
 vraisemblablement par le budget limité de la phase de tuning (250\,000 steps)
 : avec un petit buffer, les transitions récentes dominent l'échantillonnage,
 ce qui peut accélérer la convergence à court terme mais reste à confirmer sur
-les 500\,000 steps de l'évaluation finale. D'autre part, \texttt{train\_freq
-= 1} implique une mise à jour du réseau à chaque pas de temps, ce qui, combiné
-au petit buffer, produit un ratio mise-à-jour/données élevé. Cette
-configuration agressive a convergé efficacement sur cet environnement, mais
-introduit potentiellement une variance plus importante dans les gradients.
+les 500\,000 steps de l'évaluation finale. D'autre part, une fréquence de mise à jour à chaque pas de temps implique une mise à jour du réseau à chaque pas de temps, ce qui, combiné au petit buffer, produit un ratio mise-à-jour/données élevé. Cette configuration agressive a convergé efficacement sur cet environnement, mais introduit potentiellement une variance plus importante dans les gradients.
  
 % -----------------------------------------------------------------------------
 \subsubsection{PPO --- LunarLander discret}
@@ -497,29 +491,29 @@ introduit potentiellement une variance plus importante dans les gradients.
   \bottomrule
 \endlastfoot
  
-\texttt{learning\_rate} & $2.37 \times 10^{-4}$ \\
-\texttt{n\_steps}       & $2\,048$ \\
-\texttt{batch\_size}    & $256$ \\
-\texttt{n\_epochs}      & $20$ \\
-\texttt{gamma}          & $0.995$ \\
-\texttt{gae\_lambda}    & $0.98$ \\
-\texttt{ent\_coef}      & $1.55 \times 10^{-2}$ \\
-\texttt{clip\_range}    & $0.4$ \\
-\texttt{max\_grad\_norm}& $2.13$ \\
-\texttt{vf\_coef}       & $0.889$ \\
-\texttt{net\_arch}      & \textit{large} $[400,\;300]$ \\
+\textit{learning\_rate} & $2.37 \times 10^{-4}$ \\
+\textit{n\_steps}       & $2\,048$ \\
+\textit{batch\_size}    & $256$ \\
+\textit{n\_epochs}      & $20$ \\
+\textit{gamma}          & $0.995$ \\
+\textit{gae\_lambda}    & $0.98$ \\
+\textit{ent\_coef}      & $1.55 \times 10^{-2}$ \\
+\textit{clip\_range}    & $0.4$ \\
+\textit{max\_grad\_norm}& $2.13$ \\
+\textit{vf\_coef}       & $0.889$ \\
+\textit{net\_arch}      & \textit{large} $[400,\;300]$ \\
 \end{longtable}
 \endgroup
  
 \medskip
  
-La configuration PPO discrète se distingue par un \texttt{clip\_range} de
+La configuration PPO discrète se distingue par un seuil d'écrêtage $\epsilon$ de
 $0.4$, valeur maximale de la plage explorée et nettement supérieure à la
 valeur standard de $0.2$ \parencite{schulmanProximalPolicyOptimization2017}.
-Un \texttt{clip\_range} élevé autorise des mises à jour de politique plus
+Un seuil d'écrêtage élevé autorise des mises à jour de politique plus
 importantes à chaque gradient step, tout en conservant la garantie de
 stabilité propre à PPO grâce au mécanisme de clipping. Cette valeur, associée
-à \texttt{n\_epochs = 20} et \texttt{n\_steps = 2048}, indique que PPO effectue $\lfloor 2048 / 256 \rfloor = 8$ mini-batches\footnote{256 étant la taille d'un batch} par époque, soit 160 mises à jour du réseau pour chaque rollout de 2048 transitions.
+à vingt époques d'optimisations sur des rollouts de 2048 transitions, indique que PPO effectue $\lfloor 2048 / 256 \rfloor = 8$ mini-batches\footnote{256 étant la taille d'un batch} par époque, soit 160 mises à jour du réseau pour chaque rollout de 2048 transitions.
  
 % -----------------------------------------------------------------------------
 \subsubsection{PPO --- LunarLanderContinuous}
@@ -547,17 +541,17 @@ stabilité propre à PPO grâce au mécanisme de clipping. Cette valeur, associ�
   \bottomrule
 \endlastfoot
  
-\texttt{learning\_rate} & $6.42 \times 10^{-5}$ \\
-\texttt{n\_steps}       & $2\,048$ \\
-\texttt{batch\_size}    & $32$ \\
-\texttt{n\_epochs}      & $10$ \\
-\texttt{gamma}          & $0.995$ \\
-\texttt{gae\_lambda}    & $0.98$ \\
-\texttt{ent\_coef}      & $1.27 \times 10^{-4}$ \\
-\texttt{clip\_range}    & $0.4$ \\
-\texttt{max\_grad\_norm}& $1.65$ \\
-\texttt{vf\_coef}       & $0.105$ \\
-\texttt{net\_arch}      & \textit{large} $[400,\;300]$ \\
+\textit{learning\_rate} & $6.42 \times 10^{-5}$ \\
+\textit{n\_steps}       & $2\,048$ \\
+\textit{batch\_size}    & $32$ \\
+\textit{n\_epochs}      & $10$ \\
+\textit{gamma}          & $0.995$ \\
+\textit{gae\_lambda}    & $0.98$ \\
+\textit{ent\_coef}      & $1.27 \times 10^{-4}$ \\
+\textit{clip\_range}    & $0.4$ \\
+\textit{max\_grad\_norm}& $1.65$ \\
+\textit{vf\_coef}       & $0.105$ \\
+\textit{net\_arch}      & \textit{large} $[400,\;300]$ \\
 \end{longtable}
 \endgroup
  
@@ -565,13 +559,12 @@ stabilité propre à PPO grâce au mécanisme de clipping. Cette valeur, associ�
  
 La comparaison entre les deux variantes PPO révèle une convergence vers des
 valeurs communes pour plusieurs hyperparamètres structurels
-(\texttt{n\_steps = 2048}, \texttt{gae\_lambda = 0.98},
-\texttt{clip\_range = 0.4}, \texttt{net\_arch = large}), ce qui suggère que
-ces choix sont robustes à la nature de l'espace d'action sur cet
+(la longueur de rollout (2048 steps), le paramètre $\gamma$ du GAE ($0.98$),
+le seuil d'écrêtage $\epsilon$ ($0.4$) et l'architecture du réseau (large)), ce qui suggère que ces choix sont robustes à la nature de l'espace d'action sur cet
 environnement. En revanche, deux hyperparamètres diffèrent significativement
-entre les deux variantes : le \texttt{learning\_rate} est quatre fois plus
+entre les deux variantes : le taux d'apprentissage est quatre fois plus
 faible pour la variante continue ($6.42 \times 10^{-5}$ contre
-$2.37 \times 10^{-4}$), et l'\texttt{ent\_coef} est deux ordres de grandeur
+$2.37 \times 10^{-4}$), et le coefficient d'entropie est deux ordres de grandeur
 inférieur ($1.27 \times 10^{-4}$ contre $1.55 \times 10^{-2}$). Ces
 différences indiquent que l'optimisation d'une politique gaussienne en espace
 continu requiert des mises à jour plus prudentes et une pression d'exploration
@@ -603,16 +596,16 @@ entropique moindre que dans le cas discret.
   \bottomrule
 \endlastfoot
  
-\texttt{learning\_rate}           & $9.95 \times 10^{-4}$ \\
-\texttt{buffer\_size}             & $10^{5}$ \\
-\texttt{learning\_starts}         & $1\,000$ \\
-\texttt{batch\_size}              & $512$ \\
-\texttt{gamma}                    & $0.99$ \\
-\texttt{tau}                      & $0.05$ \\
-\texttt{ent\_coef}                & \texttt{auto} \\
-\texttt{use\_sde}                 & \texttt{True} \\
-\texttt{target\_update\_interval} & $2$ \\
-\texttt{net\_arch}                & \textit{medium} $[256,\;256]$ \\
+\textit{learning\_rate}           & $9.95 \times 10^{-4}$ \\
+\textit{buffer\_size}             & $10^{5}$ \\
+\textit{learning\_starts}         & $1\,000$ \\
+\textit{batch\_size}              & $512$ \\
+\textit{gamma}                    & $0.99$ \\
+\textit{tau}                      & $0.05$ \\
+\textit{ent\_coef}                & \textit{auto} \\
+\textit{use\_sde}                 & \textit{True} \\
+\textit{target\_update\_interval} & $2$ \\
+\textit{net\_arch}                & \textit{medium} $[256,\;256]$ \\
 \end{longtable}
 \endgroup
  
@@ -623,8 +616,7 @@ réseau \textit{medium} $[256, 256]$, plus petite que celle retenue par PPO
 (\textit{large} $[400, 300]$), ce qui illustre l'efficacité par paramètre
 propre aux algorithmes \textit{off-policy} bénéficiant du \textit{replay
 buffer}. Deux hyperparamètres méritent d'être soulignés. D'une part,
-\texttt{tau = 0.05} est la valeur maximale de la plage testée, dix fois
-supérieure à la valeur standard de $0.005$
+le taux d'interpolation $\tau$ atteint sa valeur maximale testée ($0.05$), dix fois supérieure à la valeur standard de $0.005$
 \parencite{haarnojaSoftActorCriticOffPolicy2018} : cette mise à jour rapide
 du réseau cible favorise une convergence accélérée sur un environnement de
 faible dimensionnalité comme LunarLander, où le risque de divergence lié à
@@ -758,8 +750,7 @@ en espace discret.
 DQN présente un écart marqué entre son score Optuna ($275.14$) et sa
 récompense moyenne en évaluation finale ($145.19$), soit une chute de plus de
 130 points. Cet écart s'explique vraisemblablement par la nature de la
-configuration retenue : un \textit{replay buffer} de $10^4$ transitions et
-un \texttt{train\_freq = 1} constituent une configuration agressive, optimisée
+configuration retenue : un \textit{replay buffer} de $10^4$ transitions combiné à une fréquence de mise à jour maximale constituent une configuration agressive, optimisée
 pour converger rapidement sur 250\,000 steps de tuning, mais qui ne se
 généralise pas sur les 500\,000 steps de l'évaluation finale. Le ratio élevé
 mise-à-jour/données induit une variance importante dans les gradients, ce qui
