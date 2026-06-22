@@ -76,10 +76,12 @@ def build_rlgym_v2_env():
         (KickoffReward(first_touch_weight=50.0), 30.0),
         (BoostKeepReward_ZS, 3.0, "BoostKeepReward_ZS"),
         # (BoostChangeReward_ZS, 2.0, "BoostChangeReward_ZS"),
+        (FaceBallReward(), 0.25),
+        (VelocityPlayerToBallReward(), 0.25),
         (EnergyReward(), 0.5),
-        (AerialDistanceReward(), 12.0),
-        (WavedashReward(), 10.0),
-        (DemoReward(), 10.0)
+        (AerialDistanceReward(), 15.0),
+        (WavedashReward(), 25.0),
+        (DemoReward(), 50.0)
     )
 
     metrics_logger.g_combined_reward = reward_fn
