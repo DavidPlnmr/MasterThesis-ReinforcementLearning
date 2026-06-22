@@ -74,7 +74,7 @@ def build_rlgym_v2_env():
         (VelocityBallToGoalReward_ZS, 25.0, "VelocityBallToGoalReward_ZS"),
         (InAirReward(), 0.05),
         (KickoffReward(first_touch_weight=50.0), 30.0),
-        (BoostKeepReward_ZS, 3.0, "BoostKeepReward_ZS"),
+        (BoostKeepReward_ZS, 2.0, "BoostKeepReward_ZS"),
         # (BoostChangeReward_ZS, 2.0, "BoostChangeReward_ZS"),
         (FaceBallReward(), 0.25),
         (VelocityPlayerToBallReward(), 0.25),
