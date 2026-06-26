@@ -58,7 +58,7 @@ node[pos=0.5, right, align=left] {action \\ $A_t$};
 
 \subsubsection{Exemple : Cliff Walking}
 
-L'environnement \textit{Cliff Walking}\footnote{\url{https://gymnasium.farama.org/environments/toy_text/cliff_walking/}} (Figure~\ref{fig:cliff-walking}) illustre ces mécanismes.
+L'environnement \textit{Cliff Walking} \parencite{GymnasiumDocumentationCliffWalking} (Figure~\ref{fig:cliff-walking}) illustre ces mécanismes.
 L'agent navigue sur une grille pour atteindre une cible en évitant une falaise.
 Il reçoit une récompense de $-1$ par pas parcouru (pour inciter à la rapidité) et de $-100$ avec retour au départ s'il tombe.
 Cet exemple met en évidence un compromis classique : l'agent doit équilibrer la minimisation de la distance pénalisante tout en évitant un risque majeur.
@@ -72,7 +72,7 @@ Cet exemple met en évidence un compromis classique : l'agent doit équilibrer l
 
 \subsection{Spécificités et Concepts Clés}
 
-Le RL se caractérise principalement par l'absence d'expert superviseur (aucun label ne vient indiquer la "bonne" action à prendre, seul le signal de récompense sert de retour), des \textit{feedbacks} souvent différés soulignant le problème de l'assignation de crédit, et des données fortement corrélées temporellement (elles ne sont pas indépendantes et identiquement distribuées, ou i.i.d.).
+Le RL se caractérise principalement par l'absence d'expert superviseur (aucun label ne vient indiquer la "bonne" action à prendre, seul le signal de récompense sert de retour), des \textit{feedbacks} souvent différés soulignant le problème de l'assignation de crédit\footnote{Credit Assignment Problem}, et des données fortement corrélées temporellement (elles ne sont pas indépendantes et identiquement distribuées, ou i.i.d.).
 
 Afin de formaliser ce problème, voici les cinq composantes fondamentales de la boucle d'interaction \parencite{suttonReinforcementLearningIntroduction2015} :
 
@@ -459,9 +459,9 @@ probabilité, mais uniquement dans la limite autorisée~; si elle a été mauvai
  
 \paragraph{Notion de rollout et efficacité des données.}
 En pratique, PPO collecte un \textbf{rollout} --- une séquence de
-\texttt{n\_steps} transitions consécutives --- avant d'effectuer ses mises
+$n$ transitions consécutives --- avant d'effectuer ses mises
 à jour. Ce batch de données est exploité sur plusieurs passes d'optimisation
-(\texttt{n\_epochs}), découpé en mini-batchs de taille \texttt{batch\_size}.
+($n_\text{epochs}$), découpé en mini-batchs de taille $b$.
 Pour un rollout de 2\,048 steps, des mini-batchs de 256 et 20 époques, PPO
 effectue ainsi $\lfloor 2048/256 \rfloor \times 20 = 160$ mises à jour du
 réseau par rollout. Ce mécanisme compense partiellement la

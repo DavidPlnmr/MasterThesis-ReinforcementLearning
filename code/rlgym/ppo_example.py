@@ -2,7 +2,7 @@ import argparse
 import os
 
 
-RUN_ON_SLURM = True # If I run this on Slurm, I set this to True to avoid issues with KBHit and GPU/CPU tensor checkpoints. If I run it locally, I set this to False to disable WandB logging and enable rendering.
+RUN_ON_SLURM = False # If I run this on Slurm, I set this to True to avoid issues with KBHit and GPU/CPU tensor checkpoints. If I run it locally, I set this to False to disable WandB logging and enable rendering.
 
 if RUN_ON_SLURM:
     import patch_kbhit # Patch pour éviter les problèmes de KBHit sur Slurm qui attendent une entrée clavier. Doit être importé avant rlgym_ppo.
@@ -69,19 +69,11 @@ def build_rlgym_v2_env():
     BoostChangeReward_ZS = ZeroSumReward(BoostChangeReward(gain_weight=1.0, lose_weight=0.0), team_spirit=0, opp_scale=1)
 
     reward_fn = LogCombinedReward(
-        (GoalReward(), 750.0),
-        (AdvancedTouchReward(touch_reward=0.3, acceleration_reward=1.0, use_touch_count=True), 7.5),
-        (VelocityBallToGoalReward_ZS, 25.0, "VelocityBallToGoalReward_ZS"),
-        (InAirReward(), 0.05),
-        (KickoffReward(first_touch_weight=50.0), 30.0),
-        (BoostKeepReward_ZS, 2.0, "BoostKeepReward_ZS"),
-        # (BoostChangeReward_ZS, 2.0, "BoostChangeReward_ZS"),
-        (FaceBallReward(), 0.25),
-        (VelocityPlayerToBallReward(), 0.25),
-        (EnergyReward(), 0.5),
-        (AerialDistanceReward(), 15.0),
-        (WavedashReward(), 25.0),
-        (DemoReward(), 50.0)
+        (AdvancedTouchReward(touch_reward=1.0, acceleration_reward=0.0), 5),
+        (VelocityPlayerToBallReward(), 1),
+        (InAirReward(), 0.1),
+        (FaceBallReward(), 0.1),
+
     )
 
     metrics_logger.g_combined_reward = reward_fn
@@ -130,13 +122,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--save-every-ts",
         type=int,
-        default=25_000_000,
+        default=10_000_000,
         help="Sauvegarder le modèle tous les N timesteps."
     )
     parser.add_argument(
         "--timesteps-limit",
         type=int,
-        default=12_500_000_000,
+        default=100_000_000,
         help="Limite de timesteps pour l'entraînement."
     )
     args = parser.parse_args()
@@ -160,7 +152,7 @@ if __name__ == "__main__":
 
     print(f"Loading checkpoint: {checkpoint_load_folder}")
 
-    ts_per_it = 200_000
+    ts_per_it = 50_000
     learner = Learner(build_rlgym_v2_env,
                       n_proc=n_proc,
                       min_inference_size=min_inference_size,
@@ -170,10 +162,10 @@ if __name__ == "__main__":
                       exp_buffer_size=ts_per_it * 3,  # size of experience buffer - keep this 2 - 3x the batch size
                       ppo_minibatch_size=50_000,  # minibatch size - set this as high as your GPU can handle
                       ppo_ent_coef=0.01,  # entropy coefficient - this determines the impact of exploration
-                      policy_lr=1e-4,  # policy learning rate
-                      critic_lr=1e-4,  # critic learning rate
+                      policy_lr=2e-4,  # policy learning rate
+                      critic_lr=2e-4,  # critic learning rate
                       ppo_epochs=2,   # number of PPO epochs
-                      gae_gamma=0.995,  # GAE gamma - discount factor for rewards
+                      gae_gamma=0.99,  # GAE gamma - discount factor for rewards
                       policy_layer_sizes=[1024, 1024, 512, 512],  # policy network
                       critic_layer_sizes=[1024, 1024, 512, 512],  # critic network making it the same size as the policy 
                       standardize_returns=True, # Don't touch these.
@@ -186,8 +178,9 @@ if __name__ == "__main__":
                       log_to_wandb=RUN_ON_SLURM, # Set this to True if you want to use Weights & Biases for logging.
                       render=not RUN_ON_SLURM,  # Disable rendering if running on Slurm to avoid issues.
                       render_delay=8/120,
-                      load_wandb=False,
-                      n_checkpoints_to_keep=10
+                      load_wandb=True,
+                      wandb_project_name="rlgym-experiments",
+                      n_checkpoints_to_keep=5
                       )
 
     build_rlgym_v2_env()
