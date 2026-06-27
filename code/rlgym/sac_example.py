@@ -115,7 +115,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--save-every-ts",
         type=int,
-        default=10_000_000,
+        default=1_000_000,
         help="Sauvegarder le modèle tous les N timesteps."
     )
     parser.add_argument(
@@ -167,7 +167,8 @@ if __name__ == "__main__":
                       render_delay=8/120,
                       load_wandb=True,
                       wandb_project_name="rlgym-experiments",
-                      n_checkpoints_to_keep=5
+                      n_checkpoints_to_keep=5,
+                      use_amp=False
                       )
 
     build_rlgym_v2_env()
