@@ -151,10 +151,10 @@ if __name__ == "__main__":
                       exp_buffer_size=1_000_000,                    # vrai replay buffer SAC (pas 2-3x le batch comme en PPO)
                       sac_batch_size=256,                           # taille standard du minibatch tiré du buffer
                       sac_ent_coef='auto',                          # auto-tuning, pas d'équivalent direct à ppo_ent_coef=0.01
-                      sac_learning_rate=2e-4,                       # = vos policy_lr/critic_lr PPO pour comparaison équitable
+                      sac_learning_rate=1e-4,                       # = vos policy_lr/critic_lr PPO pour comparaison équitable
                       sac_learning_starts=10_000,
-                      policy_layer_sizes=[1024, 1024, 512, 512],    # même capacité réseau que le PPO
-                      critic_layer_sizes=[1024, 1024, 512, 512],
+                      policy_layer_sizes=[256, 256],    # même capacité réseau que le PPO
+                      critic_layer_sizes=[256, 256],
                       sac_gamma=0.99,                                  # discount factor standard
                       standardize_returns=True,
                       standardize_obs=False,
