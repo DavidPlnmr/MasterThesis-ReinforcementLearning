@@ -69,12 +69,12 @@ def build_rlgym_v2_env():
     BoostKeepReward_ZS = ZeroSumReward(BoostKeepReward(), team_spirit=0, opp_scale=1)
     BoostChangeReward_ZS = ZeroSumReward(BoostChangeReward(gain_weight=1.0, lose_weight=0.0), team_spirit=0, opp_scale=1)
 
+    factor_dividor = 0.01 # To be on the same page as the SAC example, we divide the reward weights by 100. 
     reward_fn = LogCombinedReward(
-        (AdvancedTouchReward(touch_reward=1.0, acceleration_reward=0.0), 5),
-        (VelocityPlayerToBallReward(), 1),
-        (InAirReward(), 0.1),
-        (FaceBallReward(), 0.1),
-
+        (AdvancedTouchReward(touch_reward=1.0, acceleration_reward=0.0), 5 * factor_dividor),
+        (VelocityPlayerToBallReward(), 1 * factor_dividor),
+        (InAirReward(), 0.1 * factor_dividor),
+        (FaceBallReward(), 0.1 * factor_dividor),
     )
 
     metrics_logger.g_combined_reward = reward_fn
