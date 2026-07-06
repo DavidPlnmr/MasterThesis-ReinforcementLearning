@@ -1,21 +1,24 @@
 Dans ce mémoire, plusieurs outils et bibliothèques ont été mobilisés pour conduire les expériences d'apprentissage par renforcement.
 
 \subsection{Gymnasium}
-Gymnasium (anciennement OpenAI Gym) est une bibliothèque de référence pour la création et l'utilisation d'environnements d'apprentissage par renforcement. Elle expose une interface standardisée permettant d'interagir de manière uniforme avec des environnements très variés, ce qui facilite le développement et la comparaison d'algorithmes de RL. Gymnasium propose un large catalogue d'environnements, allant des jeux classiques aux tâches de contrôle continu, ce qui en fait un socle incontournable pour tester et évaluer les performances des agents. \parencite{GymnasiumDocumentation}
+Gymnasium (anciennement OpenAI Gym, renommé et maintenu par la Farama Foundation depuis 2022) est une bibliothèque de référence pour la création et l'utilisation d'environnements d'apprentissage par renforcement. Elle expose une interface standardisée permettant d'interagir de manière uniforme avec des environnements très variés, ce qui facilite le développement et la comparaison d'algorithmes de RL. Gymnasium propose un large catalogue d'environnements, allant des jeux classiques aux tâches de contrôle continu, ce qui en fait un socle incontournable pour tester et évaluer les performances des agents. \parencite{GymnasiumDocumentation}
 
 \subsection{Stable Baselines3}
-Stable Baselines3 est une bibliothèque de référence pour l'implémentation d'algorithmes d'apprentissage par renforcement reposant sur PyTorch. Elle fournit des implémentations robustes et éprouvées d'algorithmes populaires tels que DQN, PPO ou SAC. Conçue pour allier simplicité d'utilisation et hautes performances, elle constitue un choix naturel aussi bien pour la recherche que pour des applications pratiques en RL. \parencite{antoninraffinDLRRMStablebaselines3V2802026}
+\label{sec:sb3}
+Stable Baselines3 est une bibliothèque de référence pour l'implémentation d'algorithmes d'apprentissage par renforcement reposant sur PyTorch. Elle fournit des implémentations fiables et validées d'algorithmes de référence tels que DQN, PPO ou SAC. Conçue pour allier simplicité d'utilisation et hautes performances, elle constitue un choix naturel aussi bien pour la recherche que pour des applications pratiques en RL. \parencite{antoninraffinDLRRMStablebaselines3V2802026}
 
 \subsection{Optuna}
-Optuna est une bibliothèque d'optimisation d'hyperparamètres permettant d'identifier efficacement les configurations les plus performantes pour un modèle donné. Contrairement aux approches exhaustives de type \textit{grid search}, qui parcourent l'espace des hyperparamètres de manière séquentielle et aveugle, Optuna s'appuie sur une recherche bayésienne pour orienter intelligemment l'exploration vers les régions les plus prometteuses.
 
-Par ailleurs, Optuna intègre un mécanisme d'élagage (\textit{pruning}) qui permet d'interrompre prématurément les essais peu prometteurs, sur la base d'une évaluation continue des performances en cours d'entraînement. Cette double approche — échantillonnage guidé et élagage précoce — s'avère particulièrement précieuse en apprentissage par renforcement, où l'entraînement des agents est à la fois coûteux en ressources de calcul et très sensible aux choix d'hyperparamètres. \parencite{akibaOptunaNextgenerationHyperparameter2019}
+Optuna est une bibliothèque d'optimisation d'hyperparamètres permettant d'identifier efficacement les configurations les plus performantes pour un modèle donné. Contrairement aux approches exhaustives de type \textit{grid search}, qui parcourent l'espace des hyperparamètres de manière séquentielle et aveugle, Optuna s'appuie sur un algorithme bayésien (\textit{Tree-structured Parzen Estimator}) pour orienter intelligemment l'exploration vers les régions prometteuses de l'espace de configuration. 
+
+Par ailleurs, Optuna intègre un mécanisme d'élagage (\textit{pruning}) qui permet d'interrompre prématurément les essais peu prometteurs, sur la base d'une évaluation continue des performances en cours d'entraînement. Cette double approche — échantillonnage bayésien guidé et élagage précoce — s'avère particulièrement précieuse en apprentissage par renforcement, où l'entraînement des agents est à la fois coûteux en ressources de calcul et très sensible aux choix d'hyperparamètres. \parencite{akibaOptunaNextgenerationHyperparameter2019}
 
 \subsection{Weights \& Biases}
+\label{sec:wandb}
 Weights \& Biases (WandB) est une plateforme de suivi et de visualisation des expériences d'apprentissage automatique. Elle permet d'enregistrer les métriques d'entraînement, de visualiser les courbes d'apprentissage et de comparer les performances de différents modèles et configurations. WandB facilite par ailleurs la collaboration en centralisant l'ensemble des résultats expérimentaux et en offrant des outils de partage adaptés au travail en équipe. \parencite{WeightsBiasesAI}
 
 \subsection{RLGym}
-RLGym est une bibliothèque de simulation d'environnements pour l'apprentissage par renforcement, initialement conçue pour le jeu Rocket League, mais désormais indépendante de celui-ci. Elle s'appuie sur les abstractions de Gymnasium et propose des outils spécifiques à la simulation de physique de jeu pour l'entraînement d'agents. \parencite{RLGymRLGym}
+RLGym est une bibliothèque de simulation d'environnements pour l'apprentissage par renforcement, initialement conçue pour le jeu Rocket League, mais désormais indépendante de celui-ci. Elle s'appuie sur les abstractions de Gymnasium et propose des outils spécifiques à la simulation de physique de jeu pour l'entraînement d'agents. \parencite{RLGymRlgym2026}
 
 \subsubsection{RocketSim}
 \label{sec:rocketsim}
@@ -24,3 +27,19 @@ RocketSim est une bibliothèque de simulation physique de Rocket League, optimis
 \subsubsection{RocketSimVis}
 \label{sec:rocketsimvis}
 RocketSimVis est une bibliothèque de visualisation complémentaire à RocketSim. Elle permet de rejouer et d'inspecter visuellement les parties simulées, ce qui s'avère précieux pour analyser les comportements des agents et appréhender les dynamiques de l'environnement. \parencite{zealanlZealanLRocketSimVis2026}
+
+\subsubsection{RLBot}
+\label{sec:rlbot}
+RLBot est un framework open-source permettant de développer et de déployer des agents autonomes personnalisés au sein de Rocket League. Il fournit une interface pour interagir avec le moteur du jeu, facilitant ainsi la création d'adversaires aux comportements complexes. Son fonctionnement est strictement restreint aux sessions hors-ligne ; cette limitation technique garantit l'absence d'interférence avec les fonctionnalités en ligne et assure une utilisation conforme aux conditions d'utilisation du jeu, éliminant tout risque de bannissement. \parencite{RLBot2018}
+
+
+\subsubsection{RLGym-PPO}
+\label{sec:rlgym-ppo}
+rlgym-ppo est une implémentation vectorisée de l'algorithme PPO, développée spécifiquement pour s'interfacer avec RLGym et RocketSim. Contrairement à des frameworks plus généralistes comme Stable Baselines3 (Section \ref{sec:sb3}), conçus pour s'interfacer avec des environnements Gymnasium standards, rlgym-ppo est spécifiquement optimisé pour la collecte massive et parallélisée de transitions à travers un grand nombre d'instances simultanées de RocketSim, ce qui le rend particulièrement adapté à des besoins d'entraînement à grande échelle (de l'ordre du milliard de pas). Cette implémentation simplifie par ailleurs le suivi des métriques d'entraînement via son intégration native avec Weights \& Biases (Section \ref{sec:wandb}), ainsi que la gestion des checkpoints pour la sauvegarde et la reprise de l'entraînement.
+\parencite{allenAechProRlgymppo2026}
+
+\subsubsection{RLGym-SAC}
+\label{sec:rlgym-sac}
+rlgym-sac est une adaptation de rlgym-ppo reprenant son infrastructure de collecte vectorisée à l'algorithme SAC. Il reprend l'essentiel des composants d'ingénierie de rlgym-ppo — parallélisation des instances RocketSim, intégration Weights \& Biases, gestion des checkpoints — en substituant l'algorithme d'apprentissage sous-jacent. Ce projet, moins mature et moins largement adopté par la communauté que rlgym-ppo, présente plusieurs limites d'implémentation, détaillées en Section \ref{sec:limites-sac}.
+\parencite{mcswainUSARedDragonRlgymsac2026}
+

@@ -1,11 +1,11 @@
-Pour cette phase 2, le but est de travailler sur un environnement bien plus complexe que LunarLander, nécessitant la maîtrise de mécaniques avancées et une stratégie à long terme. J'ai choisi de travailler sur Rocket League, un jeu de football avec des voitures développé par Psyonix, qui constitue un défi particulièrement riche pour l'apprentissage par renforcement en raison de sa physique réaliste, de la grande variété de situations de jeu possibles et de la nécessité de coordonner des séquences d'actions complexes pour être compétitif.
+Pour cette phase 2, le but est de travailler sur un environnement bien plus complexe que LunarLander, nécessitant la maîtrise de mécaniques avancées et une stratégie à long terme. Rocket League a été retenu comme environnement de complexité avancée. Il s'agit d'un jeu de football avec des voitures développé par Psyonix, qui constitue un défi particulièrement riche pour l'apprentissage par renforcement en raison de sa physique, de la grande variété de situations de jeu possibles et de la nécessité de coordonner des séquences d'actions complexes pour être compétitif.
 
 \subsection{Environnement de jeu}
-Rocket League est un jeu de football avec des voitures dans lequel les joueurs contrôlent des véhicules pour frapper une balle et marquer des buts dans le camp adverse. L'environnement est particulièrement exigeant pour un agent de RL pour plusieurs raisons. D'une part, le jeu tourne nativement à 120 images par seconde, ce qui implique qu'un agent devrait théoriquement prendre 120 décisions par seconde pour interagir avec l'environnement à sa pleine résolution temporelle. D'autre part, les mécaniques de jeu sont nombreuses et interdépendantes : les voitures peuvent récupérer du boost sur le terrain, effectuer des sauts simples ou doubles, réaliser des \textit{flips} (rotations rapides en l'air pouvant conférer une impulsion de vitesse supplémentaire), et coller aux murs ou au plafond de l'arène.
+Rocket League est un jeu de football avec des voitures dans lequel les joueurs contrôlent des véhicules pour frapper une balle et marquer des buts dans le camp adverse. L'environnement est particulièrement exigeant pour un agent de RL pour plusieurs raisons. D'une part, le jeu tourne nativement à 120 images par seconde (\cite{ListGameValues}), ce qui implique qu'un agent devrait théoriquement prendre 120 décisions par seconde pour interagir avec l'environnement à sa pleine résolution temporelle. D'autre part, les mécaniques de jeu sont nombreuses et interdépendantes : les voitures peuvent récupérer du boost sur le terrain, effectuer des sauts simples ou doubles, réaliser des \textit{flips} (rotations rapides en l'air pouvant conférer une impulsion de vitesse supplémentaire), et coller aux murs ou au plafond de l'arène.
 
-Le jeu peut se pratiquer en mode 1v1, 2v2, 3v3 ou 4v4. Afin de limiter la complexité liée à la coordination entre plusieurs agents, ce travail se concentre exclusivement sur le mode 1v1, où un seul agent affronte un adversaire unique. Ce cadre permet d'isoler les défis liés à l'apprentissage individuel — contrôle du véhicule, gestion du boost, positionnement tactique — sans introduire la dimension supplémentaire de la collaboration multi-agents.
+Le jeu peut se pratiquer en mode 1v1, 2v2, 3v3 ou 4v4. Afin de limiter la complexité liée à la coordination entre plusieurs agents, ce travail se concentre exclusivement sur le mode 1v1, où un seul agent affronte un adversaire unique\footnote{Dans notre contexte, il s'agit de lui-même}. Ce cadre permet d'isoler les défis liés à l'apprentissage individuel — contrôle du véhicule, gestion du boost, positionnement tactique — sans introduire la dimension supplémentaire de la collaboration multi-agents.
 
-Dans cette phase, ce n'est pas le jeu officiel qui est utilisé, mais un environnement de simulation appelé RocketSim (Section~\ref{sec:rocketsim}), qui reproduit fidèlement la physique du jeu officiel tout en permettant un entraînement en \textit{headless mode} — sans rendu graphique — ce qui accélère considérablement les cycles d'expérimentation. RLGym fournit l'interface entre RocketSim et les algorithmes d'apprentissage par renforcement, en exposant les observations, les récompenses et les actions dans un format standardisé compatible avec les bibliothèques de RL modernes \parencite{RLGymRLGym}.
+Dans cette phase, ce n'est pas le jeu officiel qui est utilisé, mais un environnement de simulation appelé RocketSim (Section~\ref{sec:rocketsim}), qui reproduit fidèlement la physique du jeu officiel tout en permettant un entraînement en \textit{headless mode} — sans rendu graphique — ce qui accélère considérablement les cycles d'expérimentation. RLGym fournit l'interface entre RocketSim et les algorithmes d'apprentissage par renforcement, en exposant les observations, les récompenses et les actions dans un format standardisé compatible avec les bibliothèques de RL modernes \parencite{RLGymRlgym2026}.
 
 
 \subsubsection{Espace d'actions}
@@ -35,32 +35,32 @@ Boost & {0,1} & Discret & Utilisation du boost \\
 Handbrake & {0,1} & Discret & Frein à main (déraper) \\
 \hline
 \end{tabular}
-\caption{Espace d'actions dans RLGym \parencite{RLGymRLGym}}
+\caption{Espace d'actions dans RLGym \parencite{RLGymRlgym2026}}
 \label{tab:action_space}
 \end{table}
 
 
-L'espace d'actions brut, en considérant toutes les combinaisons discrétisées possibles de ces huit dimensions, atteint 1944 combinaisons. Entraîner un agent sur un espace aussi vaste ralentirait considérablement la convergence, car une grande partie de ces combinaisons est redondante ou mécaniquement incohérente (par exemple, utiliser le boost sans accélérer, ou effectuer un yaw et un jump simultanément en l'air).
+L'espace d'actions brut, en considérant toutes les combinaisons discrétisées possibles de ces huit dimensions, atteint 1\,944 combinaisons. Ce chiffre résulte du produit cartésien entre les trois actions discrètes, chacune admettant deux valeurs possibles ($2^3 = 8$), et les cinq dimensions continues, ici discrétisées en trois niveaux représentatifs ($-1$, $0$, $1$) afin de rendre l'espace d'actions dénombrable ($3^5 = 243$) :
+\begin{equation}
+    |\mathcal{A}| = \underbrace{2^3}_{\text{actions discrètes}} \times \underbrace{3^5}_{\text{actions continues discrétisées}} = 8 \times 243 = 1\,944
+\end{equation}
 
+Entraîner un agent sur un espace aussi vaste ralentirait considérablement la convergence, car une grande partie de ces combinaisons est redondante ou sans effet mécanique selon le contexte (par exemple, utiliser le boost sans accélérer simultanément avec le throttle, ou solliciter conjointement le steer et le yaw, deux actions dont les domaines d'effet — sol et air respectivement — ne se recouvrent pas).
 
-Pour remédier à cela, une table de correspondance (lookup table) est utilisée via l'outil de discrétisation de RLGym \parencite{RLGymRLGym}, qui réduit l'espace d'actions à \textbf{90 combinaisons discrètes} en ne conservant que les actions mécaniquement pertinentes. Ces 90 actions se décomposent en deux blocs : 
+Pour remédier à cela, une table de correspondance (\textit{lookup table}) est utilisée via l'outil de discrétisation de RLGym \parencite{RLGymRlgym2026}, qui réduit l'espace d'actions à \textbf{90 combinaisons discrètes} en ne conservant que les actions mécaniquement pertinentes. Ces 90 actions se décomposent en deux blocs : 
 
 \paragraph{Actions au sol (18 actions).} 
-Elles couvrent toutes les combinaisons utiles de throttle $\in \{-1, 0, 1\}$, steer $\in \{-1, 0, 1\}$, boost $\in \{0, 1\}$ et handbrake $\in \{0, 1\}$, sous la contrainte que le boost n'est activé que si le throttle est au maximum ($\text{boost} = 1 \Rightarrow \text{throttle} = 1$), ce qui correspond au comportement physique réel du jeu :
+Elles couvrent toutes les combinaisons utiles de throttle $\in \{-1, 0, 1\}$, steer $\in \{-1, 0, 1\}$, boost $\in \{0, 1\}$ et handbrake $\in \{0, 1\}$, soit $3 \times 3 \times 2 \times 2 = 36$ combinaisons brutes. Sous la contrainte que le boost n'est activé que si le throttle est au maximum ($\text{boost} = 1 \Rightarrow \text{throttle} = 1$), ce qui correspond au comportement physique réel du jeu, les combinaisons où $\text{boost} = 1$ et $\text{throttle} \neq 1$ sont écartées, ramenant le nombre d'actions au sol à 18.
 
-\begin{equation}
-|\mathcal{A}_{\text{sol}}| = |\text{throttle}| \times |\text{steer}| \times |\text{boost}| \times |\text{handbrake}| - \text{cas invalides} = 18
-\end{equation}
+\paragraph{Actions aériennes (72 actions).} 
+Elles couvrent les combinaisons de pitch, yaw, roll, jump et boost lorsque le véhicule est en l'air. Les doublons avec les actions au sol sont supprimés, ainsi que les combinaisons yaw+jump (remplacées par roll pour les flips horizontaux), ce qui ramène ce bloc à 72 actions.
 
-\paragraph{Actions aériennes (72 actions).} Elles couvrent les combinaisons de pitch, yaw, roll, jump et boost lorsque le véhicule est en l'air. Les doublons avec les actions au sol sont supprimés, ainsi que les combinaisons yaw+jump (remplacées par roll pour les flips horizontaux) :
-\begin{equation}
-|\mathcal{A}_{\text{air}}| = 72
-\end{equation}
 Au total : $|\mathcal{A}| = 18 + 72 = 90$ actions discrètes.
 
 Ce choix d'un espace discret réduit présente deux avantages majeurs. D'une part, il est directement compatible avec PPO, dont la couche de sortie applique une distribution catégorielle sur les actions discrètes (Section~\ref{sec:ppo}). D'autre part, il réduit significativement la complexité de l'exploration, ce qui favorise une convergence plus rapide — particulièrement important dans un environnement qui nécessite plusieurs milliards de pas d'entraînement pour atteindre un niveau de jeu compétitif.
 
-SAC ne sera pas exploré dans cette phase pour deux raisons. Premièrement, comme établi en Section~\ref{sec:sac}, SAC est conçu pour les espaces d'actions continus et repose sur la maximisation de l'entropie d'une distribution gaussienne sur les actions. Il n'est donc pas directement applicable à un espace d'actions discret tel que celui retenu ici. Deuxièmement, les résultats de la Phase~I ont mis en évidence que SAC présente un coût computationnel structurellement plus élevé que PPO, indépendamment de la nature de l'espace d'action : la maintenance simultanée de deux réseaux Q, de deux réseaux cibles et du mécanisme d'ajustement adaptatif du coefficient d'entropie implique un coût par mise à jour significativement supérieur. Dans un environnement nécessitant plusieurs milliards de pas d'entraînement, ce surcoût devient prohibitif au regard des ressources de calcul disponibles. PPO constitue donc le choix naturel pour cette phase, à la fois pour sa compatibilité native avec les espaces discrets et pour son efficacité computationnelle démontrée.
+
+SAC, en revanche, repose nativement sur un espace d'actions continu (Section~\ref{sec:sac}) : son application à cet environnement a donc nécessité l'utilisation de l'espace d'actions continu brut à huit dimensions, sans passage par la table de correspondance discrète décrite ci-dessus. Cette différence fondamentale d'espace d'actions entre les deux algorithmes, et son impact sur la comparaison, est discutée en Section~\ref{sec:sac_comparison}.
 
 \paragraph{Répétition d'actions (\textit{action repeat}).} 
 À la fréquence native de 120 ticks par seconde, un agent devrait théoriquement prendre 120 décisions distinctes par seconde. En pratique, cette granularité temporelle est contre-productive pour l'apprentissage : elle génère un signal de récompense extrêmement bruité, rend le problème d'assignation de crédit (\textit{credit assignment}) particulièrement difficile — il devient ardu pour l'agent de déterminer quelle action parmi les 120 a réellement contribué à une récompense donnée — et s'éloigne considérablement de la fréquence décisionnelle humaine.
@@ -70,7 +70,7 @@ Pour remédier à cela, un mécanisme de répétition d'actions est appliqué av
 \subsubsection{Espace d'observation}
 \label{sec:obs_space}
 
-L'espace d'observation fournit à l'agent un vecteur d'état normalisé décrivant la situation de jeu à chaque pas de temps. Toutes les valeurs sont normalisées pour être contenues dans l'intervalle $[-1, 1]$, ce qui est une pratique standard en Deep RL pour stabiliser l'apprentissage et éviter que certaines dimensions ne dominent numériquement les autres \parencite{suttonReinforcementLearningIntroduction2015}.
+L'espace d'observation fournit à l'agent un vecteur d'état normalisé décrivant la situation de jeu à chaque pas de temps. Toutes les valeurs sont normalisées pour être contenues dans l'intervalle $[-1, 1]$, ce qui est une pratique standard en Deep RL pour stabiliser l'apprentissage et éviter que certaines dimensions ne dominent numériquement les autres \parencite{engstromImplementationMattersDeep2020, ReinforcementLearningTips}.
 
 Le vecteur d'observation décrit chaque entité de jeu — la voiture de l'agent, la voiture adverse et la balle — à travers les informations suivantes :
 
@@ -85,7 +85,7 @@ Le vecteur d'observation décrit chaque entité de jeu — la voiture de l'agent
 
 Cet espace d'observation est dit \textit{omniscient} : l'agent dispose en permanence d'informations complètes sur l'ensemble de l'environnement, ce qui le place dans des conditions bien plus favorables qu'un joueur humain. En particulier, la position et la vitesse exactes de la balle, ainsi que le positionnement et le niveau de boost de l'adversaire, sont accessibles à tout moment — des informations qu'un joueur humain ne peut qu'estimer visuellement et imparfaitement.
 
-Également, l'état du jeu est réinitialisé après 5 minutes (durée d'une partie normale de Rocket League), lorsqu'un but est marqué ou lorsqu'aucun des deux joueurs n'a touché la balle pendant 30 secondes. Ces conditions de terminaison sont cohérentes avec les règles officielles du jeu et permettent de structurer les épisodes d'entraînement de manière réaliste.
+Par ailleurs, l'état du jeu est réinitialisé après 5 minutes (durée d'une partie normale de Rocket League), lorsqu'un but est marqué ou lorsqu'aucun des deux joueurs n'a touché la balle pendant 30 secondes. Ces conditions de terminaison sont cohérentes avec les règles officielles du jeu et permettent de structurer les épisodes d'entraînement de manière réaliste.
 
 \paragraph{Génération d'états initiaux aléatoires et exploration.}
 Par défaut, une partie de Rocket League débute systématiquement par une phase de coup d'envoi (\textit{kickoff}), caractérisée par un positionnement parfaitement symétrique des joueurs et une balle immobile au centre du terrain. Si ce cadre est conforme aux règles officielles, il s'avère restrictif pour l'exploration initiale de l'agent. Ce dernier se retrouve contraint de sur-apprendre la gestion de cette situation ultra-spécifique avant de pouvoir explorer des phases de jeu plus dynamiques, ce qui ralentit considérablement la convergence globale. 
@@ -97,16 +97,16 @@ Pour pallier cette limite, un mécanisme de modification d'état (\textit{state 
 
 L'objectif fondamental de Rocket League est de marquer davantage de buts que l'adversaire avant la fin du temps réglementaire, en poussant la balle dans le but adverse à l'aide du véhicule. Cet objectif unique et bien défini suggère, à première vue, une formulation triviale de la fonction de récompense : attribuer une récompense positive lorsqu'un but est marqué, et une récompense négative symétrique lorsqu'un but est concédé.
 
-Cette formulation minimaliste se heurte cependant au problème classique du \textit{reward sparse} (récompense rare) en apprentissage par renforcement. Ce signal isolé constitue alors le seul indicateur d'apprentissage disponible, et celui-ci ne survient qu'occasionnellement au cours d'un épisode — voire jamais durant les premières phases de l'entraînement, lorsque la politique de l'agent est encore proche d'un comportement aléatoire. Dans un espace d'actions de 90 combinaisons discrètes et un espace d'états continu de grande dimension, la probabilité qu'une séquence d'actions aléatoires mène fortuitement à un but est extrêmement faible. L'agent ne reçoit alors quasiment aucun signal exploitable pour orienter l'amélioration de sa politique, ce qui se traduit en pratique par une absence totale d'apprentissage observable, même après plusieurs millions de pas d'entraînement.
+Cette formulation minimaliste se heurte cependant au problème classique du \textit{reward sparse} (récompense rare) en apprentissage par renforcement. Ce signal isolé constitue alors le seul indicateur d'apprentissage disponible, et celui-ci ne survient qu'occasionnellement au cours d'un épisode — voire jamais durant les premières phases de l'entraînement, lorsque la politique de l'agent est encore proche d'un comportement aléatoire. Dans un espace d'états et d'actions de grande dimension, la probabilité qu'une séquence d'actions aléatoires mène fortuitement à un but est extrêmement faible. L'agent ne reçoit alors quasiment aucun signal exploitable pour orienter l'amélioration de sa politique, ce qui se traduit en pratique par une absence totale d'apprentissage observable, même après plusieurs millions de pas d'entraînement.
 
 Ce problème n'est pas spécifique à Rocket League : il est documenté de manière générale dans la littérature du RL appliqué à des environnements dont l'objectif final est temporellement éloigné des actions élémentaires de l'agent \parencite{narvekarCurriculumLearningReinforcement2020}. Deux familles de solutions complémentaires sont généralement proposées pour pallier cette rareté du signal. Le \textit{reward shaping} agit sur la \textbf{composition} de la fonction de récompense elle-même : à un instant donné de l'entraînement, le signal sparse de l'objectif final est enrichi de signaux intermédiaires plus denses, sans changer la nature de la tâche à résoudre. Le \textit{curriculum learning}, en revanche, agit sur la \textbf{progression temporelle} de l'entraînement : il consiste à faire évoluer la tâche elle-même — et donc potentiellement la fonction de récompense associée — au fil du temps, en structurant l'apprentissage en une séquence de sous-tâches de complexité croissante.
 
-Ces deux approches sont complémentaires plutôt que concurrentes, et c'est leur combinaison qui structure la démarche méthodologique adoptée dans cette phase : à chaque étape du curriculum mis en place (Section~\ref{sec:curriculum}), une fonction de récompense spécifique est conçue selon les principes du reward shaping pour faciliter l'apprentissage de la sous-tâche visée.
+Ces deux approches sont complémentaires plutôt que concurrentes, et c'est leur combinaison qui structure la démarche méthodologique adoptée dans ce travail, détaillée dans les sections suivantes.
 
 \subsection{Reward shaping}
 \label{sec:reward_shaping}
 
-Le \textit{reward shaping} désigne la pratique consistant à augmenter une fonction de récompense sparse avec des signaux intermédiaires plus denses, dans le but d'accélérer et de faciliter l'apprentissage \parencite{645528.657613}. Plutôt que de se limiter au signal binaire du but, des récompenses continues sont introduites pour guider progressivement l'agent vers des sous-comportements jugés nécessaires à l'objectif final : se rapprocher de la balle, la toucher, l'orienter vers le but adverse, etc.
+Le \textit{reward shaping} désigne la pratique consistant à augmenter une fonction de récompense sparse avec des signaux intermédiaires plus denses, dans le but d'accélérer et de faciliter l'apprentissage. Plutôt que de se limiter au signal binaire du but, des récompenses continues sont introduites pour guider progressivement l'agent vers des sous-comportements jugés nécessaires à l'objectif final : se rapprocher de la balle, la toucher, l'orienter vers le but adverse, etc.
 
 Le fondement théorique de cette approche repose sur les travaux de \textcite{645528.657613}, qui démontrent qu'un \textit{reward shaping} construit à partir d'une fonction de potentiel (\textit{potential-based reward shaping}) préserve la politique optimale du problème original : l'ajout de récompenses intermédiaires bien formulées ne modifie pas la solution recherchée par l'agent, mais accélère uniquement la vitesse à laquelle celle-ci est découverte. Si les récompenses introduites dans ce travail n'ont pas systématiquement été formalisées sous une forme strictement potential-based, ce résultat théorique a néanmoins guidé la conception générale : chaque récompense intermédiaire est pensée comme un indice complémentaire à l'objectif final, et non comme un substitut à celui-ci.
 
@@ -114,7 +114,7 @@ En pratique, la conception de ces signaux intermédiaires s'est avérée être u
 
 \begin{itemize}
     \item \textbf{Récompenses basées sur les événements} (\textit{event-based}), telles qu'un signal de but ou de démolition de l'adversaire , qui attribuent un signal ponctuel et discret lors d'un événement précis du jeu. Ce type de récompense est par nature sparse : le signal n'est émis qu'au moment de l'événement, et reste nul le reste du temps.
-    \item \textbf{Récompenses basées sur l'état} (\textit{state-based}), telles que la vitesse du joueur vers  la balle, l'alignement du regard vers la balle ou la gestion de l'énergie cinétique, qui évaluent à chaque pas de temps une propriété continue de l'état du jeu ou du véhicule (la vitesse vers la balle, l'orientation, l'énergie cinétique totale). Contrairement aux récompenses événementielles, ce type de signal est dense : il fournit un retour à chaque pas de temps, qu'un comportement particulier se produise ou non.
+    \item \textbf{Récompenses basées sur l'état} (\textit{state-based}), telles que la vitesse du joueur vers la balle, l'alignement du regard vers la balle ou la gestion de l'énergie cinétique, qui évaluent à chaque pas de temps une propriété continue de l'état du jeu ou du véhicule. Contrairement aux récompenses événementielles, ce type de signal est dense : il fournit un retour à chaque pas de temps, qu'un comportement particulier se produise ou non.
 \end{itemize}
 
 Cette distinction structure l'essentiel de la démarche de reward shaping adoptée dans ce travail : le signal sparse d'un but marqué constitue l'objectif final recherché, tandis que l'ensemble des récompenses basées sur l'état viennent densifier le signal d'apprentissage pour guider l'agent vers ce but. Leur introduction progressive, dans un ordre cohérent avec la complexité croissante des comportements visés, est détaillée en Section~\ref{sec:curriculum}.
@@ -122,18 +122,17 @@ Cette distinction structure l'essentiel de la démarche de reward shaping adopt�
 \subsection{Curriculum d'apprentissage}
 \label{sec:curriculum}
 
-La conception de la fonction de récompense a suivi une progression structurée en plusieurs phases successives, chacune introduisant un niveau de complexité supplémentaire par rapport à la précédente. Cette démarche s'inscrit dans le paradigme du \textit{curriculum learning} (Section~\ref{sec:reward_sparse}) : plutôt que de confronter directement l'agent à l'objectif final (marquer des buts), chaque phase vise l'acquisition d'une compétence intermédiaire, en s'appuyant sur les comportements déjà acquis lors des phases précédentes.
+La conception de la fonction de récompense a suivi une progression structurée en plusieurs phases successives, chacune introduisant un niveau de complexité supplémentaire par rapport à la précédente. Cette démarche s'inscrit dans le paradigme du \textit{curriculum learning} (Section~\ref{sec:reward_sparse}) : plutôt que de confronter directement l'agent à l'objectif final (marquer des buts), chaque phase vise l'acquisition d'une compétence intermédiaire, en s'appuyant sur les comportements déjà acquis lors des phases précédentes. Le signal de récompense de chaque phase conserve les composantes des phases antérieures, auxquelles s'ajoutent de nouveaux signaux orientés vers la compétence visée -- garantissant ainsi que les comportements déjà appris ne sont pas dégradés par l'introduction de nouveaux objectifs. L'application concrète de ce principe à l'environnement étudié, ainsi que le détail des fonctions de récompense associées à chaque phase, est présentée en Section~\ref{sec:sac_comparison}.
 
-La première phase se concentre exclusivement sur l'acquisition des contrôles de base et la capacité à toucher la balle, indépendamment de toute notion de score. L'agent y apprend à se déplacer, à s'orienter vers la balle et à entrer en contact avec elle de manière répétée. Une fois ce comportement fondamental acquis, une deuxième phase introduit progressivement la notion de score : les récompenses orientées vers le but adverse et l'événement de but lui-même sont intégrées à la fonction de récompense, tout en conservant les signaux de la phase précédente afin de ne pas dégrader les comportements déjà appris. Une troisième phase, enfin, vise le perfectionnement des mécaniques avancées du jeu — la gestion du boost, l'optimisation du kickoff, ou la conservation de la vitesse lors des déplacements aériens — une fois que l'agent maîtrise de manière fiable les fondamentaux du jeu compétitif.
+Cette progression par phases s'est avérée nécessaire en pratique : les premiers essais d'entraînement, menés avec l'ensemble des signaux de récompense introduits simultanément dès le début, semblaient présenter une convergence plus lente vers un comportement de poursuite de la balle cohérent, par rapport à l'introduction progressive et séquentielle adoptée par la suite. L'agent semblait alors avoir davantage de difficulté à isoler le comportement pertinent au sein d'un signal global plus complexe.
 
-Cette progression par phases s'est avérée nécessaire en pratique : une tentative d'introduire l'ensemble des signaux de récompense dès le début de l'entraînement s'est révélée nettement moins efficace que l'introduction progressive et séquentielle de ceux-ci, l'agent ayant alors plus de difficulté à isoler le comportement pertinent au sein d'un signal global trop complexe.
-
-Il est par ailleurs notable que certains comportements mécaniques avancés du jeu — tels que le \textit{flick} (mouvement consistant à projeter brusquement la balle vers l'avant depuis une position de contrôle) — ont émergé spontanément chez l'agent sans qu'aucune récompense spécifique n'ait été conçue pour les encourager explicitement. Ces comportements résultent vraisemblablement de l'optimisation conjointe des signaux plus généraux de la fonction de récompense (toucher la balle avec vitesse, l'orienter vers le but), suggérant qu'une fonction de récompense suffisamment bien conçue peut conduire à l'émergence de stratégies non anticipées par le concepteur.
+Il est par ailleurs notable que certains comportements mécaniques avancés du jeu -- tels que le \textit{flick} (mouvement consistant à projeter brusquement la balle vers l'avant depuis une position de contrôle) -- ont émergé spontanément chez l'agent sans qu'aucune récompense spécifique n'ait été conçue pour les encourager explicitement \parencite{davidplnmrRLAgentLearnt2026}. Ces comportements résultent vraisemblablement de l'optimisation conjointe des signaux plus généraux de la fonction de récompense (toucher la balle avec vitesse, l'orienter vers le but), suggérant qu'une fonction de récompense suffisamment bien conçue peut conduire à l'émergence de stratégies non anticipées par le concepteur.
 
 \subsection{Reward hacking et limites du reward shaping}
 \label{sec:reward_hacking}
 
-Au-delà de la conception initiale des signaux de récompense, l'ensemble du processus de reward shaping mené dans ce travail a été marqué par l'apparition récurrente de comportements exploitant des failles ou ambiguïtés non anticipées dans la formulation des récompenses. Ce phénomène, désigné dans la littérature sous le terme de \textit{reward hacking}, constitue une limite fondamentale du reward shaping déjà identifiée par \textcite{645528.657613} : un signal de récompense mal spécifié, même bien intentionné, peut être exploité par l'agent d'une manière qui maximise la récompense cumulée sans réaliser l'objectif réellement visé par le concepteur.
+Au-delà de la conception initiale des signaux de récompense, l'ensemble du processus de reward shaping mené dans ce travail a été marqué par l'apparition récurrente de comportements exploitant des failles ou ambiguïtés non anticipées dans la formulation des récompenses. Ce phénomène, désigné dans la littérature sous le terme de \textit{reward hacking}, constitue une limite fondamentale du reward shaping : un signal de récompense mal spécifié, même bien intentionné, peut admettre une solution qui le maximise formellement tout en s'écartant de l'intention réelle du concepteur \parencite{amodeiConcreteProblemsAI2016}. Cette limite prolonge les travaux de \textcite{645528.657613} sur la préservation théorique de la politique optimale sous reward shaping (\textit{policy invariance}) : même lorsque le shaping respecte ce cadre théorique idéal, la formulation concrète des récompenses reste, en pratique, sujette à des ambiguïtés que l'agent peut exploiter.
+
 
 Plusieurs occurrences de ce phénomène ont été observées au cours de l'entraînement, résumées dans le tableau~\ref{tab:reward_hacking}. Dans chaque cas, l'identification du comportement exploité a nécessité une observation visuelle directe du comportement de l'agent (via \textit{RocketSimVis}, Section~\ref{sec:rocketsimvis}) plutôt qu'une simple analyse des courbes de récompense agrégées, ces dernières ne révélant pas nécessairement la nature du comportement sous-jacent.
 
@@ -147,12 +146,12 @@ Plusieurs occurrences de ce phénomène ont été observées au cours de l'entra
 Récompense de contact simple (binaire) & 
 Les deux agents se coordonnent pour toucher la balle mutuellement à très faible vitesse, maximisant le nombre de contacts plutôt que leur pertinence tactique. &
 Pondération du contact par l'impulsion et l'accélération imprimées à la balle. Retour à un point de sauvegarde antérieur. &
-\textit{\citefield{davidplnmrRLGymTouchRewardHacking2026}{title}} \parencite{davidplnmrRLGymTouchRewardHacking2026} \\
+\parencite{davidplnmrRLGymTouchRewardHacking2026} \\
 \hline
 Récompense de vitesse de la balle vers le but (asymétrique) &
 Les deux agents collaborent pour faire osciller la balle entre les deux buts, maximisant simultanément leur gain individuel sans chercher à marquer. &
 Reformulation de la récompense sous forme d'un jeu à somme nulle (\textit{zero-sum reward}). &
-\textit{\citefield{davidplnmrRLGymTouchRewardVelocityBallToGoal2026}{title}} \parencite{davidplnmrRLGymTouchRewardVelocityBallToGoal2026} \\
+\parencite{davidplnmrRLGymTouchRewardVelocityBallToGoal2026} \\
 \hline
 \end{tabular}
 \caption{Exemples de \textit{reward hacking} observés et corrections conceptuelles apportées}
@@ -163,4 +162,161 @@ Ces observations soulignent une caractéristique pratique essentielle du reward 
 
 La formulation des récompenses compétitives sous forme \textit{zero-sum} dans ce travail constitue ainsi une application directe de ce principe théorique au contexte du \textit{self-play} : chaque agent étant entraîné contre une copie de sa propre politique, la symétrie de la récompense garantit que l'amélioration de l'un se traduit nécessairement par une pression équivalente sur l'autre, évitant la convergence vers des comportements collaboratifs dégénérés tels que ceux observés dans le tableau~\ref{tab:reward_hacking}. Cette correction a conduit à l'adoption systématique de récompenses \textit{zero-sum} pour l'ensemble des signaux de nature compétitive introduits dans les phases ultérieures du curriculum.
 
-% Cependant une des limites du self-play est que l'agent ne va apprendre qu'a défendre contre lui-même. Cela veut dire que si l'agent ne connaît pas certaines stratégies de jeu, il ne va pas apprendre à les contrer. 
+\subsection{Méthodologie de comparaison entre PPO et SAC}
+\label{sec:sac_comparison}
+
+Conformément au principe de curriculum décrit en Section~\ref{sec:curriculum}, l'entraînement a été structuré en trois phases successives : (I) acquisition du contrôle de base du véhicule et du contact avec la balle, (II) apprentissage de l'objectif de score, et (III) perfectionnement des mécaniques avancées du jeu. Ce curriculum a été appliqué de manière identique à PPO et SAC, afin de permettre une comparaison empirique entre les deux algorithmes. Les fonctions de récompense associées à chaque phase, ainsi que leurs poids respectifs, sont détaillées dans le tableau~\ref{tab:sac_ppo_phases}.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|p{0.12\linewidth}|p{0.18\linewidth}|p{0.5\linewidth}|p{0.1\linewidth}|}
+\hline
+\textbf{Phase} & \textbf{Objectif} & \textbf{Composantes de récompense (poids)} & \textbf{Budget} \\
+\hline
+I & Contrôle de base et contact avec la balle &
+\textit{AdvancedTouchReward} (5), \textit{VelocityPlayerToBallReward} (1), \textit{InAirReward} (0.1), \textit{FaceBallReward} (0.1) &
+$\sim$100M \\
+\hline
+II & Apprentissage du score &
+\textit{GoalReward} (150), \textit{AdvancedTouchReward} (5), \textit{VelocityPlayerToBallReward} (1), \textit{VelocityBallToGoalReward\_ZS} (6), \textit{BoostKeepReward} (3), \textit{InAirReward} (0.1), \textit{FaceBallReward} (0.1) &
+$\sim$1B \\
+\hline
+III & Perfectionnement mécanique (boost, aérien, kickoff) &
+\textit{GoalReward} (300), \textit{AdvancedTouchReward} (7.5), \textit{VelocityPlayerToBallReward} (1), \textit{VelocityBallToGoalReward\_ZS} (10), \textit{InAirReward} (0.1), \textit{KickoffReward} (5), \textit{BoostKeepReward\_ZS} (3), \textit{EnergyReward} (0.05), \textit{AerialDistanceReward} (1.5) &
+-- \\
+\hline
+\end{tabular}
+\caption{Curriculum de récompenses utilisé pour la comparaison PPO/SAC}
+\label{tab:sac_ppo_phases}
+\end{table}
+
+\subsubsection{Phase I -- Contrôle de base et contact avec la balle}
+
+La première phase vise l'acquisition des compétences fondamentales de contrôle du véhicule et de contact avec la balle, indépendamment de toute notion de but. L'objectif est que l'agent apprenne à se déplacer efficacement, à s'orienter vers la balle et à entrer en contact avec elle de manière répétée. La fonction de récompense associée combine un signal de contact (\textit{AdvancedTouchReward}), un signal de rapprochement vers la balle (\textit{VelocityPlayerToBallReward}), ainsi que deux signaux secondaires encourageant respectivement le jeu aérien (\textit{InAirReward}) et l'orientation vers la balle (\textit{FaceBallReward}).
+
+\subsubsection{Phase II -- Apprentissage du score}
+
+La deuxième phase introduit l'objectif final du jeu -- marquer des buts -- tout en conservant les signaux de la phase précédente afin de ne pas dégrader les comportements déjà appris (Section~\ref{sec:curriculum}). Le signal événementiel \textit{GoalReward} y est introduit avec un poids dominant, accompagné d'un signal dense orientant la trajectoire de la balle vers le but adverse (\textit{VelocityBallToGoalReward\_ZS}) et d'un premier signal de gestion du boost (\textit{BoostKeepReward}).
+
+Conformément à la discussion menée en Section~\ref{sec:reward_hacking}, \textit{VelocityBallToGoalReward} est formulée sous forme \textit{zero-sum} (\textit{VelocityBallToGoalReward\_ZS}) plutôt que sous sa forme individuelle brute. Cette précaution découle directement du comportement de \textit{reward hacking} observé en self-play avec une formulation asymétrique de ce signal (Tableau~\ref{tab:reward_hacking}) : les deux agents, partageant un même état, peuvent collaborer implicitement pour faire osciller la balle entre les deux buts plutôt que de chercher à marquer. La reformulation \textit{zero-sum} garantit qu'un gain de récompense pour un agent correspond nécessairement à une perte équivalente pour son adversaire, éliminant la possibilité d'une telle stratégie dégénérée.
+
+\subsubsection{Phase III -- Perfectionnement mécanique}
+
+La troisième phase vise le perfectionnement des mécaniques avancées du jeu une fois les fondamentaux acquis : gestion fine du boost en fonction de l'adversaire (\textit{BoostKeepReward\_ZS}, également formulée en zero-sum pour les mêmes raisons que ci-dessus), optimisation du kickoff (\textit{KickoffReward}), conservation de l'énergie cinétique (\textit{EnergyReward}) et maîtrise du jeu aérien à distance (\textit{AerialDistanceReward}). Le poids du signal de but est augmenté par rapport à la phase précédente afin de renforcer la pression vers l'objectif final à mesure que l'agent maîtrise les fondamentaux.
+
+Le choix d'augmenter le poids de la récompense de but à ce stade du curriculum repose sur le fait que l'ajout de nouvelles récompenses intermédiaires dans cette phase (notamment \textit{KickoffReward} et \textit{AerialDistanceReward}) a pour effet de diluer le signal de but par rapport aux autres signaux. L'augmentation de son poids vise à compenser cette dilution et à maintenir la priorité sur l'objectif final du jeu.
+
+Également, le passage de la gestion du boost d'une récompense individuelle à une formulation \textit{zero-sum} dans cette phase est motivé par l'observation que, dans des situations de jeu plus avancées, la gestion du boost devient un facteur stratégique critique. Un agent qui conserve son boost au détriment de l'autre peut obtenir un avantage décisif, et la formulation \textit{zero-sum} garantit que cette dynamique est correctement reflétée dans le signal de récompense ; elle peut également encourager l'agent à adopter des stratégies plus agressives, en allant chercher le boost adverse plutôt qu'en se contentant de conserver le sien.
+
+Ce choix d'introduire la dimension compétitive de la gestion du boost uniquement en Phase~III, plutôt que dès la Phase~II, répond également à une considération pédagogique : à un stade où l'agent ne maîtrise pas encore tous les fondamentaux du jeu (déplacement, contact avec la balle, gestion du boost, score), un signal zero-sum portant sur la gestion stratégique du boost aurait introduit un bruit prématuré dans l'apprentissage, avant que l'agent ne soit en mesure d'en tirer parti. L'introduction progressive de cette dimension stratégique, une fois les fondamentaux acquis, permet ainsi de préparer l'agent à des situations de jeu plus complexes sans nuire à l'apprentissage des comportements de base.
+
+\subsubsection{Limites d'implémentation rencontrées avec SAC}
+\label{sec:limites-sac}
+
+L'implémentation de SAC utilisée (rlgym-sac, Section~\ref{sec:rlgym-sac}) s'est révélée significativement moins mature que son équivalent PPO (rlgym-ppo, Section~\ref{sec:rlgym-ppo}) sur plusieurs aspects critiques, identifiés par inspection directe du code source :
+
+\begin{itemize}
+    \item \textbf{Absence de gradient clipping.} Aucun mécanisme de limitation de la norme des gradients n'est appliqué lors des mises à jour de l'acteur, des critiques ou du coefficient d'entropie. En conséquence, les poids de récompense présentés dans le tableau~\ref{tab:sac_ppo_phases} (calibrés pour PPO) ont provoqué une explosion numérique des gradients (perte et valeurs Q divergeant vers l'infini) dès les premières centaines de milliers de pas d'entraînement avec SAC.
+    \item \textbf{Standardisation des retours non fonctionnelle.} Contrairement à PPO, où la standardisation des retours est effectivement appliquée au calcul de la fonction de perte du critique, l'implémentation SAC testée ne calcule cette statistique qu'à des fins de journalisation, sans jamais l'appliquer à l'entraînement. Les récompenses utilisées par SAC restent donc à une échelle brute, distincte de celle utilisée par PPO.
+    \item \textbf{Cible d'entropie fixe.} La cible d'entropie ($\mathcal{H}_{\text{target}} = -|\mathcal{A}|$), qui détermine la pression d'exploration maintenue par l'auto-ajustement du coefficient $\alpha$, est codée en dur dans l'implémentation et n'est pas paramétrable.
+\end{itemize}
+
+Ces limites ont nécessité un ajustement empirique des hyperparamètres (réduction du taux d'apprentissage, réduction de l'échelle des récompenses) avant d'obtenir un entraînement numériquement stable, et constituent en elles-mêmes une limite à la stricte comparabilité des deux entraînements.
+
+Elles n'ont pas été corrigées dans le cadre de ce travail, dont l'objectif est de comparer empiriquement le comportement de PPO et SAC sur cet environnement plutôt que de développer ou maintenir l'implémentation logicielle de SAC elle-même. Leur correction (ajout d'un mécanisme de gradient clipping, application effective de la standardisation des retours au calcul de la loss du critique) constituerait néanmoins une piste claire d'amélioration pour des travaux futurs cherchant à établir une comparaison plus rigoureuse entre les deux algorithmes sur cet environnement.
+
+\subsubsection{Résultats et divergence de convergence entre PPO et SAC}
+
+Sous le curriculum de récompenses de la Phase~I (Tableau~\ref{tab:sac_ppo_phases}), PPO a progressé de manière conforme aux observations rapportées en Section~\ref{sec:curriculum} : l'agent a rapidement acquis un comportement de poursuite de la balle (\textit{ball chasing}) cohérent.
+
+SAC, sur cette même fonction de récompense, a montré une dynamique différente. Après une phase initiale d'amélioration des composantes de contact et de rapprochement vers la balle, une stagnation, voire une légère régression, a été observée sur plusieurs dizaines de millions de pas d'entraînement supplémentaires : le signal \textit{VelocityPlayerToBallReward} a montré une tendance à la baisse continue, tandis que \textit{AdvancedTouchReward} est devenu de plus en plus rare. Cette dégradation est survenue de manière concomitante à une stabilisation rapide du coefficient d'entropie $\alpha$ à une valeur faible ($\sim 0,15$--$0,22$), suggérant une réduction prématurée de la pression d'exploration avant la consolidation d'un comportement utile. En raison de cette stagnation, l'entraînement SAC a été interrompu à l'issue de la Phase~I, sans extension aux Phases~II et~III.
+
+\subsubsection{Discussion : effet de l'espace d'actions continu vs discret}
+
+Deux facteurs, non mutuellement exclusifs, permettent d'expliquer ces résultats. D'une part, les limites d'implémentation identifiées ci-dessus -- en particulier l'absence de gradient clipping et de standardisation effective des récompenses -- ont nécessité des compromis sur les hyperparamètres qui s'éloignent de la configuration canonique de SAC, limitant potentiellement sa capacité à exploiter pleinement sa \textit{sample efficiency} théorique.
+
+D'autre part, l'espace d'actions continu utilisé par SAC, contrairement à l'espace discret curaté de PPO (Section~\ref{sec:action_space}), impose à l'agent l'apprentissage simultané du contrôle moteur de base -- la coordination cohérente des huit dimensions continues du véhicule -- et de la stratégie de jeu, alors que PPO bénéficie d'un espace d'actions déjà restreint aux 90 combinaisons mécaniquement pertinentes. Cette charge d'apprentissage supplémentaire pourrait expliquer pourquoi SAC, malgré sa \textit{sample efficiency} théorique supérieure en contrôle continu \parencite{haarnojaSoftActorCriticOffPolicy2018}, peine à dépasser la phase de contrôle moteur de base dans cet environnement.
+
+Cette étude exploratoire ne permet donc pas de conclure à une infériorité intrinsèque de SAC pour ce type d'environnement, mais met en évidence l'importance déterminante du choix de l'espace d'actions et de la maturité de l'implémentation algorithmique dans la comparaison empirique de deux méthodes de RL. Pour ces raisons, PPO a été retenu comme algorithme principal pour l'ensemble du curriculum décrit dans la suite de ce chapitre.
+
+\subsection{Résultats avec PPO}
+\label{sec:ppo_results}
+
+Afin d'évaluer le niveau de jeu atteint à l'issue du curriculum, l'agent PPO a été testé de manière déterministe -- c'est-à-dire en sélectionnant à chaque pas de temps l'action de probabilité maximale plutôt qu'en échantillonnant stochastiquement -- contre plusieurs adversaires de référence issus de la communauté RLGym et contre des joueurs humains sur le jeu officiel, en utilisant RLBot (Section~\ref{sec:rlbot}). L'ensemble des matchs présentés dans cette section ont été réalisés avec l'agent à 10 milliards de pas d'entraînement, correspondant à l'issue de la Phase~III du curriculum. Les fichiers de replay associés sont disponibles publiquement sur la plateforme Ballchasing\footnote{Plateforme permettant d'analyser les statistiques détaillées de matchs Rocket League à partir des fichiers de replay officiels du jeu.} \parencite{BeepBoopV2Replays}.
+
+\paragraph{Matchs contre des agents de référence.}
+
+Deux agents de la communauté RLGym ont été retenus comme points de comparaison, tous deux issus du tournoi de bots Rocket League 2022 \parencite{RLBotChampionship2022} :
+
+\begin{itemize}
+    \item \textbf{Element}, finaliste de ce tournoi. L'agent PPO a remporté les 3 face-à-face disputés \parencite{BeepBoopV2Replays}.
+    \item \textbf{Necto} \parencite{rolv-arildRolvArildNecto2026}, vainqueur du tournoi en 1v1, entraîné sur environ 15 milliards de pas -- soit un budget supérieur à celui de l'agent produit dans ce travail. L'agent PPO a également remporté les 3 face-à-face disputés \parencite{BeepBoopV2Replays}.
+\end{itemize}
+
+Le résultat contre Necto est particulièrement notable, bien qu'il appelle une nuance importante : Necto a été entraîné sur les trois modes de jeu compétitifs (1v1, 2v2 et 3v3), tandis que l'agent PPO de ce travail a été entraîné exclusivement en 1v1. Cette spécialisation constitue un avantage potentiel dans ce contexte précis, l'agent ayant appris à optimiser ses comportements pour ce mode de jeu particulier, là où Necto doit généraliser à plusieurs configurations. Cela étant, battre un agent de référence entraîné sur un budget presque deux fois supérieur et sur un spectre de jeu plus large reste un indicateur fort de la compétitivité de l'agent produit, et constitue à ce titre une validation externe solide du niveau atteint.
+
+\paragraph{Matchs contre des joueurs humains.}
+
+L'agent a également été testé contre des joueurs humains de niveau Or à Champion en mode 2v2. Ces joueurs, bien que ne pratiquant pas spécifiquement le 1v1, représentent un niveau de jeu compétitif solide dans le contexte du jeu officiel. L'agent PPO a remporté une large majorité de ces matchs, confirmant un niveau de jeu compétitif dans des conditions proches du jeu réel.
+
+\paragraph{Analyse qualitative du comportement.}
+
+Au-delà des scores, l'observation directe du comportement de l'agent en conditions de match, complétée par l'analyse des statistiques de replay disponibles sur Ballchasing \parencite{BeepBoopV2Replays}, a mis en évidence plusieurs points forts et faiblesses résiduelles.
+
+\subparagraph{Gestion du boost.}
+
+Un élément particulièrement remarquable concerne la gestion du boost. L'analyse des données de replay révèle deux comportements distincts de l'agent par rapport aux joueurs humains de niveau comparable. D'une part, l'agent fait un usage plus économe du boost à haute vitesse : là où un joueur humain tend à maintenir le boost activé même lorsque le véhicule a déjà atteint sa vitesse maximale -- dépensant ainsi du boost sans gain de vitesse effectif -- l'agent a appris à couper le boost dès que l'accélération supplémentaire ne produit plus d'effet utile (Figure~\ref{fig:boost_while_supersonic}). D'autre part, l'agent collecte davantage de petits boost répartis sur le terrain, privilégiant une gestion continue et distribuée de ses réserves plutôt qu'une dépendance aux grands boost fixes (Figure~\ref{fig:boost_collected}). Ces comportements sont vraisemblablement liés à l'optimisation de \textit{BoostKeepReward\_ZS} et \textit{EnergyReward} introduits en Phase~III, bien qu'une attribution causale stricte reste difficile à établir formellement compte tenu de l'interaction complexe entre l'ensemble des signaux du curriculum. Ils témoignent néanmoins d'une compréhension implicite de la mécanique de boost significativement plus fine que celle observée chez les joueurs humains testés.
+
+\begin{figure}[htp]
+\centering
+\includegraphics[width=0.95\textwidth]{img/boost_while_supersonic.png}
+\caption{Consommation du boost lorsque la vitesse supersonique est atteinte}
+\label{fig:boost_while_supersonic}
+\end{figure}
+
+\begin{figure}[htp]
+\centering
+\includegraphics[width=0.95\textwidth]{img/boost_collected.png}
+\caption{Collecte du boost sur le terrain}
+\label{fig:boost_collected}
+\end{figure}
+
+\subparagraph{Points forts et faiblesses résiduelles.}
+
+Parmi les autres points forts identifiés : des situations de 50/50 offensifs bien maîtrisées et une rapidité de réaction globalement supérieure à celle des joueurs humains testés.
+
+L'analyse du temps passé au sol et dans les airs (Figure~\ref{fig:sol_air}) révèle que l'agent passe la quasi-totalité du match au sol, avec un recours au jeu aérien très limité. Ce comportement suggère que les poids associés aux récompenses liées au jeu aérien (\textit{AerialDistanceReward}, \textit{InAirReward}) n'ont pas exercé une pression suffisante pour que l'agent explore et consolide des trajectoires aériennes complexes au cours de l'entraînement. Il en résulte une faiblesse structurelle dans les situations nécessitant une intervention aérienne rapide, notamment face à des balles hautes.
+
+\begin{figure}[htp]
+\centering
+\includegraphics[width=0.95\textwidth]{img/time_spent_ground_air.png}
+\caption{Comparaison du temps passé au sol et dans les airs par l'agent PPO au cours d'un match contre un joueur humain de niveau Champion}
+\label{fig:sol_air}
+\end{figure}
+
+Par ailleurs, l'agent manifeste une tendance à laisser l'adversaire progresser dans sa propre moitié de terrain lorsque celui-ci est en possession de la balle, plutôt que de chercher à le presser activement. Ce comportement défensif passif constitue une faiblesse identifiée, mais peut également se révéler un atout dans certaines situations : en conservant sa vitesse et son boost, l'agent se positionne avantageusement pour des contre-attaques rapides, comme le suggère la heatmap de positionnement (Figure~\ref{fig:heatmap}), qui compare la présence sur le terrain de l'agent et de l'adversaire humain, et met en évidence une présence marquée de l'agent dans les zones de transition entre défense et attaque.
+
+\begin{figure}[htp]
+\centering
+\includegraphics[width=0.95\textwidth]{img/positioning_heatmap.png}
+\caption{Heatmap de positionnement comparée entre l'adversaire humain (à gauche) et l'agent PPO (à droite) au cours d'un match contre un joueur humain de niveau Champion}
+\label{fig:heatmap}
+\end{figure}
+
+\subparagraph{Utilisation du dérapage.}
+
+Un comportement émergent particulièrement intéressant concerne l'utilisation du dérapage (\textit{powerslide}). Comme le montre la Figure~\ref{fig:powerslide_graphs}, l'agent y recourt de manière significative et systématique, notamment pour ajuster sa trajectoire lors de changements de direction rapides ou pour maintenir une orientation optimale vers la balle. Ce comportement n'a pas été explicitement récompensé dans la fonction de récompense -- aucun signal dédié au powerslide n'a été introduit dans le curriculum -- et semble donc émerger naturellement de l'optimisation des signaux existants, en particulier ceux liés à la vitesse de rapprochement vers la balle et à la gestion de l'énergie cinétique.
+
+La comparaison avec les joueurs humains testés est à cet égard instructive : si ces derniers utilisent également le dérapage, ils y recourent de manière plus occasionnelle et sur des durées plus longues. L'agent, en revanche, effectue des dérapages plus courts et plus fréquents, ce qui lui confère une plus grande agilité dans ses ajustements de trajectoire et une capacité de réorientation plus réactive -- au détriment potentiel de la précision dans les situations nécessitant une stabilisation prolongée.
+
+\begin{figure}[htp]
+\centering
+\includegraphics[width=0.95\textwidth]{img/powerslide_graphs.png}
+\caption{Utilisation du dérapage par l'agent PPO et par un joueur humain de niveau Champion au cours d'un même match}
+\label{fig:powerslide_graphs}
+\end{figure}
+
+Ces résultats valident dans l'ensemble l'efficacité de la démarche adoptée -- curriculum learning combiné à un reward shaping progressif -- pour amener un agent de RL à un niveau de jeu compétitif dans un environnement aussi exigeant que Rocket League. Les comportements émergents observés (gestion fine du boost, utilisation systématique du dérapage) suggèrent par ailleurs que la conception d'une fonction de récompense bien structurée peut conduire à l'acquisition de stratégies non anticipées par le concepteur, au-delà des seuls comportements explicitement ciblés par le curriculum.
+
+

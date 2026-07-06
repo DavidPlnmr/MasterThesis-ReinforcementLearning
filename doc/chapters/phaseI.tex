@@ -45,7 +45,7 @@ La fonction de récompense pénalise la consommation de carburant et la distance
 à la zone d'atterrissage, et accorde un bonus lors du contact des pattes avec
 le sol ainsi qu'une récompense de $+100$ pour un atterrissage réussi (ou une
 pénalité de $-100$ pour un crash). L'épisode se termine soit à
-l'atterrissage, soit au crash, soit lors d'une sortie du terrain de jeu. Un
+l'atterrissage, soit au crash, soit lors d'une sortie de la zone de simulation. Un
 épisode est considéré \textbf{résolu} lorsque la récompense atteint
 $\geq 200$.
 
@@ -90,13 +90,8 @@ du problème d'apprentissage par renforcement.
 
 L'optimisation des hyperparamètres est réalisée avec le framework
 \textbf{Optuna} \parencite{akibaOptunaNextgenerationHyperparameter2019}, en
-utilisant le sampler \textit{Tree-structured Parzen Estimator} (TPE). TPE est
-un algorithme bayésien qui modélise séparément la distribution des bons et des
-mauvais hyperparamètres, et dirige la recherche vers les régions prometteuses
-de l'espace de configuration. Chaque configuration est évaluée sur
-\textbf{250\,000 pas de temps} d'entraînement, suivie d'une évaluation
-déterministe sur \textbf{20 épisodes}. La métrique optimisée est la récompense
-moyenne obtenue lors de cette évaluation finale.
+utilisant le sampler \textit{Tree-structured Parzen Estimator} (TPE). TPE est un algorithme bayésien qui modélise séparément la distribution des bons et des mauvais hyperparamètres, et dirige la recherche vers les régions prometteuses de l'espace de configuration \parencite{bergstraAlgorithmsHyperparameterOptimization2011}. Chaque configuration est évaluée sur \textbf{250\,000 pas de temps} d'entraînement, suivie d'une évaluation
+déterministe sur \textbf{20 épisodes}. La métrique optimisée est la récompense moyenne obtenue lors de cette évaluation finale.
 
 Ce budget de 250 000 steps, inférieur aux 500 000 steps retenus pour l'évaluation finale (Section 8.4.1), résulte d'un compromis pragmatique : avec une cible de 150 essais par combinaison algorithme/environnement, un budget de tuning plus élevé aurait rendu la campagne d'optimisation computationnellement prohibitive. Ce choix n'est cependant pas neutre : il repose sur l'hypothèse implicite que les hyperparamètres optimaux à 250 000 steps restent valides à 500 000 steps.
 
@@ -162,50 +157,46 @@ réseaux convolutifs n'est pas pertinent dans ce contexte.
 \endlastfoot
 
 \textit{learning\_rate}
-  & Pas de gradient de l'optimiseur Adam (\textit{continu, log}).
+  & Pas de gradient de l'optimiseur Adam.
     Une valeur trop élevée déstabilise l'entraînement~; trop faible,
     la convergence est lente.
   & $[10^{-5},\;10^{-3}]$ \\[4pt]
 \textit{buffer\_size}
-  & Taille du \textit{replay buffer} (\textit{catégoriel}).
+  & Taille du \textit{replay buffer}.
     Un buffer plus grand améliore la diversité des transitions
     échantillonnées, au coût d'une empreinte mémoire plus importante.
   & $\{10^4,\;5{\cdot}10^4,\;10^5\}$ \\[4pt]
 \textit{learning\_starts}
-  & Nombre de pas avant le début des mises à jour (\textit{catégoriel}).
+  & Nombre de pas avant le début des mises à jour.
     Permet de pré-remplir le buffer avec des transitions aléatoires
     pour stabiliser les premières itérations.
   & $\{0,\;1000,\;5000\}$ \\[4pt]
 \textit{batch\_size}
-  & Nombre de transitions échantillonnées à chaque mise à jour
-    (\textit{catégoriel}).
+  & Nombre de transitions échantillonnées à chaque mise à jour.
   & $\{32,\;64,\;128,\;256\}$ \\[4pt]
 \textit{gamma}
-  & Facteur d'actualisation des récompenses futures (\textit{catégoriel}).
+  & Facteur d'actualisation des récompenses futures.
     Proche de 1~: l'agent est prévoyant~; proche de 0~: il privilégie
     les récompenses immédiates.
   & $\{0.90,\ldots,0.999\}$ \\[4pt]
 \textit{train\_freq}
-  & Fréquence des mises à jour en nombre de pas de temps
-    (\textit{catégoriel}).
+  & Fréquence des mises à jour en nombre de pas de temps.
   & $\{1,\;4,\;8,\;16\}$ \\[4pt]
 \textit{target\_update\_interval}
-  & Nombre de mises à jour entre deux synchronisations du réseau cible
-    (\textit{catégoriel}). Le \textit{target network} stabilise
+  & Nombre de mises à jour entre deux synchronisations du réseau cible. Le \textit{target network} stabilise
     l'apprentissage en fixant temporairement les valeurs cibles.
   & $\{100,\;250,\;500,\;1000\}$ \\[4pt]
 \textit{exploration\_fraction}
   & Fraction du training durant laquelle $\varepsilon$ décroît de sa
-    valeur initiale à sa valeur finale (\textit{continu}).
+    valeur initiale à sa valeur finale.
   & $[0.05,\;0.5]$ \\[4pt]
 \textit{exploration\_final\_eps}
-  & Valeur minimale de $\varepsilon$ après la phase d'exploration
-    (\textit{continu}). Correspond au taux d'actions aléatoires résiduel
+  & Valeur minimale de $\varepsilon$ après la phase d'exploration. Correspond au taux d'actions aléatoires résiduel
     en exploitation.
   & $[0.01,\;0.1]$ \\[4pt]
 \textit{net\_arch}
   & Architecture du réseau MLP --- nombre et taille des couches
-    cachées (\textit{catégoriel}).
+    cachées.
   & \textit{small} [64,64],\newline
     \textit{medium} [256,256],\newline
     \textit{large} [400,300] \\
@@ -240,53 +231,48 @@ réseaux convolutifs n'est pas pertinent dans ce contexte.
 \endlastfoot
 
 \textit{learning\_rate}
-  & Pas de gradient de l'optimiseur Adam (\textit{continu, log}).
+  & Pas de gradient de l'optimiseur Adam.
   & $[10^{-5},\;10^{-3}]$ \\[4pt]
 \textit{n\_steps}
   & Nombre de pas collectés avant chaque mise à jour de la politique,
-    \textit{rollout length} (\textit{catégoriel}). Doit être supérieur
+    \textit{rollout length}. Doit être supérieur
     à \texttt{batch\_size}~--- les configurations invalides sont rejetées
     automatiquement lors du sampling.
   & $\{256,\;512,\;1024,\;2048\}$ \\[4pt]
 \textit{batch\_size}
-  & Taille des mini-batchs utilisés pour les mises à jour
-    (\textit{catégoriel}).
+  & Taille des mini-batchs utilisés pour les mises à jour.
   & $\{32,\;64,\;128,\;256,\;512\}$ \\[4pt]
 \textit{n\_epochs}
-  & Nombre de passes sur les données collectées à chaque mise à jour
-    (\textit{catégoriel}). Augmenter ce nombre améliore l'utilisation des
-    données mais peut déstabiliser la politique.
+  & Nombre de passes sur les données collectées à chaque mise à jour Augmenter ce nombre améliore l'utilisation des données mais peut déstabiliser la politique.
   & $\{1,\;3,\;5,\;10,\;20\}$ \\[4pt]
 \textit{gamma}
-  & Facteur d'actualisation des récompenses futures (\textit{catégoriel}).
+  & Facteur d'actualisation des récompenses futures.
   & $\{0.90,\ldots,0.999\}$ \\[4pt]
 \textit{gae\_lambda}
-  & Paramètre $\lambda$ du \textit{Generalized Advantage Estimation} (GAE)
-    (\textit{catégoriel}). Contrôle le compromis biais-variance dans
+  & Paramètre $\lambda$ du \textit{Generalized Advantage Estimation} (GAE). Contrôle le compromis biais-variance dans
     l'estimation de l'avantage.
   & $\{0.80,\ldots,1.0\}$ \\[4pt]
 \textit{ent\_coef}
-  & Coefficient de la prime d'entropie (\textit{continu, log}).
+  & Coefficient de la prime d'entropie.
     Encourage l'exploration en pénalisant les politiques trop
     déterministes.
   & $[10^{-8},\;0.1]$ \\[4pt]
 \textit{clip\_range}
-  & Paramètre $\varepsilon$ de la contrainte PPO (\textit{catégoriel}).
+  & Paramètre $\varepsilon$ de la contrainte PPO.
     Limite l'écart entre l'ancienne et la nouvelle politique lors des
     mises à jour.
   & $\{0.1,\;0.2,\;0.3,\;0.4\}$ \\[4pt]
 \textit{max\_grad\_norm}
-  & Norme maximale du gradient --- \textit{gradient clipping}
-    (\textit{continu, log}). Prévient les mises à jour explosives et
+  & Norme maximale du gradient --- \textit{gradient clipping}. Prévient les mises à jour explosives et
     stabilise l'entraînement.
   & $[0.3,\;5.0]$ \\[4pt]
 \textit{vf\_coef}
-  & Coefficient de la perte du critique (\textit{continu}). Contrôle
+  & Coefficient de la perte du critique. Contrôle
     l'importance relative de l'erreur de prédiction de valeur par rapport
     à la perte de politique.
   & $[0.1,\;1.0]$ \\[4pt]
 \textit{net\_arch}
-  & Architecture du réseau MLP acteur-critique (\textit{catégoriel}).
+  & Architecture du réseau MLP acteur-critique.
   & \textit{small} [64,64],\newline
     \textit{medium} [256,256],\newline
     \textit{large} [400,300] \\
@@ -321,23 +307,22 @@ réseaux convolutifs n'est pas pertinent dans ce contexte.
 \endlastfoot
 
 \textit{learning\_rate}
-  & Pas de gradient commun aux réseaux acteur et critique
-    (\textit{continu, log}).
+  & Pas de gradient commun aux réseaux acteur et critique.
   & $[10^{-5},\;10^{-3}]$ \\[4pt]
 \textit{buffer\_size}
-  & Taille du \textit{replay buffer} (\textit{catégoriel}).
+  & Taille du \textit{replay buffer}.
   & $\{10^4,\;5{\cdot}10^4,\;10^5\}$ \\[4pt]
 \textit{learning\_starts}
-  & Nombre de pas avant le début des mises à jour (\textit{catégoriel}).
+  & Nombre de pas avant le début des mises à jour.
   & $\{1000,\;5000,\;10000\}$ \\[4pt]
 \textit{batch\_size}
-  & Taille des mini-batchs pour les mises à jour (\textit{catégoriel}).
+  & Taille des mini-batchs pour les mises à jour.
   & $\{32,\;64,\;128,\;256,\;512\}$ \\[4pt]
 \textit{gamma}
-  & Facteur d'actualisation des récompenses futures (\textit{catégoriel}).
+  & Facteur d'actualisation des récompenses futures.
   & $\{0.90,\ldots,0.999\}$ \\[4pt]
 \textit{tau}
-  & Taux de mise à jour \textit{soft} du réseau cible (\textit{catégoriel}).
+  & Taux de mise à jour \textit{soft} du réseau cible.
     À chaque pas~:
     $\theta_{\text{cible}} \leftarrow \tau\,\theta + (1-\tau)\,\theta_{\text{cible}}$.
   & $\{0.001,\;0.005,\;0.01,\;0.02,\;0.05\}$ \\[4pt]
@@ -345,21 +330,18 @@ réseaux convolutifs n'est pas pertinent dans ce contexte.
   & Coefficient d'entropie géré automatiquement (\textit{auto}) : SAC
     ajuste ce coefficient à chaque pas de gradient pour maintenir une
     entropie cible $\mathcal{H}^* = -\dim(\mathcal{A})$, définie par
-    \cite{haarnojaSoftActorCriticAlgorithms2019} comme l'opposé de la
-    dimension de l'espace d'action.
+    \cite{haarnojaSoftActorCriticAlgorithms2019} comme l'opposé de la dimension de l'espace d'action.
   & \textit{auto} \\[4pt]
 \textit{use\_sde}
-  & Active l'\textit{State Dependent Exploration} (SDE)
-    (\textit{catégoriel}). Le bruit d'exploration dépend de l'état courant
+  & Active la \textit{State-Dependent Exploration} (SDE). Le bruit d'exploration dépend de l'état courant
     ce qui peut améliorer l'exploration dans les
     espaces d'action continus. Ce bruit est maintenu pendant plusieurs steps consécutifs. Des trajectoires entières peuvent ainsi être explorées.
   & $\{\text{True},\;\text{False}\}$ \\[4pt]
 \textit{target\_update\_interval}
-  & Nombre de gradient steps entre deux mises à jour du réseau cible
-    (\textit{catégoriel}).
+  & Nombre de gradient steps entre deux mises à jour du réseau cible.
   & $\{1,\;2,\;4\}$ \\[4pt]
 \textit{net\_arch}
-  & Architecture des réseaux MLP acteur et critique (\textit{catégoriel}).
+  & Architecture des réseaux MLP acteur et critique.
   & \textit{small} [64,64],\newline
     \textit{medium} [256,256],\newline
     \textit{large} [400,300] \\
@@ -512,8 +494,7 @@ $0.4$, valeur maximale de la plage explorée et nettement supérieure à la
 valeur standard de $0.2$ \parencite{schulmanProximalPolicyOptimization2017}.
 Un seuil d'écrêtage élevé autorise des mises à jour de politique plus
 importantes à chaque gradient step, tout en conservant la garantie de
-stabilité propre à PPO grâce au mécanisme de clipping. Cette valeur, associée
-à vingt époques d'optimisations sur des rollouts de 2048 transitions, indique que PPO effectue $\lfloor 2048 / 256 \rfloor = 8$ mini-batches\footnote{256 étant la taille d'un batch} par époque, soit 160 mises à jour du réseau pour chaque rollout de 2048 transitions.
+stabilité propre à PPO grâce au mécanisme de clipping. Cette valeur, associée à vingt époques d'optimisations sur des rollouts de 2048 transitions, indique que PPO effectue $\lfloor 2048 / 256 \rfloor = 8$ mini-batches par époque, soit 160 mises à jour du réseau pour chaque rollout de 2048 transitions.
  
 % -----------------------------------------------------------------------------
 \subsubsection{PPO --- LunarLanderContinuous}
@@ -616,12 +597,11 @@ réseau \textit{medium} $[256, 256]$, plus petite que celle retenue par PPO
 (\textit{large} $[400, 300]$), ce qui illustre l'efficacité par paramètre
 propre aux algorithmes \textit{off-policy} bénéficiant du \textit{replay
 buffer}. Deux hyperparamètres méritent d'être soulignés. D'une part,
-le taux d'interpolation $\tau$ atteint sa valeur maximale testée ($0.05$), dix fois supérieure à la valeur standard de $0.005$
-\parencite{haarnojaSoftActorCriticOffPolicy2018} : cette mise à jour rapide
+le taux d'interpolation $\tau$ atteint sa valeur maximale testée ($0.05$), dix fois supérieure à la valeur standard de $0.005$ \parencite{haarnojaSoftActorCriticOffPolicy2018} : cette mise à jour rapide
 du réseau cible favorise une convergence accélérée sur un environnement de
 faible dimensionnalité comme LunarLander, où le risque de divergence lié à
 un réseau cible instable est limité. D'autre part, \texttt{use\_sde = True}
-confirme l'intérêt de l'\textit{State Dependent Exploration} pour les espaces
+confirme l'intérêt de la \textit{State-Dependent Exploration} pour les espaces
 d'action continus : le bruit d'exploration structuré en fonction de l'état
 permet une exploration plus cohérente que le bruit gaussien indépendant de l'état.
 
@@ -646,24 +626,13 @@ L'évaluation est conduite en mode \textbf{déterministe}, ce qui diffère du
 comportement adopté durant l'entraînement selon l'algorithme :
 
 \begin{itemize}
-  \item \textbf{PPO} : pendant l'entraînement, PPO échantillonne ses actions
-        depuis une distribution de probabilités (gaussienne pour le continu,
-        catégorielle pour le discret) afin d'explorer. En mode déterministe,
-        l'action retenue est le \textit{mode} de cette distribution ---
-        l'action de probabilité maximale --- sans aucun échantillonnage.
+  \item \textbf{PPO} : pendant l'entraînement, PPO échantillonne ses actions depuis une distribution de probabilités (gaussienne pour le continu, catégorielle pour le discret) afin d'explorer. En mode déterministe, l'action retenue est celle de probabilité maximale, sans aucun échantillonnage.
 
-  \item \textbf{SAC} : de même, SAC paramétrise une distribution gaussienne
-        et échantillonne lors de l'entraînement pour maximiser l'entropie.
-        En mode déterministe, il retourne la moyenne de cette distribution,
-        ce qui correspond à la politique la plus probable sans bruit
-        d'exploration.
+  \item \textbf{SAC} : de même, SAC paramétrise une distribution gaussienne et échantillonne lors de l'entraînement pour maximiser l'entropie. En mode déterministe, il retourne la moyenne de cette distribution, ce qui correspond à la politique la plus probable sans bruit d'exploration.
 
-  \item \textbf{DQN} : le mode déterministe consiste à sélectionner
-        systématiquement l'action de Q-valeur maximale (argmax), avec
-        $\varepsilon = 0$. C'est déjà le comportement naturel de DQN
-        lors de l'exploitation ; le mode déterministe ne change donc pas
-        fondamentalement la politique évaluée.
+  \item \textbf{DQN} : le mode déterministe consiste à sélectionner systématiquement l'action de Q-valeur maximale (argmax), avec $\varepsilon = 0$. C'est déjà le comportement naturel de DQN lors de l'exploitation ; le mode déterministe ne change donc pas fondamentalement la politique évaluée.
 \end{itemize}
+
 
 Ce choix d'évaluation déterministe est standard dans la littérature RL : il
 mesure la politique \textit{apprise} sans bruit d'exploration, offrant une
@@ -695,9 +664,7 @@ Les résultats de l'évaluation multi-seeds sont présentés dans le
 tableau~\ref{tab:eval_finale}. Chaque configuration optimale est réentraînée
 sur 5 seeds indépendantes ($\{42, 123, 456, 789, 1337\}$) pendant 500\,000
 steps, puis évaluée de manière déterministe sur 20 épisodes. Les métriques
-rapportées sont la récompense moyenne et son écart-type inter-seeds (std
-échantillon, $n-1$), les récompenses extrêmes observées, le taux de succès
-(fraction d'épisodes avec une récompense $\geq 200$) et le nombre de seeds
+rapportées sont la récompense moyenne et son écart-type inter-seeds (écart-type échantillonnal, $n-1$), les récompenses extrêmes observées, le taux de succès (fraction d'épisodes avec une récompense $\geq 200$) et le nombre de seeds
 pour lesquelles la récompense moyenne dépasse le seuil de résolution.
 
 \begin{table}[h!]
@@ -706,7 +673,7 @@ pour lesquelles la récompense moyenne dépasse le seuil de résolution.
 \setlength{\tabcolsep}{5pt}
 \renewcommand{\arraystretch}{1.3}
 \caption{Résultats de l'évaluation multi-seeds (500\,000 steps,
-         récompense moyenne sur 20 épisodes déterministes, std échantillon)}
+         récompense moyenne sur 20 épisodes déterministes, écart-type échantillonnal $n-1$)}
 \label{tab:eval_finale}
 \newlength{\evalColB}\setlength{\evalColB}{3.2cm}
 \newlength{\evalColSide}\setlength{\evalColSide}{1.4cm}
@@ -721,7 +688,7 @@ pour lesquelles la récompense moyenne dépasse le seuil de résolution.
 }
 \toprule
 \textbf{Algo.} & \textbf{Env.}
-  & \textbf{Mean $\pm$ Std}
+  & \textbf{Moyenne $\pm$ Écart-type}
   & \textbf{Min}
   & \textbf{Max}
   & \textbf{Succès}
@@ -768,19 +735,17 @@ néanmoins suffisant pour dégager les tendances principales.
 \begin{figure}[h!]
 \centering
 \includegraphics[width=\textwidth]{img/model_convergence_boxplot.png}
-\caption{Distribution du temps de convergence (en minutes) pour chaque
+\caption{Distribution du temps de calcul (en minutes) pour chaque
          combinaison algorithme/environnement, sur les 5 seeds indépendantes.}
 \label{fig:convergence_boxplot}
 \end{figure}
 
 La figure~\ref{fig:convergence_boxplot} illustre la distribution des temps
-de convergence inter-seeds. SAC requiert globalement un temps d'entraînement
-plus important que PPO et DQN, ce qui s'explique par le coût computationnel
-de ses mises à jour : SAC maintient simultanément deux réseaux Q (double
-critic) et un acteur, et calcule à chaque step la mise à jour du coefficient
-d'entropie adaptatif --- un coût par update structurellement plus élevé que
-celui des autres algorithmes, indépendamment de la fréquence des mises à jour.
-Il est important de mettre en évidence que ces tests ont été réalisés sur un cluster avec des ressources partagées et donc les modèles n'ont pas forcément été entraînés dans des conditions strictement identiques, ce qui peut introduire une variance supplémentaire dans les temps de convergence observés. Cependant, la tendance générale reste claire : SAC est plus coûteux en temps d'entraînement que PPO et DQN, ce qui doit être pris en compte dans le choix de l'algorithme en fonction des contraintes de ressources disponibles.
+de calcul inter-seeds. Cette métrique correspond au temps de processus observé pendant l’entraînement et constitue une approximation du coût temporel de convergence, sans coïncider exactement avec le temps de convergence algorithmique.
+
+SAC requiert globalement un temps d'entraînement plus important que PPO et DQN, ce qui s'explique par le coût computationnel de ses mises à jour : SAC maintient simultanément deux réseaux critic et un acteur, et calcule à chaque step la mise à jour du coefficient d'entropie adaptatif --- un coût par update structurellement plus élevé que celui des autres algorithmes, indépendamment de la fréquence des mises à jour.
+Il est important de noter que ces tests ont été réalisés sur un cluster aux ressources partagées ; les expériences n'ont donc pas nécessairement bénéficié de conditions matérielles strictement identiques, ce qui peut introduire une variance supplémentaire dans les temps de calcul observés. Cependant, la tendance générale reste claire : SAC est plus coûteux en temps d'entraînement que PPO et DQN, ce qui doit être pris en compte dans le choix de l'algorithme en fonction des contraintes de ressources disponibles.
+
 
 \paragraph{Synthèse.}
 Ces résultats mettent en évidence deux enseignements principaux. D'une part,

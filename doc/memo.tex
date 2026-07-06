@@ -47,7 +47,7 @@
 \usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc}
 
 % use the right citation style
-\usepackage[backend=biber,style=iso-authoryear]{biblatex}
+\usepackage[backend=biber,style=iso-authoryear,urldate=short]{biblatex}
 \addbibresource{bibliography.bib}
 
 % Set author and place
@@ -211,9 +211,9 @@ Voilà le résumé de ce travail de Master. Il est important de bien résumer le
 
 \section{Introduction}
 
-Parmi les différents paradigmes de l'intelligence artificielle, l'apprentissage par renforcement (\textit{Reinforcement Learning} ou RL) se distingue par sa capacité à former des agents décisionnels autonomes par le biais d'une interaction continue avec leur environnement \parencite{suttonReinforcementLearningIntroduction2015}. Contrairement à l'apprentissage supervisé qui s'appuie sur des ensembles de données étiquetés, le RL repose fondamentalement sur un processus d'essais et d'erreurs. L'agent explore son environnement et affine sa \textit{politique} d'action en se basant exclusivement sur des signaux de récompense, avec pour objectif ultime de maximiser ses gains cumulés sur le long terme.
+Parmi les différents paradigmes de l'intelligence artificielle, l'apprentissage par renforcement (\textit{Reinforcement Learning} ou RL) se distingue par sa capacité à former des agents décisionnels autonomes par le biais d'une interaction continue avec leur environnement \parencite{suttonReinforcementLearningIntroduction2018}. Contrairement à l'apprentissage supervisé qui s'appuie sur des ensembles de données étiquetés, le RL repose fondamentalement sur un processus d'essais et d'erreurs. L'agent explore son environnement et affine sa \textit{politique} d'action en se basant exclusivement sur des signaux de récompense, avec pour objectif ultime de maximiser ses retours cumulés sur le long terme.
 
-Cette approche bio-inspirée a démontré des résultats spectaculaires dans des domaines aussi variés que la maîtrise de jeux stratégiques complexes \parencite{zaffagniDefinitionAlphaGoQuest2022,OpenAIFive2018}, le contrôle en robotique \parencite{tangDeepReinforcementLearning2024} ou encore la personnalisation des systèmes de recommandation \parencite{iftikharReinforcementLearningRecommender2024}. Toutefois, son déploiement pose d'importants défis pratiques, notamment en ce qui concerne l'efficacité d'échantillonnage (\textit{sample efficiency}), la formulation mathématique pertinente de la fonction de récompense, et la gestion du délicat compromis entre l'exploration de nouvelles actions et l'exploitation des connaissances déjà acquises.
+Cette approche inspirée de l'apprentissage animal a démontré des résultats spectaculaires dans des domaines aussi variés que la maîtrise de jeux stratégiques complexes \parencite{silverMasteringGameGo2017,openaiDota2Large2019}, le contrôle en robotique \parencite{tangDeepReinforcementLearning2024} ou encore la personnalisation des systèmes de recommandation \parencite{iftikharReinforcementLearningRecommender2024}. Toutefois, son déploiement pose d'importants défis pratiques, notamment en ce qui concerne l'efficacité d'échantillonnage (\textit{sample efficiency}), la formulation mathématique pertinente de la fonction de récompense, et la gestion du délicat compromis entre l'exploration de nouvelles actions et l'exploitation des connaissances déjà acquises.
 
 \newpage
 

@@ -3,7 +3,7 @@ import os
 
 os.environ["RL_ALGO"] = "sac"
 
-RUN_ON_SLURM = True  # Si je lance sur Slurm, True pour éviter les soucis KBHit et GPU/CPU tensor checkpoints. En local, False pour désactiver WandB et activer le rendu.
+RUN_ON_SLURM = False  # Si je lance sur Slurm, True pour éviter les soucis KBHit et GPU/CPU tensor checkpoints. En local, False pour désactiver WandB et activer le rendu.
 
 if RUN_ON_SLURM:
     import patch_kbhit  # Patch pour éviter les problèmes de KBHit sur Slurm. Doit être importé avant rlgym_sac.
@@ -156,6 +156,7 @@ if __name__ == "__main__":
                       policy_layer_sizes=[256, 256],    # même capacité réseau que le PPO
                       critic_layer_sizes=[256, 256],
                       sac_gamma=0.99,                                  # discount factor standard
+                      sac_max_updates_per_iter=2000,
                       standardize_returns=True,
                       standardize_obs=False,
                       save_every_ts=args.save_every_ts,
