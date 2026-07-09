@@ -87,6 +87,7 @@ Afin de formaliser ce problème, voici les cinq composantes fondamentales de la 
 
 
 \subsection{Processus Décisionnel de Markov (MDP)}
+\label{sec:mdp}
 
 L'environnement d'apprentissage dans sa globalité est formellement modélisé par un Processus Décisionnel de Markov (MDP). Ce puissant cadre mathématique repose sur la \textbf{propriété de Markov} : l'état actuel $S_t$ suffit à caractériser la dynamique future de l'environnement, indépendamment de tout l'historique passé. La prédiction de l'état suivant dépend ainsi uniquement de l'état présent, indépendamment de tout l'historique de navigation passée ($P(S_{t+1}|S_t) = P(S_{t+1}|H_t)$).
 
@@ -110,121 +111,11 @@ Pour l'exemple de \text{Cliff Walking}, on pourrait imaginer une récompense $\m
 \subsection{Model-Based}
 \label{sec:model-based}
 
-Pour classifier les méthodes d'apprentissage par renforcement, il est utile de distinguer les approches basées sur un modèle (\textit{model-based}) de celles sans modèle (\textit{model-free}). Les méthodes \textit{model-based} supposent que l'agent possède une connaissance complète de la dynamique de l'environnement, représentée par les fonctions de transition $\mathcal{P}$ et de récompense $\mathcal{R}$. 
-
-Grâce à cette connaissance, l'agent peut planifier ses actions en évaluant mentalement leurs conséquences avant même de les exécuter. Ainsi, plutôt que d'apprendre par essais et erreurs, l'agent calcule mathématiquement la stratégie optimale dès le départ, pour autant que la complexité du problème le permette.
-
-\subsubsection{Policy Evaluation et Policy Iteration}
-
-L'itération de politique (\textit{Policy Iteration}) est un processus qui permet de trouver la politique optimale en alternant deux étapes clés. La première consiste à évaluer la politique actuelle pour connaître sa valeur exacte (\textit{Policy Evaluation}). La seconde étape cherche ensuite à l'améliorer en choisissant systématiquement la meilleure action possible en fonction des résultats de l'évaluation précédente de manière \textit{greedy} (\textit{Policy Improvement}).
-
-Ce processus d'évaluation suivi d'une amélioration est répété itérativement. La convergence vers la politique optimale ($\pi^*$) garantit alors systématiquement $V^{\pi^*} \geq V^\pi$ quel que soit l'état initial comparé \parencite{silverLecturesReinforcementLearning2015}.
-
-
-Mesurer la performance d'une politique donnée équivaut à quantifier l'espérance mathématique cumulative des récompenses reçues si l'agent respecte continuellement $\pi$. Pour ce faire, nous employons une récurrence itérative construite à partir d'une estimation à zéro ($V_0(s)=0$) :
-
-\begin{equation}
-    V_{k+1}(s) = \sum_{a \in \mathcal{A}} \pi(a|s) \left[ \mathcal{R}_s^a + \gamma \sum_{s' \in \mathcal{S}} \mathcal{P}_{ss'}^a V_k(s') \right]
-\end{equation}
-
-Au fil des itérations, les récompenses associées aux actions se propagent d'état en état (comme l'illustre la Figure~\ref{fig:policy-eval-grid}, où l'influence des états terminaux rayonne vers les cases adjacentes à chaque étape $k$). Sous réserve d'un nombre infini d'itérations, les calculs convergent et s'affinent.
-
-\begin{figure}[H]
-    \centering
-    \resizebox{\textwidth}{!}{
-    \begin{tikzpicture}[scale=1]
-        % Style pour les chiffres
-        \tikzset{val/.style={font=\small, inner sep=2pt}}
-        % Style pour les terminaux
-        \tikzset{term/.style={fill=gray!20}}
-
-        % --- GRILLE k=0 ---
-        \begin{scope}
-            \draw[step=1cm, black, thin] (0,0) grid (4,4);
-            \node[val, term, minimum size=1cm] at (0.5,3.5) {0};
-            \node[val, term, minimum size=1cm] at (3.5,0.5) {0};
-            \foreach \x in {0.5,1.5,2.5,3.5}
-                \foreach \y in {0.5,1.5,2.5,3.5}
-                    \node[val] at (\x,\y) {0.0};
-            \node[val, term, minimum size=1cm] at (0.5,3.5) {0};
-            \node[val, term, minimum size=1cm] at (3.5,0.5) {0};
-            \node[below=0.5cm] at (2,0) {\textbf{$k=0$}};
-        \end{scope}
-
-        % --- FLÈCHE ---
-        \draw[->, >=stealth, thick] (4.2,2) -- (4.8,2);
-
-        % --- GRILLE k=1 ---
-        \begin{scope}[xshift=5cm]
-            \draw[step=1cm, black, thin] (0,0) grid (4,4);
-            \node[val, term, minimum size=1cm] at (0.5,3.5) {0};
-            \node[val, term, minimum size=1cm] at (3.5,0.5) {0};
-            % On remplit manuellement pour éviter les bugs de boucle
-            \foreach \x in {0.5,1.5,2.5,3.5}
-                \foreach \y in {0.5,1.5,2.5,3.5}
-                    \node[val] at (\x,\y) {-1.0};
-            % On ré-écrase les terminaux pour la clarté
-            \node[val, term, minimum size=1cm] at (0.5,3.5) {0};
-            \node[val, term, minimum size=1cm] at (3.5,0.5) {0};
-            \node[below=0.5cm] at (2,0) {\textbf{$k=1$}};
-        \end{scope}
-
-        % --- FLÈCHE ---
-        \draw[->, >=stealth, thick] (9.2,2) -- (9.8,2);
-
-        % --- GRILLE k=2 ---
-        \begin{scope}[xshift=10cm]
-            \draw[step=1cm, black, thin] (0,0) grid (4,4);
-            \node[val, term, minimum size=1cm] at (0.5,3.5) {0};
-            \node[val, term, minimum size=1cm] at (3.5,0.5) {0};
-            
-            % Valeurs calculées (arrondies)
-            \node[val] at (1.5,3.5) {-1.7}; \node[val] at (2.5,3.5) {-2.0}; \node[val] at (3.5,3.5) {-2.0};
-            \node[val] at (0.5,2.5) {-1.7}; \node[val] at (1.5,2.5) {-2.0}; \node[val] at (2.5,2.5) {-2.0}; \node[val] at (3.5,2.5) {-2.0};
-            \node[val] at (0.5,1.5) {-2.0}; \node[val] at (1.5,1.5) {-2.0}; \node[val] at (2.5,1.5) {-2.0}; \node[val] at (3.5,1.5) {-1.7};
-            \node[val] at (0.5,0.5) {-2.0}; \node[val] at (1.5,0.5) {-2.0}; \node[val] at (2.5,0.5) {-1.7};
-            
-            \node[below=0.5cm] at (2,0) {\textbf{$k=2$}};
-        \end{scope}
-
-    \end{tikzpicture}
-    }
-    \caption{Itérations de l'évaluation de politique dans un monde de grille $4 \times 4$. Les états terminaux sont grisés. Inspiré de \textcite{silverLecturesReinforcementLearning2015}.}
-    \label{fig:policy-eval-grid}
-\end{figure}
-
-
-Bien qu'une évaluation parfaite soit mathématiquement faisable, l'objectif fondamental demeure l'identification rapide d'une stratégie de jeu plus favorable. 
-Dans les faits, un nombre restreint d'itérations $k$ d'évaluation confère une estimation suffisamment robuste pour orienter la décision opportuniste \textit{greedy}. 
-
-La mise à jour de la politique s'oriente alors selon le critère de sélection de l'action optimale :
-\begin{equation}
-    \pi'(s) = \arg\max_{a \in \mathcal{A}} q_\pi(s, a)
-\end{equation}
-
-Tant que la nouvelle politique générée diffère, ces opérations inter-cycles se relaient. Ce processus prend le nom d'\textbf{itération de politique modifiée} (\textit{modified policy iteration}) lorsque l'évaluation s'interrompt pour économiser du temps de calcul dès lors qu'un seuil minime $\epsilon$ est atteint entre deux évaluations.
-
-
-\subsubsection{Value Iteration}
-
-Contrairement à l'itération de politique qui évalue une stratégie précise à chaque étape, la \textit{Value Iteration} s'attaque à l'optimisation par la fusion des deux étapes précédentes en une seule opération globale. L'algorithme cherche à trouver directement la valeur maximale de chaque état, sans avoir besoin de stocker une politique intermédiaire lors de l'entraînement. 
-
-Cette mécanique réside exclusivement dans l'introduction d'un opérateur "maximum" qui condense l'évaluation et l'amélioration :
-
-\begin{equation}
-    V_{k+1}(s) = \max_{a \in \mathcal{A}} \left[ \mathcal{R}_s^a + \gamma \sum_{s' \in \mathcal{S}} \mathcal{P}_{ss'}^a V_k(s') \right]
-\end{equation}
-
-Pour chaque état $s$ et à chaque étape, l'agent met à jour ses valeurs en supposant qu'il prendra systématiquement l'action future la plus rémunératrice.
-En pratique, on arrête les calculs (la phase de convergence) dès que la propagation des valeurs devient marginale d'une itération à l'autre (par exemple lorsque la modification $\max_s |V_{k+1}(s)-V_k(s)|<\epsilon$).
-
-Une fois que les valeurs de l'ensemble $V$ sont stabilisées, l'approche pour définir de quel comportement l'agent doit faire preuve (extraire $\pi^*$) se fait intuitivement. Il suffit à l'agent de regarder les états accessibles depuis sa position actuelle et de choisir l'action lui rapportant la valeur la plus élevée :
-\begin{equation}
-    \pi^*(s) = \arg\max_{a \in \mathcal{A}} \left[ \mathcal{R}_s^a + \gamma \sum_{s' \in \mathcal{S}} \mathcal{P}_{ss'}^a V^*(s') \right]
-\end{equation}
-
+Pour classifier les méthodes d'apprentissage par renforcement, il est utile de distinguer les approches basées sur un modèle (model-based) de celles sans modèle (model-free). Les méthodes model-based supposent que l'agent possède une connaissance complète de la dynamique de 
+l'environnement, représentée par les fonctions de transition $P$ et de récompense $R$ (Section~\ref{sec:mdp}). Grâce à cette connaissance, l'agent peut planifier ses actions en évaluant mentalement leurs conséquences avant même de les exécuter, par des méthodes classiques de programmation dynamique telles que la Policy Iteration et la Value Iteration \parencite{suttonReinforcementLearningIntroduction2018}. Ces méthodes, bien qu'elles ne soient pas mobilisées dans les expérimentations menées dans ce travail -- centrées sur des environnements dont la dynamique n'est pas connue à l'avance --, constituent un jalon historique du domaine et permettent d'introduire par contraste les méthodes model-free développées en Section~\ref{sec:model-free}.
 
 \subsection{Model-Free}
+\label{sec:model-free}
 Cependant, l'utilisation de l'apprentissage par renforcement s'applique majoritairement à des environnements réels complexes où les règles du monde sont stochastiques, inconnues, ou trop volumineuses pour être modélisées. Sans la connaissance des formules de probabilité de transition $\mathcal{P}$ ni des fonctions de récompense $\mathcal{R}$, les méthodes \textit{model-based} s'avèrent inapplicables car l'agent ne peut pas se projeter mathématiquement.
 
 Pour surmonter cet obstacle, les méthodes dites \textit{model-free} (sans modèle) effectuent un apprentissage fondé sur l'expérience. Elles s'alimentent exclusivement des données rencontrées au cours de l'interaction de l'agent avec l'environnement pour estimer peu à peu la valeur des actions. Ce changement d'approche correspond à l'idée exprimée par \textcite{silverLecturesReinforcementLearning2015} caractérisant ces processus comme une étape de véritable apprentissage par expérience (\textit{learning}) plutôt que de simple planification en amont (\textit{planning}).
@@ -514,17 +405,7 @@ $a \sim \pi_\theta(\cdot|s)$ est une opération non différentiable qui bloque
 la rétropropagation du gradient. 
  
 \paragraph{State-Dependent Exploration (SDE).}
-Par défaut, SAC rééchantillonne un bruit gaussien indépendant à
-chaque pas de temps, ce qui peut produire une exploration sans cohérence
-temporelle. \textcite{raffinSmoothExplorationRobotic2021} proposent une
-alternative, la \textbf{State-Dependent Exploration} (SDE) : plutôt que de
-tirer un nouveau bruit à chaque step, SDE maintient un vecteur de bruit
-$\varepsilon$ fixe pendant plusieurs steps consécutifs et apprend un mapping
-$f(s, \varepsilon)$ dépendant de l'état courant. L'exploration devient ainsi
-cohérente dans le temps --- l'agent explore des trajectoires entières plutôt
-que des actions isolées --- et structurée par l'état, ce qui est
-particulièrement adapté aux tâches de contrôle continu nécessitant des
-séquences d'actions coordonnées. 
+Par défaut, SAC rééchantillonne un bruit gaussien indépendant à chaque pas de temps, produisant une exploration sans cohérence temporelle. \textcite{raffinSmoothExplorationRobotic2021} proposent le \textit{State-Dependent Exploration} (SDE) : le bruit d'exploration $\varepsilon$ est maintenu fixe sur plusieurs steps consécutifs et dépend de l'état courant via un mapping $f(s, \varepsilon)$, permettant à l'agent d'explorer des trajectoires cohérentes plutôt que des actions isolées.
  
 \paragraph{Double réseau critique.}
 Pour contenir le biais de surestimation des valeurs Q

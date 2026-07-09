@@ -35,7 +35,7 @@ Boost & {0,1} & Discret & Utilisation du boost \\
 Handbrake & {0,1} & Discret & Frein à main (déraper) \\
 \hline
 \end{tabular}
-\caption{Espace d'actions dans RLGym \parencite{RLGymRlgym2026}}
+\caption{Espace d'actions dans RLGym \parencite{ListGameValues}}
 \label{tab:action_space}
 \end{table}
 
@@ -132,7 +132,6 @@ Il est par ailleurs notable que certains comportements mécaniques avancés du j
 \label{sec:reward_hacking}
 
 Au-delà de la conception initiale des signaux de récompense, l'ensemble du processus de reward shaping mené dans ce travail a été marqué par l'apparition récurrente de comportements exploitant des failles ou ambiguïtés non anticipées dans la formulation des récompenses. Ce phénomène, désigné dans la littérature sous le terme de \textit{reward hacking}, constitue une limite fondamentale du reward shaping : un signal de récompense mal spécifié, même bien intentionné, peut admettre une solution qui le maximise formellement tout en s'écartant de l'intention réelle du concepteur \parencite{amodeiConcreteProblemsAI2016}. Cette limite prolonge les travaux de \textcite{645528.657613} sur la préservation théorique de la politique optimale sous reward shaping (\textit{policy invariance}) : même lorsque le shaping respecte ce cadre théorique idéal, la formulation concrète des récompenses reste, en pratique, sujette à des ambiguïtés que l'agent peut exploiter.
-
 
 Plusieurs occurrences de ce phénomène ont été observées au cours de l'entraînement, résumées dans le tableau~\ref{tab:reward_hacking}. Dans chaque cas, l'identification du comportement exploité a nécessité une observation visuelle directe du comportement de l'agent (via \textit{RocketSimVis}, Section~\ref{sec:rocketsimvis}) plutôt qu'une simple analyse des courbes de récompense agrégées, ces dernières ne révélant pas nécessairement la nature du comportement sous-jacent.
 
@@ -244,7 +243,7 @@ Le premier palier vise l'acquisition des compétences fondamentales de contrôle
 
 Le deuxième palier introduit l'objectif final du jeu -- marquer des buts -- tout en conservant les signaux du palier précédent afin de ne pas dégrader les comportements déjà appris (Section~\ref{sec:curriculum}). Le signal événementiel \textit{GoalReward} y est introduit avec un poids dominant, accompagné d'un signal dense orientant la trajectoire de la balle vers le but adverse (\textit{VelocityBallToGoalReward\_ZS}) et d'un premier signal de gestion du boost (\textit{BoostKeepReward}).
 
-Conformément à la discussion menée en Section~\ref{sec:reward_hacking}, \textit{VelocityBallToGoalReward} est formulée sous forme \textit{zero-sum} (\textit{VelocityBallToGoalReward\_ZS}) plutôt que sous sa forme individuelle brute. Cette précaution découle directement du comportement de \textit{reward hacking} observé en self-play avec une formulation asymétrique de ce signal (Tableau~\ref{tab:reward_hacking}) : les deux agents, partageant un même état, peuvent collaborer implicitement pour faire osciller la balle entre les deux buts plutôt que de chercher à marquer. La reformulation \textit{zero-sum} garantit qu'un gain de récompense pour un agent correspond nécessairement à une perte équivalente pour son adversaire, éliminant la possibilité d'une telle stratégie dégénérée.
+Conformément à la discussion menée en Section~\ref{sec:reward_hacking}, \textit{VelocityBallToGoalReward} est formulée sous forme \textit{zero-sum} (\textit{VelocityBallToGoalReward\_ZS}) plutôt que sous sa forme individuelle brute. Cette précaution découle directement du comportement de \textit{reward hacking} observé en \textit{self-play} avec une formulation asymétrique de ce signal (Tableau~\ref{tab:reward_hacking}) : les deux agents, partageant un même état, peuvent collaborer implicitement pour faire osciller la balle entre les deux buts plutôt que de chercher à marquer. La reformulation \textit{zero-sum} garantit qu'un gain de récompense pour un agent correspond nécessairement à une perte équivalente pour son adversaire, éliminant la possibilité d'une telle stratégie dégénérée.
 
 \subsubsection{Palier III -- Perfectionnement mécanique}
 
@@ -290,7 +289,7 @@ Cette étude exploratoire ne permet donc pas de conclure à une infériorité in
 
 Afin d'évaluer le niveau de jeu atteint à l'issue du curriculum, l'agent PPO a été testé de manière déterministe -- c'est-à-dire en sélectionnant à chaque pas de temps l'action de probabilité maximale plutôt qu'en échantillonnant stochastiquement -- contre plusieurs adversaires de référence issus de la communauté RLGym et contre des joueurs humains sur le jeu officiel, en utilisant RLBot (Section~\ref{sec:rlbot}). L'ensemble des matchs présentés dans cette section ont été réalisés avec l'agent à 10 milliards de pas d'entraînement, correspondant à l'issue du Palier~III du curriculum. Les fichiers de replay associés sont disponibles publiquement sur la plateforme Ballchasing\footnote{Plateforme permettant d'analyser les statistiques détaillées de matchs Rocket League à partir des fichiers de replay officiels du jeu.} \parencite{BeepBoopV2Replays}.
 
-\paragraph{Matchs contre des agents de référence.}
+\subsubsection{Matchs contre des agents de référence.}
 
 Deux agents de la communauté RLGym ont été retenus comme points de comparaison, tous deux issus du tournoi de bots Rocket League 2022 \parencite{RLBotChampionship2022} :
 
@@ -301,15 +300,16 @@ Deux agents de la communauté RLGym ont été retenus comme points de comparaiso
 
 Le résultat contre Necto est particulièrement notable, bien qu'il appelle une nuance importante : Necto a été entraîné sur les trois modes de jeu compétitifs (1v1, 2v2 et 3v3), tandis que l'agent PPO de ce travail a été entraîné exclusivement en 1v1. Cette spécialisation constitue un avantage potentiel dans ce contexte précis, l'agent ayant appris à optimiser ses comportements pour ce mode de jeu particulier, là où Necto doit généraliser à plusieurs configurations. Cela étant, battre un agent de référence entraîné sur un budget presque deux fois supérieur et sur un spectre de jeu plus large reste un indicateur fort de la compétitivité de l'agent produit, et constitue à ce titre une validation externe solide du niveau atteint.
 
-\paragraph{Matchs contre des joueurs humains.}
+\subsubsection{Matchs contre des joueurs humains.}
 
-L'agent a également été testé contre des joueurs humains de niveau Or à Champion en mode 2v2. Ces joueurs, bien que ne pratiquant pas spécifiquement le 1v1, représentent un niveau de jeu compétitif solide dans le contexte du jeu officiel. L'agent PPO a remporté une large majorité de ces matchs, confirmant un niveau de jeu compétitif dans des conditions proches du jeu réel.
+L'agent a également été testé contre des joueurs humains de niveau Or à Champion en mode 2v2. Ces joueurs, bien que ne pratiquant pas spécifiquement le 1v1, représentent un niveau de jeu compétitif solide dans le contexte du jeu officiel. Sur les 9 matchs disputés, l'agent PPO en a remporté 6, avec un différentiel cumulé de 79 buts marqués contre 51 buts encaissés, confirmant 
+un niveau de jeu compétitif dans des conditions proches du jeu réel. Ce nombre restreint de confrontations ne permet cependant pas d'établir une estimation statistiquement robuste du taux de victoire face à des joueurs humains, contrairement au protocole multi-seeds employé en Phase~I (Section~\ref{sec:eval_finale}).
 
-\paragraph{Analyse qualitative du comportement.}
+\subsubsection{Analyse qualitative du comportement.}
 
 Au-delà des scores, l'observation directe du comportement de l'agent en conditions de match, complétée par l'analyse des statistiques de replay disponibles sur Ballchasing \parencite{BeepBoopV2Replays}, a mis en évidence plusieurs points forts et faiblesses résiduelles.
 
-\subparagraph{Gestion du boost.}
+\paragraph{Gestion du boost.}
 
 Un élément particulièrement remarquable concerne la gestion du boost. L'analyse des données de replay révèle deux comportements distincts de l'agent par rapport aux joueurs humains de niveau comparable. D'une part, l'agent fait un usage plus économe du boost à haute vitesse : là où un joueur humain tend à maintenir le boost activé même lorsque le véhicule a déjà atteint sa vitesse maximale -- dépensant ainsi du boost sans gain de vitesse effectif -- l'agent a appris à couper le boost dès que l'accélération supplémentaire ne produit plus d'effet utile (Figure~\ref{fig:boost_while_supersonic}). D'autre part, l'agent collecte davantage de petits boost répartis sur le terrain, privilégiant une gestion continue et distribuée de ses réserves plutôt qu'une dépendance aux grands boost fixes (Figure~\ref{fig:boost_collected}). Ces comportements sont vraisemblablement liés à l'optimisation de \textit{BoostKeepReward\_ZS} et \textit{EnergyReward} introduits au Palier~III, bien qu'une attribution causale stricte reste difficile à établir formellement compte tenu de l'interaction complexe entre l'ensemble des signaux du curriculum. Ils témoignent néanmoins d'une compréhension implicite de la mécanique de boost significativement plus fine que celle observée chez les joueurs humains testés.
 
@@ -327,7 +327,7 @@ Un élément particulièrement remarquable concerne la gestion du boost. L'analy
 \label{fig:boost_collected}
 \end{figure}
 
-\subparagraph{Points forts et faiblesses résiduelles.}
+\paragraph{Points forts et faiblesses résiduelles.}
 
 Parmi les autres points forts identifiés : des situations de 50/50 offensifs bien maîtrisées et une rapidité de réaction globalement supérieure à celle des joueurs humains testés.
 

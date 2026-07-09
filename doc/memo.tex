@@ -1,18 +1,26 @@
 % Author: David Paulino
 % Date: 2023-03-03
-% Description: LaTeX Template
+% Description: LaTeX Template conforme au "Modèle_Mémoire_TM_fr_2025-2026" (HEG-GE)
 % Vous êtes libre de modifier/ajouter de nouvelles commandes dans le fichier ou même de nouveau packages.
 
-\documentclass[12pt]{article}
+\documentclass[a4paper, 11pt]{article}
 
 % Document en français
 \usepackage[french]{babel}
+% Le gabarit HEG-GE utilise "Liste des figures" (babel/french donne "Table des figures" par défaut)
+\addto\captionsfrench{\renewcommand{\listfigurename}{Liste des figures}}
 
 % Color on table
 \usepackage[table,xcdraw]{xcolor}
 
-% PGFPlots compatibility mode
+% Mise en page HEG-GE : 2 cm en haut/bas/droite, 3 cm à gauche (marge de reliure)
+\usepackage[a4paper, top=2cm, bottom=2cm, right=2cm, left=3cm]{geometry}
 
+% Police "Corps de texte" = Arial. Sous pdflatex, Helvetica (helvet) est la police
+% métriquement compatible avec Arial la plus proche. Pour de l'Arial "réel", il
+% faudrait compiler avec xelatex/lualatex + fontspec et la police système Arial.
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -33,13 +41,55 @@
 \usepackage{fancyhdr}
 \usepackage{setspace}
 \usepackage{float}
+
+% Centre les titres "Table des matières", "Liste des tableaux", "Liste des figures"
+% (style "titre non numéroté centré" des consignes). tocloft DOIT être chargé
+% AVANT subfig : subfig vérifie si le compteur lofdepth existe déjà avant de le
+% créer, alors que tocloft le crée sans vérifier - inverser l'ordre provoque une
+% erreur "\c@lofdepth already defined".
+\usepackage{tocloft}
+\renewcommand{\cfttoctitlefont}{\hfill\bfseries\Large}
+\renewcommand{\cftaftertoctitle}{\hfill}
+\renewcommand{\cftloftitlefont}{\hfill\bfseries\Large}
+\renewcommand{\cftafterloftitle}{\hfill}
+\renewcommand{\cftlottitlefont}{\hfill\bfseries\Large}
+\renewcommand{\cftafterlottitle}{\hfill}
+
 \usepackage{subfig}
-\usepackage{caption}
+% Légendes : étiquette en gras, positionnées au-dessus des figures/tableaux
+% (cf. consignes p.3 : caption "Au-dessus de la sélection" + source en-dessous).
+% Pensez à placer \caption{...} AVANT \includegraphics/le contenu du tableau.
+\usepackage[labelfont=bf]{caption}
+\captionsetup{position=top}
 \usepackage{listings}
 \usepackage{tikz}
 \usepackage{pgfplots}
 \usepackage{pgfplotstable}
 \usepackage{pgf}
+
+% Mise en forme des titres de niveau 4 et 5 ("Titre 4"/"Titre 5") sur leur
+% propre ligne et numérotés, comme dans le gabarit
+\usepackage{titlesec}
+\titleformat{\paragraph}
+  {\normalfont\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
+\titleformat{\subparagraph}
+  {\normalfont\itshape}{\thesubparagraph}{1em}{}
+\titlespacing*{\subparagraph}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
+% Autoriser jusqu'à 5 niveaux de titres numérotés et dans la table des matières
+\setcounter{secnumdepth}{5}
+\setcounter{tocdepth}{5}
+
+% Notes de bas de page : Arial 10pt (= \footnotesize par défaut en 11pt), interligne
+% simple, retrait de 1,25 cm. On ne touche pas \footnotesize globalement (utilisé
+% ailleurs, y compris dans des cellules de tableaux) : seul le texte des notes
+% de bas de page proprement dites passe en interligne simple.
+\usepackage[hang]{footmisc}
+\setlength{\footnotemargin}{1.25cm}
+\makeatletter
+\let\HEG@oldmakefntext\@makefntext
+\renewcommand\@makefntext[1]{{\singlespacing\HEG@oldmakefntext{#1}}}
+\makeatother
 
 % Add references in table of contents
 \usepackage[nottoc]{tocbibind}
@@ -49,38 +99,96 @@
 % use the right citation style
 \usepackage[backend=biber,style=iso-authoryear,urldate=short]{biblatex}
 \addbibresource{bibliography.bib}
+% Style "références bibliographiques" : interligne simple, espace 6pt avant / 12pt après
+\setlength{\bibitemsep}{18pt plus 2pt minus 2pt}
+\AtBeginBibliography{\singlespacing}
+% Titre de la bibliographie centré, non numéroté
+\defbibheading{bibliography}{%
+  \begin{center}\bfseries\Large\bibname\end{center}%
+  \vspace{1em}%
+}
 
 % Set author and place
 % TODO: Changer les valeurs ci-dessous
 % Elle seront utilisées pour la page de titre et les en-têtes/pieds de page
 \newcommand{\authorname}{David Paulino}
 \newcommand{\place}{Genève}
+\newcommand{\depotdate}{\today} % <Date de dépôt> - à figer une fois le dépôt planifié
+\newcommand{\supervisorname}{Alexandros Kalousis}
+% TODO: vérifier le libellé exact du titre/fonction attendu par le secrétariat
+\newcommand{\supervisortitle}{Professeur HES, HEG Genève}
+\newcommand{\diplomatitle}{Master of Science HES-SO en Sciences de l'information}
 \newcommand{\fulltitle}{Exploration des concepts et des techniques d’apprentissage par renforcement : De la théorie à la pratique }
 \newcommand{\shorttitle}{Apprentissage par renforcement : théorie et pratique}
+
+% Mention de confidentialité (page de titre) : mettre \confidentialtrue si le
+% travail doit porter la mention "TRAVAIL STRICTEMENT CONFIDENTIEL"
+\newif\ifconfidential
+\confidentialfalse
 
 % Commande pour les titres de paragraphe visuellement distincts (supprimée pour limiter les niveaux de section)
 % \newcommand{\myparagraph}[1]{\medskip\noindent\textbf{#1}\par\smallskip}
 
 % On retire l'indentation des paragraphes
 \setlength{\parindent}{0pt}
-% Augmentation de l'espacement entre les sauts de ligne
-\setlength{\parskip}{10pt} % Modifier la valeur selon vos besoins
+% Style "Corps de texte" : interligne 1.2, espace 9pt avant / 6pt après (approximation LaTeX)
+\setstretch{1.2}
+\setlength{\parskip}{9pt plus 2pt minus 1pt}
+
+% Titre non numéroté centré (Déclaration, Remerciements, Résumé, mots-clés...)
+% + entrée dans la table des matières. Le saut de page n'est PAS automatique ici :
+% ajoutez un \newpage avant chaque appel (comme pour \tableofcontents ci-dessous)
+% pour garder un contrôle explicite et éviter les pages blanches parasites.
+\newcommand{\untitledsection}[1]{%
+  \phantomsection
+  \addcontentsline{toc}{section}{#1}
+  \begin{center}
+    \bfseries\Large #1
+  \end{center}
+  \vspace{1em}
+}
+
+% Style "titre annexe" : une annexe par page, numérotée séparément, centrée
+% Ajoutez un \newpage avant chaque \annexe{...} (sauf la toute première si elle
+% suit déjà un saut de page).
+\newcounter{annexecounter}
+\newcommand{\annexe}[1]{%
+  \stepcounter{annexecounter}
+  \phantomsection
+  \addcontentsline{toc}{section}{Annexe \theannexecounter~: #1}
+  \begin{center}
+    \bfseries\Large Annexe \theannexecounter~: #1
+  \end{center}
+  \vspace{1em}
+}
+
+% Style "puce" / "puce_num" (listes à puces et numérotées)
+\newenvironment{puce}{\begin{itemize}}{\end{itemize}}
+\newenvironment{pucenum}{\begin{enumerate}}{\end{enumerate}}
+
+% Style "Citation" (citation longue, >2 lignes) : Arial 11 italique justifié,
+% retrait 0.5 cm à gauche/droite, interligne simple, source alignée à droite
+\newenvironment{citationlongue}[1]
+ {\def\citationlonguesource{#1}%
+  \list{}{\leftmargin=0.5cm\rightmargin=0.5cm\topsep=6pt\parsep=0pt\itemsep=0pt}%
+  \item\relax\singlespacing\itshape\ignorespaces}
+ {\par\hfill\upshape(\citationlonguesource)\endlist}
 
 % Title
 \title{\fulltitle}
 \author{\authorname}
 \date{\today}
 
-% Header
+% Header / Footer
 \pagestyle{fancy}
 \fancyhf{}
 \renewcommand{\headrulewidth}{0pt}
-\lhead{\authorname}
-\rhead{\shorttitle}
+\renewcommand{\footrulewidth}{0.4pt}
 
 % Footers
-\lfoot{Page \thepage}
-\rfoot{\today}
+\rfoot{\thepage}
+\lfoot{\shorttitle \newline \authorname}
+
 
 % Document
 \begin{document}
@@ -94,78 +202,53 @@
         \includegraphics[width=0.3\textwidth]{img/logo_heg-ge.jpg}
     \end{figure}
 
-    \vspace*{0.5cm}
+    \vspace*{1.5cm}
 
     \begin{center}
 
         \begingroup \linespread{1,75} \selectfont
-        {\Large \fulltitle}\\[0,75cm]
+        {\Large\bfseries \fulltitle}\\[0,75cm]
         \endgroup
-
-
-        % Make a vertical space
 
         \vspace{1.5cm}
 
-        \textsc{\large Travail de Master réalisé en vue de \newline l’obtention du Master of Science HES-SO en Sciences de l'information par :}\\[0,50cm]
+        \ifconfidential
+            \textbf{\underline{TRAVAIL STRICTEMENT CONFIDENTIEL}}\\[1cm]
+        \fi
 
-        \begingroup \linespread{1,5} \selectfont
-        \textsc{\large \authorname}\\[0,50cm]
-        \endgroup
+        \textbf{\large Travail de master réalisé par :}\\[0,3cm]
+        {\large \authorname}\\[1cm]
 
+        \textbf{\large Sous la direction de :}\\[0,3cm]
+        {\large \supervisorname, \supervisortitle}\\[1.5cm]
 
-        \vspace{1cm}
+        {\large \place, \depotdate}\\[0,5cm]
 
+        \textbf{\large Information Science}\\[0,1cm]
+        \textbf{\large Haute École de Gestion de Genève (HEG-GE)}
 
-        \textsc{\large Conseillers au travail de Master : }
+        \vfill
 
-        \begingroup \linespread{1,5} \selectfont
-        \textsc{\large Pr Alexandros KALOUSIS}\\[0.1cm]
-        \endgroup
-
-
-        \begingroup \linespread{1,75} \selectfont
-        \textsc{\large \place, le \today}\\[0,1cm]
-
-        {\large Haute école de Gestion de Genève (HEG-GE)}\\[0,1cm]
-
-        {\large Filière Information Science}\\[0,1cm]
-        \endgroup
-
-
-
-        \begin{figure}[h]
-            \vspace{0.05cm}
-            \hspace*{12cm}\includegraphics[width=0.25\textwidth]{img/logo_hes-so.jpg}
-        \end{figure}
+        \hspace*{12cm}\includegraphics[width=0.25\textwidth]{img/logo_hes-so.jpg}
 
     \end{center}
 
-
-
-    \vfill
 \end{titlepage}
 
 
+% Pagination en chiffres romains pour les pages liminaires (avant l'introduction)
+\pagenumbering{roman}
 
-
-\newpage
-
-\section{Déclaration}
+\untitledsection{Déclaration}
 % Insérer la déclaration ici
-% Il est possible que 
-Ce travail de Master est réalisé dans le cadre du Master en Sciences de l’information de la Haute école de gestion de Genève.
-
-L’étudiant-e atteste que le travail rendu est le fruit de sa réflexion personnelle, a été rédigé de manière autonome sans avoir utilisé des sources autres que celles citées dans la bibliographie et a été vérifié par un logiciel de détection de plagiat.
-
-L’étudiant-e accepte, le cas échéant, la clause de confidentialité.
-
-L'utilisation des conclusions et recommandations formulées dans ce travail, sans préjuger de leur valeur, n'engage ni la responsabilité de l’étudiant-e, ni celle du-de la directeur-trice.
+Ce Travail de master est réalisé dans le cadre de l’examen final de la Haute école de gestion de Genève, en vue de l’obtention du titre \diplomatitle.
+L’étudiant atteste avoir soumis son travail à un logiciel de détection de plagiat. Il accepte, le cas échéant, la clause de confidentialité. L'utilisation des conclusions et recommandations formulées dans le Travail de master, sans préjuger de leur valeur, n'engage ni la responsabilité de l'auteur, ni celle du conseiller au Travail de master, du juré et de la HEG.
+« J'atteste que le présent travail a été réalisé en utilisant uniquement les sources citées dans la bibliographie, qu'il est le fruit de ma réflexion personnelle et a été rédigé de manière autonome. »
 % Faire un grand saut de ligne
 \vspace{4cm}
 % Aligner le texte à droite
 \begin{flushright}
-    Fait à \place, le \today
+    Fait à \place, le \depotdate
 \end{flushright}
 
 \begin{flushright}
@@ -178,33 +261,43 @@ L'utilisation des conclusions et recommandations formulées dans ce travail, san
 
 
 \newpage
-
-\section{Remerciements}
 % Insérer les remerciements ici
-La partie où on remercie les gens qui nous ont aidé à réaliser ce travail de Master.
+\untitledsection{Remerciements}
+Je tiens à remercier chaleureusement ma famille, Papa, Maman, mon frère et ma belle-soeur, pour leur soutien constant tout au long de la rédaction et de l’élaboration de ce travail de master.
+
+Je remercie sincèrement le professeur Alexandros Kalousis pour son encadrement, ses retours, ainsi que pour la mise à disposition du cluster Slurm, qui a permis la conduite des expérimentations computationnelles. Je le remercie également ainsi que Frantzeska Lavda pour la qualité de leurs cours de machine learning, qui m’ont apporté les bases nécessaires pour aborder ce sujet avec sérénité.
+
+Mes remerciements vont aussi au professeur Sacha Varone pour le temps qu’il m’a accordé dans le cadre de ce travail, ainsi qu’à Joao Candido pour ses réflexions et son aide précieuse sur les aspects méthodologiques.
+
+Enfin, je remercie mes amis, Jonathan, Haris, Marella, Andi, Steven et Baptiste, d’avoir accepté de tester mon agent PPO. Une mention particulière va à Florian, qui m’a apporté l’essentiel des retours, des idées d’amélioration et des observations qualitatives ayant contribué à l’évolution de l’agent.
 
 \newpage
-
-\section{Résumé}
+\untitledsection{Résumé}
 % Insérer le résumé ici
+% Le résumé ne doit pas dépasser une page.
 Voilà le résumé de ce travail de Master. Il est important de bien résumer le travail pour que le lecteur puisse comprendre le contenu de ce travail sans avoir à le lire en entier.
 
+\vspace{1em}
+\noindent\textbf{Mots-clés :} % TODO: compléter la liste de mots-clés
+mot-clé 1, mot-clé 2, mot-clé 3
 
-\newpage
-
-% Liste des tableaux
-\listoftables
-
-\newpage
-
-% Liste des figures
-\listoffigures
-
-\newpage
 
 % Table of contents
-\tableofcontents
 \newpage
+\tableofcontents
+
+% Liste des tableaux
+\newpage
+\listoftables
+
+% Liste des figures
+\newpage
+\listoffigures
+
+% Pagination en chiffres arabes à partir de l'introduction, continue sur tout le document
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
 
 % Content
 % Ce sont des exemples de sections, vous pouvez les modifier ou les supprimer
@@ -221,24 +314,32 @@ Cette approche inspirée de l'apprentissage animal a démontré des résultats s
 \label{sec:etat-art}
 \input{chapters/state_of_art}
 
+\newpage
 \section{Problématique}
 \label{sec:problematic}
 \input{chapters/problematic.tex}
 
+\newpage
 \section{Outils utilisés}
 \label{sec:outils}
 \input{chapters/tools.tex}
 
+\newpage
 \section{Phase I - Validation méthodologique}
 \label{sec:phaseI}
 \input{chapters/phaseI.tex}
 
+\newpage
 \section{Phase II - Apprentissage sur Rocket League}
 \label{sec:phaseII}
 \input{chapters/phaseII.tex}
 
-\section{Discussion transversale}
+\newpage
+\section{Améliorations futures et perspectives}
+\label{sec:future}
+\input{chapters/future.tex}
 
+\newpage
 \section{Conclusion}
 \label{sec:conclusion}
 
@@ -246,10 +347,32 @@ Cette approche inspirée de l'apprentissage animal a démontré des résultats s
 % Bibliography
 % Il est possible d'afficher la bibliographie sous différentes formes en changeant le style
 % Différents styles possibles : https://www.overleaf.com/learn/latex/Bibtex_bibliography_styles
-% \bibliographystyle{plainurl}
-% Nom du fichier .bib
-% \bibliography{bibliography}
+\newpage
+\printbibliography[heading=bibliography]
 
-\printbibliography
+% Section obligatoire du gabarit HEG-GE
+\newpage
+\untitledsection{Utilisation d'outils assistés par l'intelligence artificielle}
+Dans le cadre de ce travail, l'auteur déclare avoir utilisé des outils assistés par l'intelligence artificielle aux fins suivantes :
+
+\begin{puce}
+    \item \textit{Améliorations formelles (orthographe, syntaxe, reformulation, structure du rapport)} aux pages XXX \\
+    Mention des outils d'IA utilisés : \underline{\hspace{5cm}}
+    \item \textit{Réflexions de fond (production d'analyses, de recommandations)} aux pages XXX \\
+    Mention des outils d'IA utilisés : \underline{\hspace{5cm}}
+    \item \textit{Collecte et interprétation des données} \\
+    Tous les calculs statistiques ont été effectués à l'aide de\ldots{} Mention des IA utilisées : \underline{\hspace{5cm}}
+\end{puce}
+
+\textit{Ces indications ne se substituent pas à l’obligation de se conformer aux règles mentionnées dans le chapitre ad hoc du « Guide pratique de citation et référencement des sources » de la bibliothèque de la HEG en vigueur.}
+
+% Annexes (exemple - dupliquez le bloc \newpage + \annexe{...} pour chaque nouvelle annexe)
+% \newpage
+% \annexe{Titre de l'annexe}
+% Votre texte ou le document mis en annexe.
+%
+% \newpage
+% \annexe{Titre de l'annexe 2}
+% Votre texte ou le document mis en annexe.
 
 \end{document}

@@ -398,6 +398,7 @@ l'algorithme aux deux types d'espaces d'action sur cet environnement.
 \newlength{\hpOptA}\setlength{\hpOptA}{5.5cm}
  
 % -----------------------------------------------------------------------------
+\newpage
 \subsubsection{DQN --- LunarLander discret}
 % -----------------------------------------------------------------------------
  
@@ -448,6 +449,7 @@ ce qui peut accélérer la convergence à court terme mais reste à confirmer su
 les 500\,000 steps de l'évaluation finale. D'autre part, une fréquence de mise à jour à chaque pas de temps implique une mise à jour du réseau à chaque pas de temps, ce qui, combiné au petit buffer, produit un ratio mise-à-jour/données élevé. Cette configuration agressive a convergé efficacement sur cet environnement, mais introduit potentiellement une variance plus importante dans les gradients.
  
 % -----------------------------------------------------------------------------
+\newpage
 \subsubsection{PPO --- LunarLander discret}
 % -----------------------------------------------------------------------------
  
@@ -497,6 +499,7 @@ importantes à chaque gradient step, tout en conservant la garantie de
 stabilité propre à PPO grâce au mécanisme de clipping. Cette valeur, associée à vingt époques d'optimisations sur des rollouts de 2048 transitions, indique que PPO effectue $\lfloor 2048 / 256 \rfloor = 8$ mini-batches par époque, soit 160 mises à jour du réseau pour chaque rollout de 2048 transitions.
  
 % -----------------------------------------------------------------------------
+\newpage
 \subsubsection{PPO --- LunarLanderContinuous}
 % -----------------------------------------------------------------------------
  
@@ -539,19 +542,10 @@ stabilité propre à PPO grâce au mécanisme de clipping. Cette valeur, associ�
 \medskip
  
 La comparaison entre les deux variantes PPO révèle une convergence vers des
-valeurs communes pour plusieurs hyperparamètres structurels
-(la longueur de rollout (2048 steps), le paramètre $\gamma$ du GAE ($0.98$),
-le seuil d'écrêtage $\epsilon$ ($0.4$) et l'architecture du réseau (large)), ce qui suggère que ces choix sont robustes à la nature de l'espace d'action sur cet
-environnement. En revanche, deux hyperparamètres diffèrent significativement
-entre les deux variantes : le taux d'apprentissage est quatre fois plus
-faible pour la variante continue ($6.42 \times 10^{-5}$ contre
-$2.37 \times 10^{-4}$), et le coefficient d'entropie est deux ordres de grandeur
-inférieur ($1.27 \times 10^{-4}$ contre $1.55 \times 10^{-2}$). Ces
-différences indiquent que l'optimisation d'une politique gaussienne en espace
-continu requiert des mises à jour plus prudentes et une pression d'exploration
-entropique moindre que dans le cas discret.
+valeurs communes pour plusieurs hyperparamètres structurels (la longueur de rollout (2048 steps), le paramètre $\gamma$ du GAE ($0.98$), le seuil d'écrêtage $\epsilon$ ($0.4$) et l'architecture du réseau (large)), ce qui suggère que ces choix sont robustes à la nature de l'espace d'action sur cet environnement. En revanche, deux hyperparamètres diffèrent significativement entre les deux variantes : le taux d'apprentissage est quatre fois plus faible pour la variante continue ($6.42 \times 10^{-5}$ contre $2.37 \times 10^{-4}$), et le coefficient d'entropie est deux ordres de grandeur inférieur ($1.27 \times 10^{-4}$ contre $1.55 \times 10^{-2}$). Ces différences indiquent que l'optimisation d'une politique gaussienne en espace continu requiert des mises à jour plus prudentes et une pression d'exploration entropique moindre que dans le cas discret.
  
 % -----------------------------------------------------------------------------
+\newpage
 \subsubsection{SAC --- LunarLanderContinuous}
 % -----------------------------------------------------------------------------
  
@@ -657,7 +651,7 @@ manière occasionnelle en raison de la stochasticité de l'entraînement.
 
 % -----------------------------------------------------------------------------
 \subsubsection{Résultats de l'évaluation multi-seeds}
-\label{sec:eval_finale}
+\label{sec:res_eval_finale}
 % -----------------------------------------------------------------------------
 
 Les résultats de l'évaluation multi-seeds sont présentés dans le
