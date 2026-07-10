@@ -251,6 +251,7 @@ Le \textit{Deep Reinforcement Learning} (DRL) exploite la puissance des réseaux
 Sous ces conditions, la convergence des algorithmes est menacée par une forte corrélation temporelle des données et une cible de calcul mouvante (le réseau tente de rattraper une valeur qu'il modifie lui-même).
 
 \subsubsection{Deep Q-Network}
+\label{sec:dqn}
 
 L'algorithme \textbf{Deep Q-Network (DQN)} \parencite{mnihHumanlevelControlDeep2015} a marqué l'avènement du DRL en proposant deux solutions techniques majeures pour briser cette triade et stabiliser l'optimisation :
 
@@ -352,6 +353,7 @@ probabilité, mais uniquement dans la limite autorisée~; si elle a été mauvai
 ($\hat{A}_t < 0$), on la pénalise, là encore dans la même fenêtre bornée.
  
 \paragraph{Notion de rollout et efficacité des données.}
+\label{sec:rollout}
 En pratique, PPO collecte un \textbf{rollout} --- une séquence de
 $n$ transitions consécutives --- avant d'effectuer ses mises
 à jour. Ce batch de données est exploité sur plusieurs passes d'optimisation
@@ -359,7 +361,7 @@ $n$ transitions consécutives --- avant d'effectuer ses mises
 Pour un rollout de 2\,048 steps, des mini-batchs de 256 et 20 époques, PPO
 effectue ainsi $\lfloor 2048/256 \rfloor \times 20 = 160$ mises à jour du
 réseau par rollout. Ce mécanisme compense partiellement la
-\textit{sample efficiency} structurellement limitée des méthodes
+\textit{sample efficiency}\footnote{Capacité d'un modèle à acquérir une compétence ou à atteindre un bon niveau de performance en utilisant un minimum de données (ou d'exemples) d'entraînement.} structurellement limitée des méthodes
 \textit{on-policy}~; néanmoins, le batch est intégralement renouvelé après chaque cycle, les données devenant non représentatives dès que la politique est modifiée \parencite{schulmanProximalPolicyOptimization2017}.
  
 % -----------------------------------------------------------------------------

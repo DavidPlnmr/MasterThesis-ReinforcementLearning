@@ -136,6 +136,9 @@ Au-delà de la conception initiale des signaux de récompense, l'ensemble du pro
 Plusieurs occurrences de ce phénomène ont été observées au cours de l'entraînement, résumées dans le tableau~\ref{tab:reward_hacking}. Dans chaque cas, l'identification du comportement exploité a nécessité une observation visuelle directe du comportement de l'agent (via \textit{RocketSimVis}, Section~\ref{sec:rocketsimvis}) plutôt qu'une simple analyse des courbes de récompense agrégées, ces dernières ne révélant pas nécessairement la nature du comportement sous-jacent.
 
 \begin{table}[h]
+
+\caption{Exemples de \textit{reward hacking} observés et corrections conceptuelles apportées}
+\label{tab:reward_hacking}
 \centering
 % On définit la taille de chaque colonne proportionnellement à la largeur de la page
 \begin{tabular}{|p{0.20\linewidth}|p{0.28\linewidth}|p{0.24\linewidth}|p{0.14\linewidth}|}
@@ -153,8 +156,7 @@ Reformulation de la récompense sous forme d'un jeu à somme nulle (\textit{zero
 \parencite{davidplnmrRLGymTouchRewardVelocityBallToGoal2026} \\
 \hline
 \end{tabular}
-\caption{Exemples de \textit{reward hacking} observés et corrections conceptuelles apportées}
-\label{tab:reward_hacking}
+
 \end{table}
 
 Ces observations soulignent une caractéristique pratique essentielle du reward shaping en environnement compétitif multi-agent : un signal de récompense individuel, aussi bien intentionné soit-il, peut être détourné par une stratégie collaborative implicite entre agents lorsqu'il n'est pas formulé de manière intrinsèquement compétitive. Cette problématique illustre une caractéristique fondamentale des environnements compétitifs multi-agents tels que le 1v1 retenu dans ce travail : l'interaction entre deux agents partageant le même état et observant chacun une récompense distincte correspond formellement à un \textit{jeu de Markov} (\textit{Markov game}) à somme nulle \parencite{littmanMarkovGamesFramework1994}. Dans ce cadre théorique, un agent cherche à maximiser son propre retour cumulé tandis que l'autre cherche, de manière équivalente, à le minimiser — ce qui garantit formellement qu'aucune stratégie collaborative implicite entre les deux agents ne puisse être mutuellement avantageuse à l'équilibre.
@@ -277,6 +279,7 @@ Sous le curriculum de récompenses du Palier~I (Tableau~\ref{tab:sac_ppo_phases}
 SAC, sur cette même fonction de récompense, a montré une dynamique différente. Après une période initiale d'amélioration des composantes de contact et de rapprochement vers la balle, une stagnation, voire une légère régression, a été observée sur plusieurs dizaines de millions de pas d'entraînement supplémentaires : le signal \textit{VelocityPlayerToBallReward} a montré une tendance à la baisse continue, tandis que \textit{AdvancedTouchReward} est devenu de plus en plus rare. Cette dégradation est survenue de manière concomitante à une stabilisation rapide du coefficient d'entropie $\alpha$ à une valeur faible ($\sim 0,15$--$0,22$), suggérant une réduction prématurée de la pression d'exploration avant la consolidation d'un comportement utile. En raison de cette stagnation, l'entraînement SAC a été interrompu à l'issue du Palier~I, sans extension aux Paliers~II et~III.
 
 \subsubsection{Discussion : effet de l'espace d'actions continu vs discret}
+\label{sec:discussion:continu-vs-discret}
 
 Deux facteurs, non mutuellement exclusifs, permettent d'expliquer ces résultats. D'une part, les limites d'implémentation identifiées ci-dessus -- en particulier l'absence de gradient clipping et de standardisation effective des récompenses -- ont nécessité des compromis sur les hyperparamètres qui s'éloignent de la configuration canonique de SAC, limitant potentiellement sa capacité à exploiter pleinement sa \textit{sample efficiency} théorique.
 
