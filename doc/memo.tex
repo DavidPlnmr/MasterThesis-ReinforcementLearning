@@ -273,13 +273,19 @@ Enfin, je remercie mes amis, Jonathan, Haris, Marella, Andi, Steven et Baptiste,
 
 \newpage
 \untitledsection{Résumé}
-% Insérer le résumé ici
-% Le résumé ne doit pas dépasser une page.
-Voilà le résumé de ce travail de Master. Il est important de bien résumer le travail pour que le lecteur puisse comprendre le contenu de ce travail sans avoir à le lire en entier.
+L'apprentissage par renforcement (RL) permet de former des agents décisionnels autonomes par interaction avec leur environnement, mais sa mise en pratique se heurte à un défi récurrent dès lors que l'environnement se complexifie : la rareté du signal de récompense (\textit{reward sparse}). Ce travail explore ce défi à travers deux phases expérimentales 
+progressives.
+
+La première phase établit une méthodologie de validation sur l'environnement standard LunarLander, en comparant trois algorithmes de RL profond couvrant des paradigmes complémentaires -- DQN, PPO et SAC -- après optimisation systématique de leurs hyperparamètres via Optuna. Une évaluation multi-seeds révèle que la performance obtenue lors de l'optimisation n'est pas toujours 
+prédictive de la robustesse en évaluation finale, la configuration DQN retenue s'avérant notamment fragile malgré un score de tuning élevé.
+
+La seconde phase applique ces enseignements à un environnement nettement plus complexe et structurellement dépendant d'un signal de récompense rare : Rocket League, simulé via RocketSim et RLGym. Face au coût computationnel prohibitif d'une optimisation d'hyperparamètres systématique à cette échelle, l'entraînement s'appuie sur un \textit{reward shaping} et un \textit{curriculum learning} progressifs, structurés en plusieurs paliers de complexité croissante. Cette démarche met en évidence plusieurs comportements de \textit{reward hacking} -- exploitations imprévues de la fonction de récompense en environnement compétitif multi-agent -- corrigés par une reformulation des signaux sous forme de récompenses à somme nulle. La comparaison empirique entre PPO et SAC sur ce curriculum révèle une divergence marquée : tandis que PPO progresse de manière cohérente à travers l'ensemble du curriculum jusqu'à atteindre un niveau de jeu compétitif face à des agents de référence de la communauté et à des joueurs humains, SAC stagne dès la première étape, une limite attribuable à la fois à des lacunes d'implémentation et à la charge d'exploration propre à son espace d'actions continu.
+
+Ce travail illustre ainsi, à travers une démarche méthodologique complète -- de la sélection d'algorithmes standard jusqu'à la conception de récompenses pour un environnement avancé -- les défis pratiques que pose l'apprentissage par renforcement en environnement à récompense rare, ainsi que les compromis nécessaires entre rigueur méthodologique et contraintes de calcul à grande échelle.
 
 \vspace{1em}
 \noindent\textbf{Mots-clés :} % TODO: compléter la liste de mots-clés
-mot-clé 1, mot-clé 2, mot-clé 3
+apprentissage par renforcement, reward sparse, reward shaping, curriculum learning, reward hacking, optimisation d'hyperparamètres, Gymnasium, DQN, PPO, SAC, self-play, Rocket League, RLGym
 
 
 % Table of contents
@@ -357,12 +363,14 @@ Cette approche inspirée de l'apprentissage animal a démontré des résultats s
 Dans le cadre de ce travail, l'auteur déclare avoir utilisé des outils assistés par l'intelligence artificielle aux fins suivantes :
 
 \begin{puce}
-    \item \textit{Améliorations formelles (orthographe, syntaxe, reformulation, structure du rapport)} aux pages XXX \\
-    Mention des outils d'IA utilisés : \underline{\hspace{5cm}}
-    \item \textit{Réflexions de fond (production d'analyses, de recommandations)} aux pages XXX \\
-    Mention des outils d'IA utilisés : \underline{\hspace{5cm}}
-    \item \textit{Collecte et interprétation des données} \\
-    Tous les calculs statistiques ont été effectués à l'aide de\ldots{} Mention des IA utilisées : \underline{\hspace{5cm}}
+\item \textit{Améliorations formelles (orthographe, syntaxe, reformulation, structure du rapport)} 
+    \underline{sur l'ensemble du document} \\
+    Mention des outils d'IA utilisés : \underline{Claude Sonnet (Anthropic), Gemini Flash (Google)}
+\item \textit{Réflexions de fond (production d'analyses, de recommandations, de structuration de contenu et de suggestions de recherche)} 
+    aux sections \ref{sec:problematic}, \ref{sec:phaseI}, \ref{sec:future} \\
+    Mention des outils d'IA utilisés : \underline{Claude Sonnet (Anthropic)}
+\item \textit{Aide au développement du code pour la Phase I et II} aux sections \ref{sec:phaseI}, \ref{sec:phaseII} \\
+    Mention des IA utilisées : \underline{Claude Sonnet (Anthropic), Gemini Flash (Google)}
 \end{puce}
 
 \textit{Ces indications ne se substituent pas à l’obligation de se conformer aux règles mentionnées dans le chapitre ad hoc du « Guide pratique de citation et référencement des sources » de la bibliothèque de la HEG en vigueur.}
