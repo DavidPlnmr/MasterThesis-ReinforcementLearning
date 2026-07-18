@@ -3,7 +3,7 @@ Pour cette phase II, le but est de travailler sur un environnement bien plus com
 \subsection{Environnement de jeu}
 Rocket League est un jeu de football avec des voitures dans lequel les joueurs contrôlent des véhicules pour frapper une balle et marquer des buts dans le camp adverse. L'environnement est particulièrement exigeant pour un agent de RL pour plusieurs raisons. D'une part, le jeu tourne nativement à 120 images par seconde (\cite{ListGameValues}), ce qui implique qu'un agent devrait théoriquement prendre 120 décisions par seconde pour interagir avec l'environnement à sa pleine résolution temporelle. D'autre part, les mécaniques de jeu sont nombreuses et interdépendantes : les voitures peuvent récupérer du boost sur le terrain, effectuer des sauts simples ou doubles, réaliser des \textit{flips} (rotations rapides en l'air pouvant conférer une impulsion de vitesse supplémentaire), et coller aux murs ou au plafond de l'arène.
 
-Le jeu peut se pratiquer en mode 1v1, 2v2, 3v3 ou 4v4. Afin de limiter la complexité liée à la coordination entre plusieurs agents, ce travail se concentre exclusivement sur le mode 1v1, où un seul agent affronte un adversaire unique\footnote{Dans notre contexte, il s'agit de lui-même}. Ce cadre permet d'isoler les défis liés à l'apprentissage individuel — contrôle du véhicule, gestion du boost, positionnement tactique — sans introduire la dimension supplémentaire de la collaboration multi-agents.
+Le jeu peut se pratiquer en mode 1v1, 2v2, 3v3 ou 4v4. Afin de limiter la complexité liée à la coordination entre plusieurs agents, ce travail se concentre exclusivement sur le mode 1v1, où un seul agent affronte un adversaire unique\footnote{Dans notre contexte, il s'agit de lui-même avec une politique identique}. Ce cadre permet d'isoler les défis liés à l'apprentissage individuel — contrôle du véhicule, gestion du boost, positionnement tactique — sans introduire la dimension supplémentaire de la collaboration multi-agents.
 
 Dans cette phase, ce n'est pas le jeu officiel qui est utilisé, mais un environnement de simulation appelé RocketSim (Section~\ref{sec:rocketsim}), qui reproduit fidèlement la physique du jeu officiel tout en permettant un entraînement en \textit{headless mode} — sans rendu graphique — ce qui accélère considérablement les cycles d'expérimentation. RLGym fournit l'interface entre RocketSim et les algorithmes d'apprentissage par renforcement, en exposant les observations, les récompenses et les actions dans un format standardisé compatible avec les bibliothèques de RL modernes \parencite{RLGymRlgym2026}.
 
@@ -49,18 +49,23 @@ Entraîner un agent sur un espace aussi vaste ralentirait considérablement la c
 
 Pour remédier à cela, une table de correspondance (\textit{lookup table}) est utilisée via l'outil de discrétisation de RLGym \parencite{RLGymRlgym2026}, qui réduit l'espace d'actions à \textbf{90 combinaisons discrètes} en ne conservant que les actions mécaniquement pertinentes. Ces 90 actions se décomposent en deux blocs : 
 
-\paragraph{Actions au sol (18 actions).} 
-Elles couvrent toutes les combinaisons utiles de throttle $\in \{-1, 0, 1\}$, steer $\in \{-1, 0, 1\}$, boost $\in \{0, 1\}$ et handbrake $\in \{0, 1\}$, soit $3 \times 3 \times 2 \times 2 = 36$ combinaisons brutes. Sous la contrainte que le boost n'est activé que si le throttle est au maximum ($\text{boost} = 1 \Rightarrow \text{throttle} = 1$), ce qui correspond au comportement physique réel du jeu, les combinaisons où $\text{boost} = 1$ et $\text{throttle} \neq 1$ sont écartées, ramenant le nombre d'actions au sol à 18.
+\paragraph{Actions au sol (24 actions).} 
+Elles couvrent toutes les combinaisons utiles de throttle $\in \{-1, 0, 1\}$, steer $\in \{-1, 0, 1\}$, boost $\in \{0, 1\}$ et handbrake $\in \{0, 1\}$, soit $3 \times 3 \times 2 \times 2 = 36$ combinaisons brutes. Sous la contrainte que le boost n'est activé que si le throttle est au maximum ($\text{boost} = 1 \Rightarrow \text{throttle} = 1$), ce qui correspond au comportement physique réel du jeu, les combinaisons où $\text{boost} = 1$ et 
+$\text{throttle} \neq 1$ sont écartées ($2 \times 3 \times 2 = 12$ combinaisons), ramenant le nombre d'actions au sol à $36 - 12 = 24$.
 
-\paragraph{Actions aériennes (72 actions).} 
-Elles couvrent les combinaisons de pitch, yaw, roll, jump et boost lorsque le véhicule est en l'air. Les doublons avec les actions au sol sont supprimés, ainsi que les combinaisons yaw+jump (remplacées par roll pour les flips horizontaux), ce qui ramène ce bloc à 72 actions.
+\paragraph{Actions aériennes (66 actions).} 
+Elles couvrent les combinaisons de pitch, yaw, roll, jump et boost lorsque le véhicule est en l'air, soit $3 \times 3 \times 3 \times 2 \times 2 = 108$ combinaisons brutes. Deux contraintes réduisent cet espace : d'une part, lorsque \texttt{jump = 1}, seul \texttt{yaw = 0} est conservé 
+-- le \textit{roll} suffisant à produire les \textit{flips} latéraux (\textit{sideflips}) --, ce qui écarte $3 \times 3 \times 2 \times 2 = 36$ combinaisons ; d'autre part, les combinaisons où pitch, roll et jump sont simultanément nuls constituent des doublons avec les actions au sol et 
+sont également écartées ($3 \times 2 = 6$ combinaisons). Au total : 
+$108 - 36 - 6 = 66$ actions aériennes.
 
-Au total : $|\mathcal{A}| = 18 + 72 = 90$ actions discrètes.
+Au total : $|\mathcal{A}| = 24 + 66 = 90$ actions discrètes.
 
 Ce choix d'un espace discret réduit présente deux avantages majeurs. D'une part, il est directement compatible avec PPO, dont la couche de sortie applique une distribution catégorielle sur les actions discrètes (Section~\ref{sec:ppo}). D'autre part, il réduit significativement la complexité de l'exploration, ce qui favorise une convergence plus rapide — particulièrement important dans un environnement qui nécessite plusieurs milliards de pas d'entraînement pour atteindre un niveau de jeu compétitif.
 
 
 SAC, en revanche, repose nativement sur un espace d'actions continu (Section~\ref{sec:sac}) : son application à cet environnement a donc nécessité l'utilisation de l'espace d'actions continu brut à huit dimensions, sans passage par la table de correspondance discrète décrite ci-dessus. Cette différence fondamentale d'espace d'actions entre les deux algorithmes, et son impact sur la comparaison, est discutée en Section~\ref{sec:sac_comparison}.
+Sur les trois dimensions binaires de l'espace d'action (jump, boost, handbrake), la sortie continue de la politique SAC est convertie en action discrète par un seuillage au signe de la valeur brute produite par la politique.
 
 \paragraph{Répétition d'actions (\textit{action repeat}).} 
 À la fréquence native de 120 ticks par seconde, un agent devrait théoriquement prendre 120 décisions distinctes par seconde. En pratique, cette granularité temporelle est contre-productive pour l'apprentissage : elle génère un signal de récompense extrêmement bruité, rend le problème d'assignation de crédit (\textit{credit assignment}) particulièrement difficile — il devient ardu pour l'agent de déterminer quelle action parmi les 120 a réellement contribué à une récompense donnée — et s'éloigne considérablement de la fréquence décisionnelle humaine.
@@ -131,7 +136,7 @@ Il est par ailleurs notable que certains comportements mécaniques avancés du j
 \subsection{Reward hacking et limites du reward shaping}
 \label{sec:reward_hacking}
 
-Au-delà de la conception initiale des signaux de récompense, l'ensemble du processus de reward shaping mené dans ce travail a été marqué par l'apparition récurrente de comportements exploitant des failles ou ambiguïtés non anticipées dans la formulation des récompenses. Ce phénomène, désigné dans la littérature sous le terme de \textit{reward hacking}, constitue une limite fondamentale du reward shaping : un signal de récompense mal spécifié, même bien intentionné, peut admettre une solution qui le maximise formellement tout en s'écartant de l'intention réelle du concepteur \parencite{amodeiConcreteProblemsAI2016}. Cette limite prolonge les travaux de \textcite{645528.657613} sur la préservation théorique de la politique optimale sous reward shaping (\textit{policy invariance}) : même lorsque le shaping respecte ce cadre théorique idéal, la formulation concrète des récompenses reste, en pratique, sujette à des ambiguïtés que l'agent peut exploiter.
+Au-delà de la conception initiale des signaux de récompense, l'ensemble du processus de reward shaping mené dans ce travail a été marqué par l'apparition de comportements exploitant des failles ou ambiguïtés non anticipées dans la formulation des récompenses. Ce phénomène, désigné dans la littérature sous le terme de \textit{reward hacking}, constitue une limite fondamentale du reward shaping : un signal de récompense mal spécifié, même bien intentionné, peut admettre une solution qui le maximise formellement tout en s'écartant de l'intention réelle du concepteur \parencite{amodeiConcreteProblemsAI2016}. Cette limite prolonge les travaux de \textcite{645528.657613} sur la préservation théorique de la politique optimale sous reward shaping (\textit{policy invariance}) : même lorsque le shaping respecte ce cadre théorique idéal, la formulation concrète des récompenses reste, en pratique, sujette à des ambiguïtés que l'agent peut exploiter.
 
 Plusieurs occurrences de ce phénomène ont été observées au cours de l'entraînement, résumées dans le tableau~\ref{tab:reward_hacking}. Dans chaque cas, l'identification du comportement exploité a nécessité une observation visuelle directe du comportement de l'agent (via \textit{RocketSimVis}, Section~\ref{sec:rocketsimvis}) plutôt qu'une simple analyse des courbes de récompense agrégées, ces dernières ne révélant pas nécessairement la nature du comportement sous-jacent.
 
@@ -205,11 +210,12 @@ policy\_layer\_sizes / critic\_layer\_sizes & \multicolumn{3}{c|}{$[1024, 1024, 
 \label{tab:hp_ppo_curriculum}
 \end{table}
 
-Certains de ces hyperparamètres correspondent directement aux concepts déjà introduits pour 
-PPO en Section~\ref{sec:hparams} (Tableau~\ref{tab:hparams_ppo}).
+Certains de ces hyperparamètres correspondent directement aux concepts déjà introduits pour PPO en Section~\ref{sec:hparams} (Tableau~\ref{tab:hparams_ppo}).
 Trois paramètres sont en revanche spécifiques à l'implémentation vectorisée de rlgym-ppo : 
 \texttt{ts\_per\_iteration} désigne le nombre total de pas collectés avant chaque mise à jour de politique (l'équivalent du rollout $n\_steps \times n\_envs$ sous Stable-Baselines3), 
 \texttt{exp\_buffer\_size} fixe la taille du buffer d'expérience conservé pour l'entraînement (maintenu ici à 3 fois \texttt{ts\_per\_iteration}, conformément aux recommandations du guide communautaire \parencite{zealanlZealanLRLGymPPOGuide2026}), et \texttt{ppo\_minibatch\_size} correspond à la taille de mini-batch utilisée pour la descente de gradient (l'équivalent du \texttt{batch\_size} sous Stable-Baselines3).
+
+Ce dimensionnement du buffer d'expérience à 2--3 fois la taille du rollout, recommandé par le guide communautaire \parencite{zealanlZealanLRLGymPPOGuide2026}, introduit une entorse mesurable au caractère strictement \textit{on-policy} de PPO (Section~\ref{sec:ppo}) : le buffer, persistant d'une itération à l'autre, contient nécessairement des transitions collectées sous une politique légèrement antérieure à celle en cours de mise à jour. Cet écart demeure toutefois contenu par le mécanisme de \textit{clipping} du ratio de probabilité (équation~\ref{eq:ppo_clip}, Section~\ref{sec:ppo}), conçu pour tolérer un décalage modéré entre politique de comportement et politique cible.
 
 
 \begin{table}[h]
@@ -253,9 +259,12 @@ Le troisième palier vise le perfectionnement des mécaniques avancées du jeu u
 
 Le choix d'augmenter le poids de la récompense de but à ce stade du curriculum repose sur le fait que l'ajout de nouvelles récompenses intermédiaires dans ce palier (notamment \textit{KickoffReward} et \textit{AerialDistanceReward}) a pour effet de diluer le signal de but par rapport aux autres signaux. L'augmentation de son poids vise à compenser cette dilution et à maintenir la priorité sur l'objectif final du jeu.
 
+Par ailleurs, \textit{FaceBallReward}, présent aux Paliers~I et~II pour encourager l'orientation vers la balle, est retiré à ce stade du curriculum. Ce comportement, largement consolidé dès les premiers paliers, ne nécessite plus de signal dédié une fois les fondamentaux acquis. Son maintien aurait par ailleurs contribué à la dilution du signal de but déjà identifiée ci-dessus (poids de \textit{GoalReward} augmenté pour compenser l'introduction de nouveaux signaux), sans apporter d'information supplémentaire dès lors que le comportement d'orientation ne nécessite plus d'être renforcé explicitement.
+
 Également, le passage de la gestion du boost d'une récompense individuelle à une formulation \textit{zero-sum} dans ce palier est motivé par l'observation que, dans des situations de jeu plus avancées, la gestion du boost devient un facteur stratégique critique. Un agent qui conserve son boost au détriment de l'autre peut obtenir un avantage décisif, et la formulation \textit{zero-sum} garantit que cette dynamique est correctement reflétée dans le signal de récompense ; elle peut également encourager l'agent à adopter des stratégies plus agressives, en allant chercher le boost adverse plutôt qu'en se contentant de conserver le sien.
 
 Ce choix d'introduire la dimension compétitive de la gestion du boost uniquement au Palier~III, plutôt qu'au Palier~II, répond également à une considération pédagogique : à un stade où l'agent ne maîtrise pas encore tous les fondamentaux du jeu (déplacement, contact avec la balle, gestion du boost, score), un signal zero-sum portant sur la gestion stratégique du boost aurait introduit un bruit prématuré dans l'apprentissage, avant que l'agent ne soit en mesure d'en tirer parti. L'introduction progressive de cette dimension stratégique, une fois les fondamentaux acquis, permet ainsi de préparer l'agent à des situations de jeu plus complexes sans nuire à l'apprentissage des comportements de base.
+
 
 \subsubsection{Limites d'implémentation rencontrées avec SAC}
 \label{sec:limites-sac}
@@ -271,6 +280,7 @@ L'implémentation de SAC utilisée (rlgym-sac, Section~\ref{sec:rlgym-sac}) s'es
 Ces limites ont nécessité un ajustement empirique des hyperparamètres (réduction du taux d'apprentissage, réduction de l'échelle des récompenses) avant d'obtenir un entraînement numériquement stable, et constituent en elles-mêmes une limite à la stricte comparabilité des deux entraînements.
 
 Elles n'ont pas été corrigées dans le cadre de ce travail, dont l'objectif est de comparer empiriquement le comportement de PPO et SAC sur cet environnement plutôt que de développer ou maintenir l'implémentation logicielle de SAC elle-même. Leur correction (ajout d'un mécanisme de gradient clipping, application effective de la standardisation des retours au calcul de la loss du critique) constituerait néanmoins une piste claire d'amélioration pour des travaux futurs cherchant à établir une comparaison plus rigoureuse entre les deux algorithmes sur cet environnement.
+
 
 \subsubsection{Résultats et divergence de convergence entre PPO et SAC}
 
@@ -305,7 +315,7 @@ Le résultat contre Necto est particulièrement notable, bien qu'il appelle une 
 
 \subsubsection{Matchs contre des joueurs humains.}
 
-L'agent a également été testé contre des joueurs humains de niveau Or à Champion en mode 2v2. Ces joueurs, bien que ne pratiquant pas spécifiquement le 1v1, représentent un niveau de jeu compétitif solide dans le contexte du jeu officiel. Sur les 9 matchs disputés, l'agent PPO en a remporté 6, avec un différentiel cumulé de 79 buts marqués contre 51 buts encaissés, confirmant 
+L'agent a également été testé en configuration 1v1 contre des joueurs humains dont le rang (Or à Champion) a été établi sur la base de leur pratique habituelle en 2v2, mode qu'ils pratiquent majoritairement sur le jeu officiel. Bien que ce classement ne reflète pas spécifiquement un niveau de jeu 1v1, il constitue un indicateur de compétitivité solide dans le contexte du jeu officiel. Sur les 9 matchs disputés, l'agent PPO en a remporté 6, avec un différentiel cumulé de 79 buts marqués contre 51 buts encaissés, confirmant 
 un niveau de jeu compétitif dans des conditions proches du jeu réel. Ce nombre restreint de confrontations ne permet cependant pas d'établir une estimation statistiquement robuste du taux de victoire face à des joueurs humains, contrairement au protocole multi-seeds employé en Phase~I (Section~\ref{sec:eval_finale}).
 
 \subsubsection{Analyse qualitative du comportement.}
@@ -334,7 +344,7 @@ Un élément particulièrement remarquable concerne la gestion du boost. L'analy
 
 Parmi les autres points forts identifiés : des situations de 50/50 offensifs bien maîtrisées et une rapidité de réaction globalement supérieure à celle des joueurs humains testés.
 
-L'analyse du temps passé au sol et dans les airs (Figure~\ref{fig:sol_air}) révèle que l'agent passe la quasi-totalité du match au sol, avec un recours au jeu aérien très limité. Ce comportement suggère que les poids associés aux récompenses liées au jeu aérien (\textit{AerialDistanceReward}, \textit{InAirReward}) n'ont pas exercé une pression suffisante pour que l'agent explore et consolide des trajectoires aériennes complexes au cours de l'entraînement. Il en résulte une faiblesse structurelle dans les situations nécessitant une intervention aérienne rapide, notamment face à des balles hautes.
+L'analyse du temps passé au sol et dans les airs (Figure~\ref{fig:sol_air}) révèle que l'agent ne s'élève quasiment jamais au-dessus de la barre transversale (0.77\% du temps en air haut, contre 6.81\% pour l'adversaire humain), révélant une absence de jeu aérien complexe. Ce comportement suggère que les poids associés aux récompenses liées au jeu aérien (\textit{AerialDistanceReward}, \textit{InAirReward}) n'ont pas exercé une pression suffisante pour que l'agent explore et consolide des trajectoires aériennes complexes au cours de l'entraînement. Il en résulte une faiblesse structurelle dans les situations nécessitant une intervention aérienne rapide, notamment face à des balles hautes.
 
 \begin{figure}[htp]
 \centering

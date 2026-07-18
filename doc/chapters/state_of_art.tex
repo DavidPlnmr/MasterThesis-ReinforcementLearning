@@ -326,6 +326,7 @@ strictement l'amplitude des modifications entre deux mises à jour de la
 politique :
  
 \begin{equation}
+    \label{eq:ppo_clip}
     L^{\text{CLIP}}(\theta) = \hat{\mathbb{E}}_t \left[
         \min\!\Big(r_t(\theta)\,\hat{A}_t,\;
         \text{clip}\!\big(r_t(\theta),\,1-\varepsilon,\,1+\varepsilon\big)\,\hat{A}_t
@@ -396,9 +397,7 @@ l'espace d'action :
     \mathcal{H}^* = -\dim(\mathcal{A})
 \end{equation}
  
-Ce choix correspond approximativement à l'entropie d'une distribution
-uniforme sur un espace d'action normalisé, garantissant une exploration
-suffisante sans sur-contraindre la politique.
+Cette valeur constitue une heuristique par défaut proposée par \textcite{haarnojaSoftActorCriticAlgorithms2019}, proportionnelle à la dimension de l'espace d'action, sans justification théorique stricte reliant cette valeur à l'entropie d'une distribution particulière -- son efficacité repose avant tout sur une validation empirique dans la littérature du contrôle continu.
  
 \paragraph{Reparameterization trick.}
 SAC exploite le \textbf{reparameterization trick} pour rendre son

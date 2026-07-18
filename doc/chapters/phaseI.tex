@@ -542,7 +542,7 @@ stabilité propre à PPO grâce au mécanisme de clipping. Cette valeur, associ�
 \medskip
  
 La comparaison entre les deux variantes PPO révèle une convergence vers des
-valeurs communes pour plusieurs hyperparamètres structurels (la longueur de rollout (2048 steps), le paramètre $\gamma$ du GAE ($0.98$), le seuil d'écrêtage $\epsilon$ ($0.4$) et l'architecture du réseau (large)), ce qui suggère que ces choix sont robustes à la nature de l'espace d'action sur cet environnement. En revanche, deux hyperparamètres diffèrent significativement entre les deux variantes : le taux d'apprentissage est quatre fois plus faible pour la variante continue ($6.42 \times 10^{-5}$ contre $2.37 \times 10^{-4}$), et le coefficient d'entropie est deux ordres de grandeur inférieur ($1.27 \times 10^{-4}$ contre $1.55 \times 10^{-2}$). Ces différences indiquent que l'optimisation d'une politique gaussienne en espace continu requiert des mises à jour plus prudentes et une pression d'exploration entropique moindre que dans le cas discret.
+valeurs communes pour plusieurs hyperparamètres structurels (la longueur de rollout (2048 steps), le paramètre $\lambda$ du GAE ($0.98$), le seuil d'écrêtage $\epsilon$ ($0.4$) et l'architecture du réseau (large)), ce qui suggère que ces choix sont robustes à la nature de l'espace d'action sur cet environnement. En revanche, deux hyperparamètres diffèrent significativement entre les deux variantes : le taux d'apprentissage est quatre fois plus faible pour la variante continue ($6.42 \times 10^{-5}$ contre $2.37 \times 10^{-4}$), et le coefficient d'entropie est deux ordres de grandeur inférieur ($1.27 \times 10^{-4}$ contre $1.55 \times 10^{-2}$). Ces différences indiquent que l'optimisation d'une politique gaussienne en espace continu requiert des mises à jour plus prudentes et une pression d'exploration entropique moindre que dans le cas discret.
  
 % -----------------------------------------------------------------------------
 \newpage
@@ -697,15 +697,13 @@ SAC & Continu  & $233.44 \pm 52.50$ & $132.67$ & $281.01$ & $79\%$ & $4/5$ \\
 \end{table}
 
 \paragraph{SAC et PPO --- configurations robustes.}
-SAC obtient la meilleure récompense moyenne ($233.44 \pm 52.50$) et le taux
-de succès le plus élevé ($79\%$, 4 seeds sur 5 résolues), confirmant la
-supériorité de l'algorithme à entropie maximale sur la variante continue.
+SAC obtient la meilleure récompense moyenne ($233.44 \pm 52.50$) et le taux de succès le plus élevé ($79\%$, 4 seeds sur 5 résolues), ce qui va dans le sens d'une performance légèrement supérieure de l'algorithme à entropie maximale sur la variante continue -- un écart qui reste néanmoins du même ordre de grandeur que la variance inter-seeds observée, et qui ne permet donc pas de conclure à une supériorité statistiquement établie sur la seule base de ces 5 seeds.
 PPO affiche des performances solides dans les deux variantes, avec des
 récompenses moyennes supérieures au seuil de résolution ($218.58$ en discret,
 $208.67$ en continu) et des taux de succès proches de $75\%$. La variante
 discrète résout légèrement plus de seeds (3/5 contre 2/5), bien que les scores
 moyens soient proches, ce qui suggère une variance inter-seeds plus favorable
-en espace discret.
+en espace discret.\footnote{La valeur maximale de $278.76$ dans l'environnement discret (en évaluation multi-seeds) coïncide exactement avec le score Optuna de tuning pour cette configuration ; cette coïncidence a été vérifiée sur les données brutes et ne résulte pas d'une erreur de saisie.}
 
 \paragraph{DQN --- fragilité de la configuration optimale.}
 DQN présente un écart marqué entre son score Optuna ($275.14$) et sa
