@@ -1,0 +1,732 @@
+@inproceedings{645528.657613,
+  title = {Policy Invariance under Reward Transformations: {{Theory}} and Application to Reward Shaping},
+  booktitle = {Proceedings of the Sixteenth International Conference on Machine Learning},
+  author = {Ng, Andrew Y. and Harada, Daishi and Russell, Stuart J.},
+  date = {1999},
+  series = {Icml '99},
+  pages = {278--287},
+  publisher = {Morgan Kaufmann Publishers Inc.},
+  location = {San Francisco, CA, USA},
+  isbn = {1-55860-612-2},
+  pagetotal = {10}
+}
+
+@online{akibaOptunaNextgenerationHyperparameter2019,
+  title = {Optuna: {{A Next-generation Hyperparameter Optimization Framework}}},
+  shorttitle = {Optuna},
+  author = {Akiba, Takuya and Sano, Shotaro and Yanase, Toshihiko and Ohta, Takeru and Koyama, Masanori},
+  date = {2019-07-25},
+  eprint = {1907.10902},
+  eprinttype = {arXiv},
+  eprintclass = {cs},
+  doi = {10.48550/arXiv.1907.10902},
+  url = {http://arxiv.org/abs/1907.10902},
+  urldate = {2026-05-04},
+  abstract = {The purpose of this study is to introduce new design-criteria for next-generation hyperparameter optimization software. The criteria we propose include (1) define-by-run API that allows users to construct the parameter search space dynamically, (2) efficient implementation of both searching and pruning strategies, and (3) easy-to-setup, versatile architecture that can be deployed for various purposes, ranging from scalable distributed computing to light-weight experiment conducted via interactive interface. In order to prove our point, we will introduce Optuna, an optimization software which is a culmination of our effort in the development of a next generation optimization software. As an optimization software designed with define-by-run principle, Optuna is particularly the first of its kind. We will present the design-techniques that became necessary in the development of the software that meets the above criteria, and demonstrate the power of our new design through experimental results and real world applications. Our software is available under the MIT license (https://github.com/pfnet/optuna/).},
+  pubstate = {prepublished},
+  keywords = {Computer Science - Machine Learning,Statistics - Machine Learning},
+  file = {/Users/davidpaulino/Zotero/storage/QTTJMJJ6/Akiba et al. - 2019 - Optuna A Next-generation Hyperparameter Optimization Framework.pdf;/Users/davidpaulino/Zotero/storage/QT7F3ZH3/1907.html}
+}
+
+@software{allenAechProRlgymppo2026,
+  title = {{{AechPro}}/Rlgym-Ppo},
+  author = {Allen, Matthew},
+  date = {2026-04-15T19:10:45Z},
+  origdate = {2023-08-15T21:24:40Z},
+  url = {https://github.com/AechPro/rlgym-ppo},
+  urldate = {2026-07-01},
+  abstract = {A vectorized implementation of PPO for use with RLGym}
+}
+
+@online{AlphaGo,
+  title = {{{AlphaGo}}},
+  author = {{Google Deep Mind}},
+  url = {https://deepmind.google/research/alphago/},
+  urldate = {2026-02-23},
+  abstract = {Novel AI system mastered the ancient game of Go, defeated a Go world champion, and inspired a new era of AI.},
+  langid = {english},
+  organization = {Google DeepMind},
+  file = {/Users/davidpaulino/Zotero/storage/J7JFPFCZ/alphago.html}
+}
+
+@online{amodeiConcreteProblemsAI2016,
+  title = {Concrete {{Problems}} in {{AI Safety}}},
+  author = {Amodei, Dario and Olah, Chris and Steinhardt, Jacob and Christiano, Paul and Schulman, John and Mané, Dan},
+  date = {2016-07-25},
+  eprint = {1606.06565},
+  eprinttype = {arXiv},
+  eprintclass = {cs},
+  doi = {10.48550/arXiv.1606.06565},
+  url = {http://arxiv.org/abs/1606.06565},
+  urldate = {2026-07-03},
+  abstract = {Rapid progress in machine learning and artificial intelligence (AI) has brought increasing attention to the potential impacts of AI technologies on society. In this paper we discuss one such potential impact: the problem of accidents in machine learning systems, defined as unintended and harmful behavior that may emerge from poor design of real-world AI systems. We present a list of five practical research problems related to accident risk, categorized according to whether the problem originates from having the wrong objective function ("avoiding side effects" and "avoiding reward hacking"), an objective function that is too expensive to evaluate frequently ("scalable supervision"), or undesirable behavior during the learning process ("safe exploration" and "distributional shift"). We review previous work in these areas as well as suggesting research directions with a focus on relevance to cutting-edge AI systems. Finally, we consider the high-level question of how to think most productively about the safety of forward-looking applications of AI.},
+  pubstate = {prepublished},
+  keywords = {Computer Science - Artificial Intelligence,Computer Science - Machine Learning},
+  file = {/Users/davidpaulino/Zotero/storage/8ANMMRKB/Amodei et al. - 2016 - Concrete Problems in AI Safety.pdf;/Users/davidpaulino/Zotero/storage/6FZ3N636/1606.html}
+}
+
+@software{antoninraffinDLRRMStablebaselines3V2802026,
+  title = {{{DLR-RM}}/Stable-Baselines3: V2.8.0: {{Dropped Python}} 3.9, Added {{Python}} 3.13 Support, {{MaskablePPO}} Bug Fix, Default Hyperparams for Unlisted Env in the {{RL Zoo}}, {{Markdown}} Doc},
+  shorttitle = {{{DLR-RM}}/Stable-Baselines3},
+  author = {Antonin RAFFIN and Quentin Gallouédec and Noah Dormann and Adam Gleave and Anssi and Alex Pasquali and Juan Rocamonde and M. Ernestus and Patrick Helm and Corentin and Thomas Simonini and Tobias Rohrer and Sidney Tio and Rohan Tangri and Mark Towers and Tom Dörr and {unexploredtest} and Wilson Jallet and Steven H. Wang and Sam Toyer and Roland Gavrilescu and Paul Maria Scheikl and Parth Kothari and Oleksii Kachaiev and Megan Klaiber and Bernhard Raml and Chris Schindlbeck and Costa Huang and Dominic Kerr},
+  date = {2026-04-01},
+  doi = {10.5281/ZENODO.8123988},
+  url = {https://zenodo.org/doi/10.5281/zenodo.8123988},
+  urldate = {2026-04-21},
+  abstract = {Breaking Changes: Removed support for Python 3.9, please upgrade to Python {$>$}= 3.10 Set strict=True for every call to zip(...) Switched to pygame-ce when installing extras New Features: Added official support for Python 3.13 Bug Fixes: Fixed saving and loading of Torch compiled models (using th.compile()) by updating get\_parameters() Added a warning to env-checker if a multidiscrete space has multi-dimensional array (@unexploredtest) Fixed pandas.concat futurewarnings occuring when dataframes are empty by removing empty frames from the list before concatenating SB3-Contrib Set strict=True for every call to zip(...) Fixed MaskablePPO and RecurrentPPO inaccurate n\_updates counting when target\_kl early exits the training loop Fixed RecurrentPPO and MaskablePPO forward and predict not reshaping the action before clipping it (@immortal-boy) Do not call forward() method directly in RecurrentPPO (@immortal-boy) Fixed MaskableCategorical.apply\_masking() crashing with ValueError: Simplex when cached probs deviate from sum=1 in float32 with large action spaces (torch 2.9+) (@kirann-05) Switched to Markdown documentation (using MyST parser) RL Zoo Set strict=True for every call to zip(...) Allow to specify env\_kwargs in the hyperparam config Switched to Markdown documentation (using MyST parser) Allow to use default hyperparameters for any environment Save training command in Weights \& Biases (Wandb) Save training command and default hyperparameters as study attributes SBX (SB3 + Jax) Increased Jax version range and use tf-nightly Deprecations: zip\_strict() is not needed anymore since Python 3.10, please use zip(..., strict=True) instead Others: Updated to Python 3.10+ annotations Removed some unused variables (@unexploredtest) Improved type hints for distributions Simplified zip file loading by removing Python 3.6 workaround and enabling weights\_only=True (PyTorch 2.x) Sped up saving/loading tests Updated black from v25 to v26 Updated monitor test to check handling of empty monitor files Documentation: Added a note on MultiDiscrete spaces with multi-dimensional arrays and a wrapper to fix the issue (@unexploredtest) Added an example of manual export of SBX (SB3 + Jax) model to ONNX (@m-abr) Switched to Markdown documentation (using MyST parser) New Contributors @unexploredtest made their first contribution in https://github.com/DLR-RM/stable-baselines3/pull/2200 @m-abr made their first contribution in https://github.com/DLR-RM/stable-baselines3/pull/2214 @sdace9719 made their first contribution in https://github.com/DLR-RM/stable-baselines3/pull/2218 Full Changelog: https://github.com/DLR-RM/stable-baselines3/compare/v2.7.1...v2.8.0},
+  organization = {Zenodo},
+  version = {v2.8.0}
+}
+
+@online{bakerVideoPreTrainingVPT2022,
+  title = {Video {{PreTraining}} ({{VPT}}): {{Learning}} to {{Act}} by {{Watching Unlabeled Online Videos}}},
+  shorttitle = {Video {{PreTraining}} ({{VPT}})},
+  author = {Baker, Bowen and Akkaya, Ilge and Zhokhov, Peter and Huizinga, Joost and Tang, Jie and Ecoffet, Adrien and Houghton, Brandon and Sampedro, Raul and Clune, Jeff},
+  date = {2022-06-23},
+  eprint = {2206.11795},
+  eprinttype = {arXiv},
+  eprintclass = {cs},
+  doi = {10.48550/arXiv.2206.11795},
+  url = {http://arxiv.org/abs/2206.11795},
+  urldate = {2026-07-08},
+  abstract = {Pretraining on noisy, internet-scale datasets has been heavily studied as a technique for training models with broad, general capabilities for text, images, and other modalities. However, for many sequential decision domains such as robotics, video games, and computer use, publicly available data does not contain the labels required to train behavioral priors in the same way. We extend the internet-scale pretraining paradigm to sequential decision domains through semi-supervised imitation learning wherein agents learn to act by watching online unlabeled videos. Specifically, we show that with a small amount of labeled data we can train an inverse dynamics model accurate enough to label a huge unlabeled source of online data -- here, online videos of people playing Minecraft -- from which we can then train a general behavioral prior. Despite using the native human interface (mouse and keyboard at 20Hz), we show that this behavioral prior has nontrivial zero-shot capabilities and that it can be fine-tuned, with both imitation learning and reinforcement learning, to hard-exploration tasks that are impossible to learn from scratch via reinforcement learning. For many tasks our models exhibit human-level performance, and we are the first to report computer agents that can craft diamond tools, which can take proficient humans upwards of 20 minutes (24,000 environment actions) of gameplay to accomplish.},
+  pubstate = {prepublished},
+  keywords = {Computer Science - Artificial Intelligence,Computer Science - Machine Learning},
+  file = {/Users/davidpaulino/Zotero/storage/F3KMUNLH/Baker et al. - 2022 - Video PreTraining (VPT) Learning to Act by Watching Unlabeled Online Videos.pdf;/Users/davidpaulino/Zotero/storage/69HEEMH5/2206.html}
+}
+
+@online{BeepBoopV2Replays,
+  title = {Beep {{Boop}} v2 - {{Replays}}},
+  author = {{David Paulino}},
+  date = {2026-07-01},
+  url = {https://ballchasing.com/group/beep-boop-v2-10b-tdfuhcyooj},
+  urldate = {2026-07-02},
+  abstract = {Liste de replays des matchs de l'agent PPO nommé "Beep Boop v2" contre Element, Necto et des joueurs humains.},
+  organization = {Ballchasing},
+  file = {/Users/davidpaulino/Zotero/storage/URKDY7YK/beep-boop-v2-10b-tdfuhcyooj.html}
+}
+
+@inproceedings{bergstraAlgorithmsHyperparameterOptimization2011,
+  title = {Algorithms for Hyper-Parameter Optimization},
+  booktitle = {Proceedings of the 25th {{International Conference}} on {{Neural Information Processing Systems}}},
+  author = {Bergstra, James and Bardenet, Rémi and Bengio, Yoshua and Kégl, Balázs},
+  date = {2011-12-12},
+  series = {{{NIPS}}'11},
+  pages = {2546--2554},
+  publisher = {Curran Associates Inc.},
+  location = {Red Hook, NY, USA},
+  abstract = {Several recent advances to the state of the art in image classification benchmarks have come from better configurations of existing techniques rather than novel approaches to feature learning. Traditionally, hyper-parameter optimization has been the job of humans because they can be very efficient in regimes where only a few trials are possible. Presently, computer clusters and GPU processors make it possible to run more trials and we show that algorithmic approaches can find better results. We present hyper-parameter optimization results on tasks of training neural networks and deep belief networks (DBNs). We optimize hyper-parameters using random search and two new greedy sequential methods based on the expected improvement criterion. Random search has been shown to be sufficiently efficient for learning neural networks for several datasets, but we show it is unreliable for training DBNs. The sequential algorithms are applied to the most difficult DBN learning problems from [1] and find significantly better results than the best previously reported. This work contributes novel techniques for making response surface models P(y|x) in which many elements of hyper-parameter assignment (x) are known to be irrelevant given particular values of other elements.},
+  isbn = {978-1-61839-599-3}
+}
+
+@online{christodoulouSoftActorCriticDiscrete2019,
+  title = {Soft {{Actor-Critic}} for {{Discrete Action Settings}}},
+  author = {Christodoulou, Petros},
+  date = {2019-10-18},
+  eprint = {1910.07207},
+  eprinttype = {arXiv},
+  eprintclass = {cs},
+  doi = {10.48550/arXiv.1910.07207},
+  url = {http://arxiv.org/abs/1910.07207},
+  urldate = {2026-03-31},
+  abstract = {Soft Actor-Critic is a state-of-the-art reinforcement learning algorithm for continuous action settings that is not applicable to discrete action settings. Many important settings involve discrete actions, however, and so here we derive an alternative version of the Soft Actor-Critic algorithm that is applicable to discrete action settings. We then show that, even without any hyperparameter tuning, it is competitive with the tuned model-free state-of-the-art on a selection of games from the Atari suite.},
+  pubstate = {prepublished},
+  keywords = {Computer Science - Artificial Intelligence,Computer Science - Machine Learning,Statistics - Machine Learning},
+  file = {/Users/davidpaulino/Zotero/storage/3HSM5CZT/Christodoulou - 2019 - Soft Actor-Critic for Discrete Action Settings.pdf;/Users/davidpaulino/Zotero/storage/PKQC9ZZC/1910.html}
+}
+
+@misc{davidplnmrRLAgentLearnt2026,
+  entrysubtype = {video},
+  title = {{{RLGym}} : {{Agent}} Learnt How to Make Flicks},
+  shorttitle = {Agent Learnt How to Flick},
+  author = {Paulino, David},
+  date = {2026-06-30},
+  url = {https://www.youtube.com/watch?v=bocBIrl1ZHw},
+  urldate = {2026-06-30},
+  abstract = {In this sequence we can see that the agent learnt how to flick without having any reward promoting this specific mechanic. He just figured it out with the TouchReward and VBTGReward}
+}
+
+@misc{davidplnmrRLGymTouchRewardHacking2026,
+  entrysubtype = {video},
+  title = {{{RLGym}} : {{TouchReward Hacking}}},
+  shorttitle = {{{TouchReward Hacking}}},
+  author = {Paulino, David},
+  date = {2026-06-22},
+  url = {https://www.youtube.com/watch?v=ThIveL9bChM},
+  urldate = {2026-06-22},
+  abstract = {In this sequence, we can easily see that the agent found an exploit to maximize its rewards by touching the ball simultaneously with its opponent.}
+}
+
+@misc{davidplnmrRLGymTouchRewardVelocityBallToGoal2026,
+  entrysubtype = {video},
+  title = {{{RLGym}} : {{TouchReward}} and {{VelocityBallToGoal Hacking}}},
+  shorttitle = {{{TouchReward}} \& {{VBTG Hacking}}},
+  author = {Paulino, David},
+  date = {2026-06-22},
+  url = {https://www.youtube.com/watch?v=hdgCqtCQtPc},
+  urldate = {2026-06-22},
+  abstract = {In this sequence, the agents discovered they could still exploit the same idea as touch reward hacking.}
+}
+
+@inproceedings{eimerHyperparametersReinforcementLearning2023,
+  title = {Hyperparameters in {{Reinforcement Learning}} and {{How To Tune Them}}},
+  booktitle = {Proceedings of the 40th {{International Conference}} on {{Machine Learning}}},
+  author = {Eimer, Theresa and Lindauer, Marius and Raileanu, Roberta},
+  date = {2023-07-03},
+  pages = {9104--9149},
+  publisher = {PMLR},
+  issn = {2640-3498},
+  url = {https://proceedings.mlr.press/v202/eimer23a.html},
+  urldate = {2026-07-06},
+  abstract = {In order to improve reproducibility, deep reinforcement learning (RL) has been adopting better scientific practices such as standardized evaluation metrics and reporting. However, the process of hyperparameter optimization still varies widely across papers, which makes it challenging to compare RL algorithms fairly. In this paper, we show that hyperparameter choices in RL can significantly affect the agent’s final performance and sample efficiency, and that the hyperparameter landscape can strongly depend on the tuning seed which may lead to overfitting. We therefore propose adopting established best practices from AutoML, such as the separation of tuning and testing seeds, as well as principled hyperparameter optimization (HPO) across a broad search space. We support this by comparing multiple state-of-the-art HPO tools on a range of RL algorithms and environments to their hand-tuned counterparts, demonstrating that HPO approaches often have higher performance and lower compute overhead. As a result of our findings, we recommend a set of best practices for the RL community, which should result in stronger empirical results with fewer computational costs, better reproducibility, and thus faster progress. In order to encourage the adoption of these practices, we provide plug-and-play implementations of the tuning algorithms used in this paper at https://github.com/facebookresearch/how-to-autorl.},
+  eventtitle = {International {{Conference}} on {{Machine Learning}}},
+  langid = {english},
+  file = {/Users/davidpaulino/Zotero/storage/PX4LFHSB/Eimer et al. - 2023 - Hyperparameters in Reinforcement Learning and How To Tune Them.pdf}
+}
+
+@online{engstromImplementationMattersDeep2020,
+  title = {Implementation {{Matters}} in {{Deep Policy Gradients}}: {{A Case Study}} on {{PPO}} and {{TRPO}}},
+  shorttitle = {Implementation {{Matters}} in {{Deep Policy Gradients}}},
+  author = {Engstrom, Logan and Ilyas, Andrew and Santurkar, Shibani and Tsipras, Dimitris and Janoos, Firdaus and Rudolph, Larry and Madry, Aleksander},
+  date = {2020-05-25},
+  eprint = {2005.12729},
+  eprinttype = {arXiv},
+  eprintclass = {cs},
+  doi = {10.48550/arXiv.2005.12729},
+  url = {http://arxiv.org/abs/2005.12729},
+  urldate = {2026-07-03},
+  abstract = {We study the roots of algorithmic progress in deep policy gradient algorithms through a case study on two popular algorithms: Proximal Policy Optimization (PPO) and Trust Region Policy Optimization (TRPO). Specifically, we investigate the consequences of "code-level optimizations:" algorithm augmentations found only in implementations or described as auxiliary details to the core algorithm. Seemingly of secondary importance, such optimizations turn out to have a major impact on agent behavior. Our results show that they (a) are responsible for most of PPO's gain in cumulative reward over TRPO, and (b) fundamentally change how RL methods function. These insights show the difficulty and importance of attributing performance gains in deep reinforcement learning. Code for reproducing our results is available at https://github.com/MadryLab/implementation-matters .},
+  pubstate = {prepublished},
+  keywords = {Computer Science - Machine Learning,Computer Science - Robotics,Statistics - Machine Learning},
+  file = {/Users/davidpaulino/Zotero/storage/HTYEINLC/Engstrom et al. - 2020 - Implementation Matters in Deep Policy Gradients A Case Study on PPO and TRPO.pdf;/Users/davidpaulino/Zotero/storage/B3LGE6QF/2005.html}
+}
+
+@online{fujimotoAddressingFunctionApproximation2018,
+  title = {Addressing {{Function Approximation Error}} in {{Actor-Critic Methods}}},
+  author = {Fujimoto, Scott and family=Hoof, given=Herke, prefix=van, useprefix=false and Meger, David},
+  date = {2018-10-22},
+  eprint = {1802.09477},
+  eprinttype = {arXiv},
+  eprintclass = {cs},
+  doi = {10.48550/arXiv.1802.09477},
+  url = {http://arxiv.org/abs/1802.09477},
+  urldate = {2026-05-13},
+  abstract = {In value-based reinforcement learning methods such as deep Q-learning, function approximation errors are known to lead to overestimated value estimates and suboptimal policies. We show that this problem persists in an actor-critic setting and propose novel mechanisms to minimize its effects on both the actor and the critic. Our algorithm builds on Double Q-learning, by taking the minimum value between a pair of critics to limit overestimation. We draw the connection between target networks and overestimation bias, and suggest delaying policy updates to reduce per-update error and further improve performance. We evaluate our method on the suite of OpenAI gym tasks, outperforming the state of the art in every environment tested.},
+  pubstate = {prepublished},
+  keywords = {Computer Science - Artificial Intelligence,Computer Science - Machine Learning,Statistics - Machine Learning},
+  file = {/Users/davidpaulino/Zotero/storage/KDMD6ICW/Fujimoto et al. - 2018 - Addressing Function Approximation Error in Actor-Critic Methods.pdf;/Users/davidpaulino/Zotero/storage/I9XSYZKU/1802.html}
+}
+
+@online{GymnasiumDocumentation,
+  title = {Gymnasium {{Documentation}}},
+  author = {{Farama Foundation}},
+  date = {2025},
+  url = {https://gymnasium.farama.org/index.html},
+  urldate = {2026-04-21},
+  abstract = {A standard API for reinforcement learning and a diverse set of reference environments (formerly Gym)},
+  langid = {english},
+  file = {/Users/davidpaulino/Zotero/storage/TVV749DV/index.html}
+}
+
+@online{GymnasiumDocumentationCliffWalking,
+  title = {Gymnasium {{Documentation}} - {{Cliff Walking}}},
+  author = {{Farama Foundation}},
+  date = {2025},
+  url = {https://gymnasium.farama.org/environments/toy_text/cliff_walking.html},
+  urldate = {2026-06-26},
+  abstract = {A standard API for reinforcement learning and a diverse set of reference environments (formerly Gym)},
+  langid = {english}
+}
+
+@online{GymnasiumDocumentationLunarLander,
+  title = {Gymnasium {{Documentation}} - {{Lunar Lander}}},
+  author = {{Farama Foundation}},
+  date = {2025},
+  url = {https://gymnasium.farama.org/environments/box2d/lunar_lander.html},
+  urldate = {2026-05-04},
+  abstract = {A standard API for reinforcement learning and a diverse set of reference environments (formerly Gym)},
+  langid = {english},
+  file = {/Users/davidpaulino/Zotero/storage/KQ9NWR39/lunar_lander.html}
+}
+
+@online{haarnojaSoftActorCriticAlgorithms2019,
+  title = {Soft {{Actor-Critic Algorithms}} and {{Applications}}},
+  author = {Haarnoja, Tuomas and Zhou, Aurick and Hartikainen, Kristian and Tucker, George and Ha, Sehoon and Tan, Jie and Kumar, Vikash and Zhu, Henry and Gupta, Abhishek and Abbeel, Pieter and Levine, Sergey},
+  date = {2019-01-29},
+  eprint = {1812.05905},
+  eprinttype = {arXiv},
+  eprintclass = {cs},
+  doi = {10.48550/arXiv.1812.05905},
+  url = {http://arxiv.org/abs/1812.05905},
+  urldate = {2026-05-11},
+  abstract = {Model-free deep reinforcement learning (RL) algorithms have been successfully applied to a range of challenging sequential decision making and control tasks. However, these methods typically suffer from two major challenges: high sample complexity and brittleness to hyperparameters. Both of these challenges limit the applicability of such methods to real-world domains. In this paper, we describe Soft Actor-Critic (SAC), our recently introduced off-policy actor-critic algorithm based on the maximum entropy RL framework. In this framework, the actor aims to simultaneously maximize expected return and entropy. That is, to succeed at the task while acting as randomly as possible. We extend SAC to incorporate a number of modifications that accelerate training and improve stability with respect to the hyperparameters, including a constrained formulation that automatically tunes the temperature hyperparameter. We systematically evaluate SAC on a range of benchmark tasks, as well as real-world challenging tasks such as locomotion for a quadrupedal robot and robotic manipulation with a dexterous hand. With these improvements, SAC achieves state-of-the-art performance, outperforming prior on-policy and off-policy methods in sample-efficiency and asymptotic performance. Furthermore, we demonstrate that, in contrast to other off-policy algorithms, our approach is very stable, achieving similar performance across different random seeds. These results suggest that SAC is a promising candidate for learning in real-world robotics tasks.},
+  pubstate = {prepublished},
+  keywords = {Computer Science - Artificial Intelligence,Computer Science - Machine Learning,Computer Science - Robotics,Statistics - Machine Learning},
+  file = {/Users/davidpaulino/Zotero/storage/JR8YA2CS/Haarnoja et al. - 2019 - Soft Actor-Critic Algorithms and Applications.pdf;/Users/davidpaulino/Zotero/storage/MRILW2LL/1812.html}
+}
+
+@online{haarnojaSoftActorCriticOffPolicy2018,
+  title = {Soft {{Actor-Critic}}: {{Off-Policy Maximum Entropy Deep Reinforcement Learning}} with a {{Stochastic Actor}}},
+  shorttitle = {Soft {{Actor-Critic}}},
+  author = {Haarnoja, Tuomas and Zhou, Aurick and Abbeel, Pieter and Levine, Sergey},
+  date = {2018-08-08},
+  eprint = {1801.01290},
+  eprinttype = {arXiv},
+  eprintclass = {cs},
+  doi = {10.48550/arXiv.1801.01290},
+  url = {http://arxiv.org/abs/1801.01290},
+  urldate = {2026-03-31},
+  abstract = {Model-free deep reinforcement learning (RL) algorithms have been demonstrated on a range of challenging decision making and control tasks. However, these methods typically suffer from two major challenges: very high sample complexity and brittle convergence properties, which necessitate meticulous hyperparameter tuning. Both of these challenges severely limit the applicability of such methods to complex, real-world domains. In this paper, we propose soft actor-critic, an off-policy actor-critic deep RL algorithm based on the maximum entropy reinforcement learning framework. In this framework, the actor aims to maximize expected reward while also maximizing entropy. That is, to succeed at the task while acting as randomly as possible. Prior deep RL methods based on this framework have been formulated as Q-learning methods. By combining off-policy updates with a stable stochastic actor-critic formulation, our method achieves state-of-the-art performance on a range of continuous control benchmark tasks, outperforming prior on-policy and off-policy methods. Furthermore, we demonstrate that, in contrast to other off-policy algorithms, our approach is very stable, achieving very similar performance across different random seeds.},
+  pubstate = {prepublished},
+  keywords = {Computer Science - Artificial Intelligence,Computer Science - Machine Learning,Statistics - Machine Learning},
+  file = {/Users/davidpaulino/Zotero/storage/54DIHWRT/Haarnoja et al. - 2018 - Soft Actor-Critic Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor.pdf;/Users/davidpaulino/Zotero/storage/YRP3EF36/1801.html}
+}
+
+@article{iftikharReinforcementLearningRecommender2024,
+  title = {A Reinforcement Learning Recommender System Using Bi-Clustering and {{Markov Decision Process}}},
+  author = {Iftikhar, Arta and Ghazanfar, Mustansar Ali and Ayub, Mubbashir and Ali Alahmari, Saad and Qazi, Nadeem and Wall, Julie},
+  date = {2024-03-01},
+  journaltitle = {Expert Systems with Applications},
+  volume = {237},
+  pages = {121541},
+  issn = {0957-4174},
+  doi = {10.1016/j.eswa.2023.121541},
+  url = {https://www.sciencedirect.com/science/article/pii/S0957417423020432},
+  urldate = {2026-02-23},
+  abstract = {Collaborative filtering (CF) recommender systems are static in nature and does not adapt well with changing user preferences. User preferences may change after interaction with a system or after buying a product. Conventional CF clustering algorithms only identifies the distribution of patterns and hidden correlations globally. However, the impossibility of discovering local patterns by these algorithms, headed to the popularization of bi-clustering algorithms. Bi-clustering algorithms can analyze all dataset dimensions simultaneously and consequently, discover local patterns that deliver a better understanding of the underlying hidden correlations. In this paper, we modelled the recommendation problem as a sequential decision-making problem using Markov Decision Processes (MDP). To perform state representation for MDP, we first converted user-item votings matrix to a binary matrix. Then we performed bi-clustering on this binary matrix to determine a subset of similar rows and columns. A bi-cluster merging algorithm is designed to merge similar and overlapping bi-clusters. These bi-clusters are then mapped to a squared grid (SG). RL is applied on this SG to determine best policy to give recommendation to users. Start state is determined using Improved Triangle Similarity (ITR similarity measure. Reward function is computed as grid state overlapping in terms of users and items in current and prospective next state. A thorough comparative analysis was conducted, encompassing a diverse array of methodologies, including RL-based, pure Collaborative Filtering (CF), and clustering methods. The results demonstrate that our proposed method outperforms its competitors in terms of precision, recall, and optimal policy learning.},
+  keywords = {Bi-clustering,Markov Decision Process,Policy,Q-learning,Reinforcement learning},
+  file = {/Users/davidpaulino/Zotero/storage/7MJVXLPV/S0957417423020432.html}
+}
+
+@online{lillicrapContinuousControlDeep2015,
+  title = {Continuous Control with Deep Reinforcement Learning},
+  author = {Lillicrap, Timothy P. and Hunt, Jonathan J. and Pritzel, Alexander and Heess, Nicolas and Erez, Tom and Tassa, Yuval and Silver, David and Wierstra, Daan},
+  date = {2015-09-09},
+  url = {https://arxiv.org/abs/1509.02971v6},
+  urldate = {2026-04-13},
+  abstract = {We adapt the ideas underlying the success of Deep Q-Learning to the continuous action domain. We present an actor-critic, model-free algorithm based on the deterministic policy gradient that can operate over continuous action spaces. Using the same learning algorithm, network architecture and hyper-parameters, our algorithm robustly solves more than 20 simulated physics tasks, including classic problems such as cartpole swing-up, dexterous manipulation, legged locomotion and car driving. Our algorithm is able to find policies whose performance is competitive with those found by a planning algorithm with full access to the dynamics of the domain and its derivatives. We further demonstrate that for many of the tasks the algorithm can learn policies end-to-end: directly from raw pixel inputs.},
+  langid = {english},
+  organization = {arXiv.org},
+  file = {/Users/davidpaulino/Zotero/storage/C529PLVQ/Lillicrap et al. - 2015 - Continuous control with deep reinforcement learning.pdf}
+}
+
+@online{ListGameValues,
+  title = {List of {{Game Values}} | {{RLGym}}},
+  author = {{RLGym}},
+  date = {2020},
+  url = {https://rlgym.org/Cheatsheets/game_values},
+  urldate = {2026-06-15},
+  abstract = {This document provides a reference for constant values used in Rocket League. All spatial measurements are in Unreal Units (uu), where 1 uu = 1 centimeter.},
+  langid = {english},
+  file = {/Users/davidpaulino/Zotero/storage/AUBVHS23/game_values.html}
+}
+
+@incollection{littmanMarkovGamesFramework1994,
+  title = {Markov Games as a Framework for Multi-Agent Reinforcement Learning},
+  booktitle = {Machine {{Learning Proceedings}} 1994},
+  author = {Littman, Michael L.},
+  editor = {Cohen, William W. and Hirsh, Haym},
+  date = {1994-01-01},
+  pages = {157--163},
+  publisher = {Morgan Kaufmann},
+  location = {San Francisco (CA)},
+  doi = {10.1016/B978-1-55860-335-6.50027-1},
+  url = {https://www.sciencedirect.com/science/article/pii/B9781558603356500271},
+  urldate = {2026-06-22},
+  abstract = {In the Markov decision process (MDP) formalization of reinforcement learning, a single adaptive agent interacts with an environment defined by a probabilistic transition function. In this solipsis-tic view, secondary agents can only be part of the environment and are therefore fixed in their behavior. The framework of Markov games allows us to widen this view to include multiple adaptive agents with interacting or competing goals. This paper considers a step in this direction in which exactly two agents with diametrically opposed goals share an environment. It describes a Q-learning-like algorithm for finding optimal policies and demonstrates its application to a simple two-player game in which the optimal policy is probabilistic.},
+  isbn = {978-1-55860-335-6},
+  file = {/Users/davidpaulino/Zotero/storage/FTMVI44B/B9781558603356500271.html}
+}
+
+@inproceedings{maoResourceManagementDeep2016,
+  title = {Resource {{Management}} with {{Deep Reinforcement Learning}}},
+  booktitle = {Proceedings of the 15th {{ACM Workshop}} on {{Hot Topics}} in {{Networks}}},
+  author = {Mao, Hongzi and Alizadeh, Mohammad and Menache, Ishai and Kandula, Srikanth},
+  date = {2016-11-09},
+  pages = {50--56},
+  publisher = {ACM},
+  location = {Atlanta GA USA},
+  doi = {10.1145/3005745.3005750},
+  url = {https://dl.acm.org/doi/10.1145/3005745.3005750},
+  urldate = {2026-02-23},
+  abstract = {Resource management problems in systems and networking often manifest as difficult online decision making tasks where appropriate solutions depend on understanding the workload and environment. Inspired by recent advances in deep reinforcement learning for AI problems, we consider building systems that learn to manage resources directly from experience. We present DeepRM, an example solution that translates the problem of packing tasks with multiple resource demands into a learning problem. Our initial results show that DeepRM performs comparably to state-ofthe-art heuristics, adapts to different conditions, converges quickly, and learns strategies that are sensible in hindsight.},
+  eventtitle = {{{HotNets-XV}}: {{The}} 15th {{ACM Workshop}} on {{Hot Topics}} in {{Networks}}},
+  isbn = {978-1-4503-4661-0},
+  langid = {english},
+  file = {/Users/davidpaulino/Zotero/storage/UAAYU4J4/Mao et al. - 2016 - Resource Management with Deep Reinforcement Learning.pdf}
+}
+
+@software{mcswainUSARedDragonRlgymsac2026,
+  title = {{{USA-RedDragon}}/Rlgym-Sac},
+  author = {McSwain, Jacob},
+  date = {2026-03-09T08:46:08Z},
+  origdate = {2026-01-12T04:51:52Z},
+  url = {https://github.com/USA-RedDragon/rlgym-sac},
+  urldate = {2026-07-01}
+}
+
+@article{mnihHumanlevelControlDeep2015,
+  title = {Human-Level Control through Deep Reinforcement Learning},
+  author = {Mnih, Volodymyr and Kavukcuoglu, Koray and Silver, David and Rusu, Andrei A. and Veness, Joel and Bellemare, Marc G. and Graves, Alex and Riedmiller, Martin and Fidjeland, Andreas K. and Ostrovski, Georg and Petersen, Stig and Beattie, Charles and Sadik, Amir and Antonoglou, Ioannis and King, Helen and Kumaran, Dharshan and Wierstra, Daan and Legg, Shane and Hassabis, Demis},
+  date = {2015-02},
+  journaltitle = {Nature},
+  volume = {518},
+  number = {7540},
+  pages = {529--533},
+  publisher = {Nature Publishing Group},
+  issn = {1476-4687},
+  doi = {10.1038/nature14236},
+  url = {https://www.nature.com/articles/nature14236},
+  urldate = {2026-03-31},
+  abstract = {An artificial agent is developed that learns to play~a diverse range of classic Atari 2600 computer games directly from sensory experience, achieving a~performance comparable to that of an expert human player; this work paves the way to building general-purpose learning algorithms that bridge the divide between perception and action.},
+  langid = {english},
+  keywords = {Computer science}
+}
+
+@online{narvekarCurriculumLearningReinforcement2020,
+  title = {Curriculum {{Learning}} for {{Reinforcement Learning Domains}}: {{A Framework}} and {{Survey}}},
+  shorttitle = {Curriculum {{Learning}} for {{Reinforcement Learning Domains}}},
+  author = {Narvekar, Sanmit and Peng, Bei and Leonetti, Matteo and Sinapov, Jivko and Taylor, Matthew E. and Stone, Peter},
+  date = {2020-09-17},
+  eprint = {2003.04960},
+  eprinttype = {arXiv},
+  eprintclass = {cs},
+  doi = {10.48550/arXiv.2003.04960},
+  url = {http://arxiv.org/abs/2003.04960},
+  urldate = {2026-06-22},
+  abstract = {Reinforcement learning (RL) is a popular paradigm for addressing sequential decision tasks in which the agent has only limited environmental feedback. Despite many advances over the past three decades, learning in many domains still requires a large amount of interaction with the environment, which can be prohibitively expensive in realistic scenarios. To address this problem, transfer learning has been applied to reinforcement learning such that experience gained in one task can be leveraged when starting to learn the next, harder task. More recently, several lines of research have explored how tasks, or data samples themselves, can be sequenced into a curriculum for the purpose of learning a problem that may otherwise be too difficult to learn from scratch. In this article, we present a framework for curriculum learning (CL) in reinforcement learning, and use it to survey and classify existing CL methods in terms of their assumptions, capabilities, and goals. Finally, we use our framework to find open problems and suggest directions for future RL curriculum learning research.},
+  pubstate = {prepublished},
+  keywords = {Computer Science - Artificial Intelligence,Computer Science - Machine Learning,Statistics - Machine Learning},
+  file = {/Users/davidpaulino/Zotero/storage/JUCTSRXM/Narvekar et al. - 2020 - Curriculum Learning for Reinforcement Learning Domains A Framework and Survey.pdf;/Users/davidpaulino/Zotero/storage/F722664I/2003.html}
+}
+
+@online{openaiDota2Large2019,
+  title = {Dota 2 with {{Large Scale Deep Reinforcement Learning}}},
+  author = {OpenAI and Berner, Christopher and Brockman, Greg and Chan, Brooke and Cheung, Vicki and Dębiak, Przemysław and Dennison, Christy and Farhi, David and Fischer, Quirin and Hashme, Shariq and Hesse, Chris and Józefowicz, Rafal and Gray, Scott and Olsson, Catherine and Pachocki, Jakub and Petrov, Michael and Pinto, Henrique P. d O. and Raiman, Jonathan and Salimans, Tim and Schlatter, Jeremy and Schneider, Jonas and Sidor, Szymon and Sutskever, Ilya and Tang, Jie and Wolski, Filip and Zhang, Susan},
+  date = {2019-12-13},
+  eprint = {1912.06680},
+  eprinttype = {arXiv},
+  eprintclass = {cs},
+  doi = {10.48550/arXiv.1912.06680},
+  url = {http://arxiv.org/abs/1912.06680},
+  urldate = {2026-07-02},
+  abstract = {On April 13th, 2019, OpenAI Five became the first AI system to defeat the world champions at an esports game. The game of Dota 2 presents novel challenges for AI systems such as long time horizons, imperfect information, and complex, continuous state-action spaces, all challenges which will become increasingly central to more capable AI systems. OpenAI Five leveraged existing reinforcement learning techniques, scaled to learn from batches of approximately 2 million frames every 2 seconds. We developed a distributed training system and tools for continual training which allowed us to train OpenAI Five for 10 months. By defeating the Dota 2 world champion (Team OG), OpenAI Five demonstrates that self-play reinforcement learning can achieve superhuman performance on a difficult task.},
+  pubstate = {prepublished},
+  keywords = {Computer Science - Machine Learning,Statistics - Machine Learning},
+  file = {/Users/davidpaulino/Zotero/storage/3ZWRK272/OpenAI et al. - 2019 - Dota 2 with Large Scale Deep Reinforcement Learning.pdf;/Users/davidpaulino/Zotero/storage/PEDCEMYX/1912.html}
+}
+
+@online{OpenAIFive2018,
+  title = {{{OpenAI Five}}},
+  author = {{OpenAI}},
+  date = {2018-06-25},
+  url = {https://openai.com/index/openai-five/},
+  urldate = {2026-02-23},
+  abstract = {Our team of five neural networks, OpenAI Five, has started to defeat amateur human teams at Dota~2.},
+  langid = {american},
+  file = {/Users/davidpaulino/Zotero/storage/GGZVYAAS/openai-five.html}
+}
+
+@online{pathakCuriositydrivenExplorationSelfsupervised2017,
+  title = {Curiosity-Driven {{Exploration}} by {{Self-supervised Prediction}}},
+  author = {Pathak, Deepak and Agrawal, Pulkit and Efros, Alexei A. and Darrell, Trevor},
+  date = {2017-05-15},
+  eprint = {1705.05363},
+  eprinttype = {arXiv},
+  eprintclass = {cs},
+  doi = {10.48550/arXiv.1705.05363},
+  url = {http://arxiv.org/abs/1705.05363},
+  urldate = {2026-06-11},
+  abstract = {In many real-world scenarios, rewards extrinsic to the agent are extremely sparse, or absent altogether. In such cases, curiosity can serve as an intrinsic reward signal to enable the agent to explore its environment and learn skills that might be useful later in its life. We formulate curiosity as the error in an agent's ability to predict the consequence of its own actions in a visual feature space learned by a self-supervised inverse dynamics model. Our formulation scales to high-dimensional continuous state spaces like images, bypasses the difficulties of directly predicting pixels, and, critically, ignores the aspects of the environment that cannot affect the agent. The proposed approach is evaluated in two environments: VizDoom and Super Mario Bros. Three broad settings are investigated: 1) sparse extrinsic reward, where curiosity allows for far fewer interactions with the environment to reach the goal; 2) exploration with no extrinsic reward, where curiosity pushes the agent to explore more efficiently; and 3) generalization to unseen scenarios (e.g. new levels of the same game) where the knowledge gained from earlier experience helps the agent explore new places much faster than starting from scratch. Demo video and code available at https://pathak22.github.io/noreward-rl/},
+  pubstate = {prepublished},
+  keywords = {Computer Science - Artificial Intelligence,Computer Science - Computer Vision and Pattern Recognition,Computer Science - Machine Learning,Computer Science - Robotics,Statistics - Machine Learning},
+  file = {/Users/davidpaulino/Zotero/storage/BNUFBEBH/Pathak et al. - 2017 - Curiosity-driven Exploration by Self-supervised Prediction.pdf;/Users/davidpaulino/Zotero/storage/E5BGDT6C/1705.html}
+}
+
+@online{raffinSmoothExplorationRobotic2021,
+  title = {Smooth {{Exploration}} for {{Robotic Reinforcement Learning}}},
+  author = {Raffin, Antonin and Kober, Jens and Stulp, Freek},
+  date = {2021-06-20},
+  eprint = {2005.05719},
+  eprinttype = {arXiv},
+  eprintclass = {cs},
+  doi = {10.48550/arXiv.2005.05719},
+  url = {http://arxiv.org/abs/2005.05719},
+  urldate = {2026-05-13},
+  abstract = {Reinforcement learning (RL) enables robots to learn skills from interactions with the real world. In practice, the unstructured step-based exploration used in Deep RL -- often very successful in simulation -- leads to jerky motion patterns on real robots. Consequences of the resulting shaky behavior are poor exploration, or even damage to the robot. We address these issues by adapting state-dependent exploration (SDE) to current Deep RL algorithms. To enable this adaptation, we propose two extensions to the original SDE, using more general features and re-sampling the noise periodically, which leads to a new exploration method generalized state-dependent exploration (gSDE). We evaluate gSDE both in simulation, on PyBullet continuous control tasks, and directly on three different real robots: a tendon-driven elastic robot, a quadruped and an RC car. The noise sampling interval of gSDE permits to have a compromise between performance and smoothness, which allows training directly on the real robots without loss of performance. The code is available at https://github.com/DLR-RM/stable-baselines3.},
+  pubstate = {prepublished},
+  version = {2},
+  keywords = {Computer Science - Machine Learning,Computer Science - Robotics,Statistics - Machine Learning},
+  file = {/Users/davidpaulino/Zotero/storage/RTF3AG2G/Raffin et al. - 2021 - Smooth Exploration for Robotic Reinforcement Learning.pdf;/Users/davidpaulino/Zotero/storage/IXGW6ZY8/2005.html}
+}
+
+@online{ReinforcementLearningTips,
+  title = {Reinforcement {{Learning Tips}} and {{Tricks}} — {{Stable Baselines3}} Documentation},
+  author = {{Stable-Baselines3}},
+  date = {2021},
+  url = {https://stable-baselines3.readthedocs.io/en/master/guide/rl_tips.html},
+  urldate = {2026-07-03},
+  file = {/Users/davidpaulino/Zotero/storage/P7GGWCCQ/rl_tips.html}
+}
+
+@software{RLBot2018,
+  title = {{{RLBot}}},
+  author = {{RLBot}},
+  date = {2018},
+  url = {https://rlbot.org/},
+  urldate = {2026-07-02},
+  file = {/Users/davidpaulino/Zotero/storage/9Y3VQXGV/rlbot.org.html}
+}
+
+@video{RLBotChampionship2022,
+  entrysubtype = {video},
+  title = {{{RLBot Championship}} 2022},
+  namea = {{RLBot}},
+  nameatype = {collaborator},
+  date = {2022-03-21},
+  url = {https://www.youtube.com/watch?v=XVIxZA6gFRI},
+  urldate = {2026-07-02}
+}
+
+@software{RLGymRlgym2026,
+  title = {{{RLGym}}},
+  author = {{RLGym}},
+  date = {2026-06-11T22:55:49Z},
+  origdate = {2020-10-15T16:10:31Z},
+  url = {https://github.com/RLGym/rlgym},
+  urldate = {2026-07-02},
+  abstract = {A Gym-like environment for Reinforcement Learning in Rocket League},
+  keywords = {gym-environment,hacktoberfest,reinforcement-learning,rocket-league}
+}
+
+@software{rolv-arildRolvArildNecto2026,
+  title = {Rolv-{{Arild}}/{{Necto}}},
+  author = {{Rolv-Arild}},
+  date = {2026-05-19T09:16:45Z},
+  origdate = {2021-09-26T21:05:24Z},
+  url = {https://github.com/Rolv-Arild/Necto},
+  urldate = {2026-07-02}
+}
+
+@software{rolv-arildRolvArildReplaypretraining2026,
+  title = {Rolv-{{Arild}}/Replay-Pretraining},
+  author = {{Rolv-Arild}},
+  date = {2026-06-13T03:22:50Z},
+  origdate = {2022-07-31T00:19:11Z},
+  url = {https://github.com/Rolv-Arild/replay-pretraining},
+  urldate = {2026-07-08},
+  abstract = {Rocket League pretraining from replay files},
+  keywords = {behavioral-cloning,machine-learning,reinforcement-learning,rocket-league}
+}
+
+@online{schulmanHighDimensionalContinuousControl2018,
+  title = {High-{{Dimensional Continuous Control Using Generalized Advantage Estimation}}},
+  author = {Schulman, John and Moritz, Philipp and Levine, Sergey and Jordan, Michael and Abbeel, Pieter},
+  date = {2018-10-20},
+  eprint = {1506.02438},
+  eprinttype = {arXiv},
+  eprintclass = {cs},
+  doi = {10.48550/arXiv.1506.02438},
+  url = {http://arxiv.org/abs/1506.02438},
+  urldate = {2026-04-13},
+  abstract = {Policy gradient methods are an appealing approach in reinforcement learning because they directly optimize the cumulative reward and can straightforwardly be used with nonlinear function approximators such as neural networks. The two main challenges are the large number of samples typically required, and the difficulty of obtaining stable and steady improvement despite the nonstationarity of the incoming data. We address the first challenge by using value functions to substantially reduce the variance of policy gradient estimates at the cost of some bias, with an exponentially-weighted estimator of the advantage function that is analogous to TD(lambda). We address the second challenge by using trust region optimization procedure for both the policy and the value function, which are represented by neural networks. Our approach yields strong empirical results on highly challenging 3D locomotion tasks, learning running gaits for bipedal and quadrupedal simulated robots, and learning a policy for getting the biped to stand up from starting out lying on the ground. In contrast to a body of prior work that uses hand-crafted policy representations, our neural network policies map directly from raw kinematics to joint torques. Our algorithm is fully model-free, and the amount of simulated experience required for the learning tasks on 3D bipeds corresponds to 1-2 weeks of real time.},
+  pubstate = {prepublished},
+  keywords = {Computer Science - Machine Learning,Computer Science - Robotics,Electrical Engineering and Systems Science - Systems and Control},
+  file = {/Users/davidpaulino/Zotero/storage/7P8T9HXW/Schulman et al. - 2018 - High-Dimensional Continuous Control Using Generalized Advantage Estimation.pdf;/Users/davidpaulino/Zotero/storage/MHKFQK9G/1506.html}
+}
+
+@online{schulmanProximalPolicyOptimization2017,
+  title = {Proximal {{Policy Optimization Algorithms}}},
+  author = {Schulman, John and Wolski, Filip and Dhariwal, Prafulla and Radford, Alec and Klimov, Oleg},
+  date = {2017-07-20},
+  url = {https://arxiv.org/abs/1707.06347v2},
+  urldate = {2026-03-31},
+  abstract = {We propose a new family of policy gradient methods for reinforcement learning, which alternate between sampling data through interaction with the environment, and optimizing a "surrogate" objective function using stochastic gradient ascent. Whereas standard policy gradient methods perform one gradient update per data sample, we propose a novel objective function that enables multiple epochs of minibatch updates. The new methods, which we call proximal policy optimization (PPO), have some of the benefits of trust region policy optimization (TRPO), but they are much simpler to implement, more general, and have better sample complexity (empirically). Our experiments test PPO on a collection of benchmark tasks, including simulated robotic locomotion and Atari game playing, and we show that PPO outperforms other online policy gradient methods, and overall strikes a favorable balance between sample complexity, simplicity, and wall-time.},
+  langid = {english},
+  organization = {arXiv.org},
+  file = {/Users/davidpaulino/Zotero/storage/HXQQLQ5R/Schulman et al. - 2017 - Proximal Policy Optimization Algorithms.pdf}
+}
+
+@misc{silverLecturesReinforcementLearning2015,
+  title = {Lectures on {{Reinforcement Learning}}},
+  author = {Silver, David},
+  date = {2015},
+  url = {https://www.davidsilver.uk/teaching/},
+  urldate = {2026-02-02},
+  annotation = {Published: \textsc{url:} https://www.davidsilver.uk/teaching/}
+}
+
+@article{silverMasteringGameGo2017,
+  title = {Mastering the Game of {{Go}} without Human Knowledge},
+  author = {Silver, David and Schrittwieser, Julian and Simonyan, Karen and Antonoglou, Ioannis and Huang, Aja and Guez, Arthur and Hubert, Thomas and Baker, Lucas and Lai, Matthew and Bolton, Adrian and Chen, Yutian and Lillicrap, Timothy and Hui, Fan and Sifre, Laurent and family=Driessche, given=George, prefix=van den, useprefix=true and Graepel, Thore and Hassabis, Demis},
+  date = {2017-10},
+  journaltitle = {Nature},
+  volume = {550},
+  number = {7676},
+  pages = {354--359},
+  publisher = {Nature Publishing Group},
+  issn = {1476-4687},
+  doi = {10.1038/nature24270},
+  url = {https://www.nature.com/articles/nature24270},
+  urldate = {2026-07-02},
+  abstract = {Starting from zero knowledge and without human data, AlphaGo Zero was able to teach itself to play Go and to develop novel strategies that provide new insights into the oldest of games.},
+  langid = {english},
+  keywords = {Computational science,Computer science,Reward},
+  file = {/Users/davidpaulino/Zotero/storage/AQK7R5AI/Silver et al. - 2017 - Mastering the game of Go without human knowledge.pdf}
+}
+
+@article{singhConvergenceResultsSingleStep2000,
+  title = {Convergence {{Results}} for {{Single-Step On-Policy Reinforcement-Learning Algorithms}}},
+  author = {Singh, Satinder and Jaakkola, Tommi and Littman, Michael L. and Szepesvári, Csaba},
+  date = {2000-03-01},
+  journaltitle = {Machine Learning},
+  volume = {38},
+  number = {3},
+  pages = {287--308},
+  issn = {1573-0565},
+  doi = {10.1023/A:1007678930559},
+  url = {https://doi.org/10.1023/A:1007678930559},
+  urldate = {2026-07-02},
+  abstract = {An important application of reinforcement learning (RL) is to finite-state control problems and one of the most difficult problems in learning for control is balancing the exploration/exploitation tradeoff. Existing theoretical results for RL give very little guidance on reasonable ways to perform exploration. In this paper, we examine the convergence of single-step on-policy RL algorithms for control. On-policy algorithms cannot separate exploration from learning and therefore must confront the exploration problem directly. We prove convergence results for several related on-policy algorithms with both decaying exploration and persistent exploration. We also provide examples of exploration strategies that can be followed during learning that result in convergence to both optimal values and optimal policies.},
+  langid = {english},
+  keywords = {convergence,Markov decision processes,on-policy,reinforcement-learning},
+  file = {/Users/davidpaulino/Zotero/storage/4J8GIDDE/Singh et al. - 2000 - Convergence Results for Single-Step On-Policy Reinforcement-Learning Algorithms.pdf}
+}
+
+@book{suttonReinforcementLearningIntroduction2018,
+  title = {Reinforcement {{Learning}}: {{An Introduction}}},
+  author = {Sutton, Richard S and Barto, Andrew G},
+  date = {2018-11-13},
+  edition = {2},
+  publisher = {MIT Press},
+  location = {Cambridge, MA},
+  isbn = {978-0-262-03924-6},
+  langid = {english}
+}
+
+@online{tangDeepReinforcementLearning2024,
+  title = {Deep {{Reinforcement Learning}} for {{Robotics}}: {{A Survey}} of {{Real-World Successes}}},
+  shorttitle = {Deep {{Reinforcement Learning}} for {{Robotics}}},
+  author = {Tang, Chen and Abbatematteo, Ben and Hu, Jiaheng and Chandra, Rohan and Martín-Martín, Roberto and Stone, Peter},
+  date = {2024-09-16},
+  eprint = {2408.03539},
+  eprinttype = {arXiv},
+  eprintclass = {cs},
+  doi = {10.48550/arXiv.2408.03539},
+  url = {http://arxiv.org/abs/2408.03539},
+  urldate = {2026-02-23},
+  abstract = {Reinforcement learning (RL), particularly its combination with deep neural networks referred to as deep RL (DRL), has shown tremendous promise across a wide range of applications, suggesting its potential for enabling the development of sophisticated robotic behaviors. Robotics problems, however, pose fundamental difficulties for the application of RL, stemming from the complexity and cost of interacting with the physical world. This article provides a modern survey of DRL for robotics, with a particular focus on evaluating the real-world successes achieved with DRL in realizing several key robotic competencies. Our analysis aims to identify the key factors underlying those exciting successes, reveal underexplored areas, and provide an overall characterization of the status of DRL in robotics. We highlight several important avenues for future work, emphasizing the need for stable and sample-efficient real-world RL paradigms, holistic approaches for discovering and integrating various competencies to tackle complex long-horizon, open-world tasks, and principled development and evaluation procedures. This survey is designed to offer insights for both RL practitioners and roboticists toward harnessing RL's power to create generally capable real-world robotic systems.},
+  pubstate = {prepublished},
+  keywords = {Computer Science - Machine Learning,Computer Science - Robotics},
+  file = {/Users/davidpaulino/Zotero/storage/QPW7W95S/Tang et al. - 2024 - Deep Reinforcement Learning for Robotics A Survey of Real-World Successes.pdf;/Users/davidpaulino/Zotero/storage/PLAVE9ZF/2408.html}
+}
+
+@article{vinyalsGrandmasterLevelStarCraft2019,
+  title = {Grandmaster Level in {{StarCraft II}} Using Multi-Agent Reinforcement Learning},
+  author = {Vinyals, Oriol and Babuschkin, Igor and Czarnecki, Wojciech M. and Mathieu, Michaël and Dudzik, Andrew and Chung, Junyoung and Choi, David H. and Powell, Richard and Ewalds, Timo and Georgiev, Petko and Oh, Junhyuk and Horgan, Dan and Kroiss, Manuel and Danihelka, Ivo and Huang, Aja and Sifre, Laurent and Cai, Trevor and Agapiou, John P. and Jaderberg, Max and Vezhnevets, Alexander S. and Leblond, Rémi and Pohlen, Tobias and Dalibard, Valentin and Budden, David and Sulsky, Yury and Molloy, James and Paine, Tom L. and Gulcehre, Caglar and Wang, Ziyu and Pfaff, Tobias and Wu, Yuhuai and Ring, Roman and Yogatama, Dani and Wünsch, Dario and McKinney, Katrina and Smith, Oliver and Schaul, Tom and Lillicrap, Timothy and Kavukcuoglu, Koray and Hassabis, Demis and Apps, Chris and Silver, David},
+  date = {2019-11},
+  journaltitle = {Nature},
+  volume = {575},
+  number = {7782},
+  pages = {350--354},
+  publisher = {Nature Publishing Group},
+  issn = {1476-4687},
+  doi = {10.1038/s41586-019-1724-z},
+  url = {https://www.nature.com/articles/s41586-019-1724-z},
+  urldate = {2026-07-08},
+  abstract = {AlphaStar uses a multi-agent reinforcement learning algorithm and has reached Grandmaster level, ranking among the top 0.2\% of human players for the real-time strategy game StarCraft II.},
+  langid = {english},
+  keywords = {Computer science,Statistics},
+  file = {/Users/davidpaulino/Zotero/storage/MINXMSMQ/Vinyals et al. - 2019 - Grandmaster level in StarCraft II using multi-agent reinforcement learning.pdf}
+}
+
+@article{watkinsQlearning1992,
+  title = {Q-Learning},
+  author = {Watkins, Christopher J. C. H. and Dayan, Peter},
+  date = {1992-05-01},
+  journaltitle = {Mach Learn},
+  volume = {8},
+  number = {3},
+  pages = {279--292},
+  issn = {1573-0565},
+  doi = {10.1007/BF00992698},
+  url = {https://doi.org/10.1007/BF00992698},
+  urldate = {2026-07-03},
+  abstract = {Q-learning (Watkins, 1989) is a simple way for agents to learn how to act optimally in controlled Markovian domains. It amounts to an incremental method for dynamic programming which imposes limited computational demands. It works by successively improving its evaluations of the quality of particular actions at particular states.},
+  langid = {english},
+  keywords = {asynchronous dynamic programming,Q-learning,reinforcement learning,temporal differences},
+  file = {/Users/davidpaulino/Zotero/storage/IJB7YYDC/Watkins et Dayan - 1992 - Q-learning.pdf}
+}
+
+@software{WeightsBiasesAI,
+  title = {Weights \& {{Biases}}: {{The AI Developer Platform}}},
+  shorttitle = {Weights \& {{Biases}}},
+  author = {{Weight \& Biases}},
+  date = {2017},
+  url = {https://wandb.ai/site/},
+  urldate = {2026-04-21},
+  abstract = {Learn why thousands of companies rely on W\&B as their system of record for training AI models and developing AI applications with confidence.},
+  file = {/Users/davidpaulino/Zotero/storage/TQB9JL4H/site.html}
+}
+
+@article{williamsSimpleStatisticalGradientfollowing1992,
+  title = {Simple Statistical Gradient-Following Algorithms for Connectionist Reinforcement Learning},
+  author = {Williams, Ronald J.},
+  date = {1992-05-01},
+  journaltitle = {Mach Learn},
+  volume = {8},
+  number = {3},
+  pages = {229--256},
+  issn = {1573-0565},
+  doi = {10.1007/BF00992696},
+  url = {https://doi.org/10.1007/BF00992696},
+  urldate = {2026-04-13},
+  abstract = {This article presents a general class of associative reinforcement learning algorithms for connectionist networks containing stochastic units. These algorithms, called REINFORCE algorithms, are shown to make weight adjustments in a direction that lies along the gradient of expected reinforcement in both immediate-reinforcement tasks and certain limited forms of delayed-reinforcement tasks, and they do this without explicitly computing gradient estimates or even storing information from which such estimates could be computed. Specific examples of such algorithms are presented, some of which bear a close relationship to certain existing algorithms while others are novel but potentially interesting in their own right. Also given are results that show how such algorithms can be naturally integrated with backpropagation. We close with a brief discussion of a number of additional issues surrounding the use of such algorithms, including what is known about their limiting behaviors as well as further considerations that might be used to help develop similar but potentially more powerful reinforcement learning algorithms.},
+  langid = {english},
+  keywords = {connectionist networks,gradient descent,mathematical analysis,Reinforcement learning},
+  file = {/Users/davidpaulino/Zotero/storage/WT8236D9/Williams - 1992 - Simple statistical gradient-following algorithms for connectionist reinforcement learning.pdf}
+}
+
+@online{zaffagniDefinitionAlphaGoQuest2022,
+  title = {Définition | AlphaGo : qu'est-ce que c'est ? | Futura tech},
+  shorttitle = {Définition | AlphaGo},
+  author = {Zaffagni, Marc},
+  date = {2022-12-01T11:58:42},
+  url = {https://www.futura-sciences.com/tech/definitions/intelligence-artificielle-alphago-16467/},
+  urldate = {2026-02-23},
+  abstract = {AlphaGo est le nom du programme d’intelligence artificielle (IA) développé par la société britannique DeepMind (acquise en 2014 par Google) pour affronter les meilleurs joueurs humains de go. Accor...},
+  langid = {french},
+  organization = {Futura},
+  file = {/Users/davidpaulino/Zotero/storage/QU2Z2QBN/intelligence-artificielle-alphago-16467.html}
+}
+
+@software{zealanlZealanLRLGymPPOGuide2026,
+  title = {{{ZealanL}}/{{RLGym-PPO-Guide}}},
+  author = {{ZealanL}},
+  date = {2026-05-11T07:23:37Z},
+  origdate = {2024-04-19T07:18:56Z},
+  url = {https://github.com/ZealanL/RLGym-PPO-Guide},
+  urldate = {2026-07-06},
+  abstract = {A beginner's guide to creating a Rocket League ML bot using RLGym-PPO.}
+}
+
+@software{zealanlZealanLRocketSim2026,
+  title = {{{ZealanL}}/{{RocketSim}}},
+  author = {{ZealanL}},
+  date = {2026-04-19T23:38:59Z},
+  origdate = {2022-08-06T17:50:49Z},
+  url = {https://github.com/ZealanL/RocketSim},
+  urldate = {2026-04-22},
+  abstract = {A C++ library for simulating Rocket League games at maximum efficiency},
+  keywords = {cpp,physics-simulation,rocket-league,rust,simulation}
+}
+
+@software{zealanlZealanLRocketSimVis2026,
+  title = {{{ZealanL}}/{{RocketSimVis}}},
+  author = {{ZealanL}},
+  date = {2026-06-08T23:30:53Z},
+  origdate = {2024-02-07T23:42:42Z},
+  url = {https://github.com/ZealanL/RocketSimVis},
+  urldate = {2026-06-11},
+  abstract = {An easy-to-use cool-looking visualizer for RocketSim}
+}
