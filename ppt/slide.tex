@@ -10,6 +10,7 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,shapes,positioning,calc}
 \usepackage{booktabs}
+\usepackage{multicol}
 
 \newcommand{\dateofpresentation}{\DTMdate{2026-08-21}}
 
@@ -26,7 +27,9 @@
 
 \begin{frame}
 \frametitle{Plan de la présentation}
+\begin{multicols}{2}
 \tableofcontents
+\end{multicols}
 \end{frame}
 
 \section{Introduction}
@@ -64,7 +67,7 @@ Rocket League : un jeu de football avec des voitures.
 \begin{frame}
 \frametitle{Le problème du \emph{reward sparse}}
 
-Ce phénomène porte un nom : le \textbf{reward sparse} \parencite{narvekarCurriculumLearningReinforcement2020}
+Ce phénomène porte un nom : le \textbf{reward sparse} \nocite{narvekarCurriculumLearningReinforcement2020}
 
 \vspace{0.3cm}
 
@@ -192,14 +195,190 @@ Sample efficiency & Moyenne & Faible & Élevée \\
 \end{frame}
 
 \section{Phase I}
+\subsection{Méthodologie}
 \begin{frame}
-    \frametitle{Phase I}
+    \frametitle{Méthodologie}
+
+    \begin{itemize}
+        \item \textbf{Environnement :} LunarLander \nocite{GymnasiumDocumentationLunarLander}
+        \item \textbf{Algorithmes :} DQN, PPO, SAC \nocite{mnihHumanlevelControlDeep2015, schulmanProximalPolicyOptimization2017, haarnojaSoftActorCriticOffPolicy2018}
+        \item \textbf{Optimisation :} Optuna pour le tuning des hyperparamètres \nocite{akibaOptunaNextgenerationHyperparameter2019}
+        \item \textbf{Évaluation :} Multi-seeds pour la robustesse
+    \end{itemize}
+\end{frame}
+
+\subsection{Robustesse des configurations}
+\begin{frame}
+\frametitle{Score de tuning vs robustesse réelle}
+
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Combinaison} & \textbf{Score Optuna} & \textbf{Éval. finale (moy.)} & \textbf{Seeds résolues} \\
+\hline
+DQN discret & 275.14 & \textbf{145.19} & 1/5 \\
+PPO discret & 278.76 & 218.58 & 3/5 \\
+PPO continu & 280.42 & 208.67 & 2/5 \\
+SAC continu & 284.05 & 233.44 & 4/5 \\
+\hline
+\end{tabular}
+\end{center}
+
+\vspace{0.5cm}
+
+\begin{beamerboxesrounded}[upper=block head,lower=block body]{Enseignement clé}
+    Le score de tuning n'est \textbf{pas un prédicteur fiable} de la
+    robustesse : DQN a un très bon score, mais
+    la pire performance finale.
+\end{beamerboxesrounded}
+
 \end{frame}
 
 \section{Phase II}
+
+\subsection{L'environnement Rocket League}
 \begin{frame}
-    \frametitle{Phase II}
+\frametitle{L'environnement Rocket League}
+
+\begin{itemize}
+    \item Simulation via \textbf{RocketSim} + \textbf{RLGym} : physique fidèle,
+    entraînement \emph{headless} (sans rendu graphique) \nocite{ZealanLRocketSim2022,RLGymRLGym2020}
+    \item Mode \textbf{1v1} : un agent affronte une copie de lui-même
+    (\emph{self-play})
+    \item Espace d'actions réduit par discrétisation :
+    $1944 \rightarrow \textbf{90}$ actions pertinentes
+    \item Fréquence de décision ramenée de 120~Hz à \textbf{15~Hz}
+    (\emph{action repeat})
+\end{itemize}
+
+\vspace{0.5cm}
+
+\begin{beamerboxesrounded}[upper=block head,lower=block body]{Rappel}
+    Le seul signal naturel — marquer un but — est \textbf{extrêmement rare} :
+    aucun apprentissage observable en RL pur.
+\end{beamerboxesrounded}
+
 \end{frame}
+
+\subsection{Reward shaping et curriculum}
+\begin{frame}
+\frametitle{Reward shaping et curriculum}
+
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Palier} & \textbf{Objectif} \\
+\hline
+I & Contrôle de base et contact avec la balle \\
+II & Apprentissage du score (introduction du but) \\
+III & Perfectionnement mécanique (boost, aérien, kickoff) \\
+\hline
+\end{tabular}
+\end{center}
+
+\vspace{0.5cm}
+
+\begin{itemize}
+    \item \textbf{Reward shaping} : densifier le signal rare avec des
+    signaux intermédiaires (contact, vitesse vers la balle...)
+    \item \textbf{Curriculum learning} : introduire ces signaux
+    progressivement, sans dégrader les acquis des paliers précédents
+\end{itemize}
+
+\vspace{0.3cm}
+
+\centering\footnotesize{Une introduction simultanée de tous les signaux
+converge plus lentement.}
+
+\end{frame}
+
+\subsection{Reward hacking}
+\begin{frame}
+\frametitle{Reward hacking}
+
+\begin{center}
+% Remplacer par l'image/clip correspondant, ex. balle qui oscille entre les deux buts
+\href{https://www.youtube.com/watch?v=hdgCqtCQtPc}{%
+        \includegraphics[width=0.7\textwidth]{img/miniature_reward_hacking.png}%
+    }
+\end{center}
+\end{frame}
+
+\begin{frame}
+\frametitle{Reward hacking (suite)}
+\vspace{0.3cm}
+
+\begin{beamerboxesrounded}[upper=block head,lower=block body]{Comportement observé}
+    Les deux agents collaborent pour faire osciller la balle entre les
+    deux buts, maximisant leur récompense individuelle sans jamais
+    chercher à marquer.
+\end{beamerboxesrounded}
+
+\vspace{0.3cm}
+
+\textbf{Correction :} reformulation en récompense \emph{zero-sum} —
+le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarkovGamesFramework1994}
+
+\end{frame}
+
+\subsection{PPO vs SAC}
+\begin{frame}
+\frametitle{PPO vs SAC : une divergence marquée}
+
+\begin{itemize}
+    \item \textbf{PPO} : progresse de manière cohérente à travers tout
+    le curriculum
+    \item \textbf{SAC} : stagne dès le Palier I, entraînement interrompu
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Deux facteurs explicatifs :}
+\begin{enumerate}
+    \item Limites d'implémentation de \texttt{rlgym-sac} (pas de
+    gradient clipping, cible d'entropie fixe)
+    \item Espace d'actions \textbf{continu brut} (8 dimensions) contre
+    l'espace \textbf{discret curaté} (90 actions) de PPO
+\end{enumerate}
+
+\vspace{0.5cm}
+
+\begin{beamerboxesrounded}[upper=block head,lower=block body]{Conclusion}
+    Résultat non tranché : impossible de conclure à une infériorité
+    intrinsèque de SAC sur cet environnement.
+\end{beamerboxesrounded}
+
+\end{frame}
+
+\subsection{Résultats}
+\begin{frame}
+\frametitle{Résultats de l'agent PPO}
+
+\nocite{BeepBoopV2Replays}
+\begin{itemize}
+    \item Victoires \textbf{3-0} contre Element (finaliste RLBot 2022)
+    \item Victoires \textbf{3-0} contre Necto (vainqueur RLBot 2022,
+    entraîné sur 3 modes de jeu et un budget supérieur)
+    \item \textbf{6 victoires sur 9} contre des joueurs humains
+    (Or à Champion)
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Comportements émergents non récompensés explicitement :}
+\begin{itemize}
+    \item Gestion du boost plus économe qu'un joueur humain
+    \item Utilisation systématique et précoce du \emph{powerslide}
+\end{itemize}
+
+\end{frame}
+
+\section{Limites et perspectives}
+  \subsection{Limites}                            % 5 seeds, écarts-types, SAC non tranché, pas de tuning Phase II
+  \subsection{Perspectives}                       % 3 pistes en 1 slide
+
+\section{Conclusion}
+
 
 % Bibliography
 \begin{frame}[allowframebreaks]
