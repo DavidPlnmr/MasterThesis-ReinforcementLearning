@@ -28,7 +28,7 @@
 \begin{frame}
 \frametitle{Plan de la présentation}
 \begin{multicols}{2}
-\tableofcontents
+\tableofcontents[hideallsubsections]
 \end{multicols}
 \end{frame}
 
@@ -44,7 +44,9 @@ Rocket League : un jeu de football avec des voitures.
 
 % Option A : vidéo intégrée (nécessite Adobe Acrobat Reader pour fonctionner)
 \begin{center}
-\includegraphics[width=6cm]{img/miniature_agent_not_trained.png}
+% 
+\href{https://youtu.be/irfLQ0a7Zpk}{\includegraphics[width=6cm]{img/miniature_agent_not_trained.png}}
+
 \end{center}
 
 % Option B (plus sûre) : lien externe à cliquer, ou lancement manuel via VLC
@@ -354,7 +356,7 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
 \begin{frame}
 \frametitle{Résultats de l'agent PPO}
 
-\nocite{BeepBoopV2Replays}
+
 \begin{itemize}
     \item Victoires \textbf{3-0} contre Element (finaliste RLBot 2022)
     \item Victoires \textbf{3-0} contre Necto (vainqueur RLBot 2022,
@@ -362,6 +364,8 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
     \item \textbf{6 victoires sur 9} contre des joueurs humains
     (Or à Champion)
 \end{itemize}
+
+\nocite{RLBotChampionship2022}
 
 \vspace{0.5cm}
 
@@ -374,10 +378,53 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
 \end{frame}
 
 \section{Limites et perspectives}
-  \subsection{Limites}                            % 5 seeds, écarts-types, SAC non tranché, pas de tuning Phase II
-  \subsection{Perspectives}                       % 3 pistes en 1 slide
+
+\subsection{Limites}
+\begin{frame}
+\frametitle{Limites}
+
+\begin{itemize}
+    \item \textbf{Phase I :} seulement \textbf{5 seeds} $\rightarrow$
+    écarts-types élevés (45 à 52 points), estimations encore bruitées
+    \item \textbf{Phase II :} aucun tuning systématique des
+    hyperparamètres (coût computationnel prohibitif à cette échelle + complexité avec le curriculum)
+    \item \textbf{Comparaison PPO/SAC sur Rocket League :} non
+    tranchée — limites d'implémentation vs limites intrinsèques de
+    l'algorithme
+\end{itemize}
+
+\vspace{0.5cm}
+
+\begin{beamerboxesrounded}[upper=block head,lower=block body]{À retenir}
+    Un score d'optimisation ou un résultat isolé ne suffit jamais à
+    conclure seul — la validation multi-seeds et la prudence
+    d'interprétation restent essentielles.
+\end{beamerboxesrounded}
+
+\end{frame}
+
+\subsection{Perspectives}
+\begin{frame}
+\frametitle{Perspectives}
+
+\begin{enumerate}
+    \item \textbf{Corriger l'implémentation SAC} : gradient clipping,
+    standardisation effective des retours $\rightarrow$ trancher
+    réellement la comparaison avec PPO
+    \item \textbf{Apprentissage par imitation} (Video PreTraining) :
+    initialiser l'agent à partir de replays humains plutôt que d'une
+    politique aléatoire \nocite{bakerVideoPreTrainingVPT2022}
+    \item \textbf{Entraînement multi-agent} : généraliser au 2v2/3v3
+    et diversifier les partenaires d'entraînement (\emph{league
+    training})
+\end{enumerate}
+
+\end{frame}
 
 \section{Conclusion}
+\begin{frame}
+\frametitle{Conclusion}
+\end{frame}
 
 
 % Bibliography
@@ -386,6 +433,15 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
 \printbibliography
 \end{frame}
 
+
+\appendix
+\begin{frame}
+    \frametitle{Annexes}
+    \begin{itemize}
+        \item \href{https://wandb.ai/master-is-heg/rl-lunarlander-eval/reports/Rapport-de-RL-sur-Lunar-Lander--VmlldzoxNjg0MTQxNw}{Rapport WandB sur LunarLander}
+        \item \href{https://ballchasing.com/group/beep-boop-v2-10b-tdfuhcyooj}{Replays des parties de l'agent PPO sur Rocket League}
+    \end{itemize}
+\end{frame}
 
 
 
