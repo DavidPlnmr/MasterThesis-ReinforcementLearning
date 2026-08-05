@@ -97,7 +97,7 @@
 \usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc}
 
 % use the right citation style
-\usepackage[backend=biber,style=iso-authoryear,urldate=short]{biblatex}
+\usepackage[backend=biber,style=iso-authoryear,urldate=short, maxcitenames=2, mincitenames=1, uniquelist=true, autolang=none,]{biblatex}
 \addbibresource{bibliography.bib}
 % Style "références bibliographiques" : interligne simple, espace 6pt avant / 12pt après
 \setlength{\bibitemsep}{18pt plus 2pt minus 2pt}
@@ -273,7 +273,7 @@ Enfin, je remercie mes amis, Jonathan, Haris, Marella, Andi, Steven et Baptiste,
 
 \newpage
 \untitledsection{Résumé}
-L'apprentissage par renforcement (RL) permet de former des agents décisionnels autonomes par interaction avec leur environnement, mais sa mise en pratique se heurte à un défi récurrent dès lors que l'environnement se complexifie : la rareté du signal de récompense (\textit{reward sparse}). Ce travail explore ce défi à travers deux phases expérimentales 
+L'apprentissage par renforcement (RL) permet de former des agents décisionnels autonomes par interaction avec leur environnement, mais sa mise en pratique se heurte à un défi récurrent dès lors que l'environnement se complexifie : la rareté du signal de récompense (\textit{sparse reward}). Ce travail explore ce défi à travers deux phases expérimentales 
 progressives.
 
 La première phase établit une méthodologie de validation sur l'environnement standard LunarLander, en comparant trois algorithmes de RL profond couvrant des paradigmes complémentaires -- DQN, PPO et SAC -- après optimisation systématique de leurs hyperparamètres via Optuna. Une évaluation multi-seeds révèle que la performance obtenue lors de l'optimisation n'est pas toujours 
@@ -285,7 +285,7 @@ Ce travail illustre ainsi, à travers une démarche méthodologique complète --
 
 \vspace{1em}
 \noindent\textbf{Mots-clés :} % TODO: compléter la liste de mots-clés
-apprentissage par renforcement, reward sparse, reward shaping, curriculum learning, reward hacking, optimisation d'hyperparamètres, Gymnasium, DQN, PPO, SAC, self-play, Rocket League, RLGym
+apprentissage par renforcement, sparse reward, reward shaping, curriculum learning, reward hacking, optimisation d'hyperparamètres, Gymnasium, DQN, PPO, SAC, self-play, Rocket League, RLGym
 
 
 % Table of contents

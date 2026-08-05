@@ -67,9 +67,9 @@ Rocket League : un jeu de football avec des voitures.
 
 \subsection{Problématique}
 \begin{frame}
-\frametitle{Le problème du \emph{reward sparse}}
+\frametitle{Le problème du \emph{sparse reward}}
 
-Ce phénomène porte un nom : le \textbf{reward sparse} \nocite{narvekarCurriculumLearningReinforcement2020}
+Ce phénomène porte un nom : le \textbf{sparse reward} \nocite{narvekarCurriculumLearningReinforcement2020}
 
 \vspace{0.3cm}
 
@@ -421,9 +421,38 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
 
 \end{frame}
 
+
 \section{Conclusion}
 \begin{frame}
 \frametitle{Conclusion}
+
+\begin{center}
+\emph{Explorer un domaine riche et vaste : de la sélection d'algorithmes
+standards à la conception d'un signal de récompense pour un
+environnement avancé.}
+\end{center}
+
+\vspace{0.5cm}
+
+\begin{itemize}
+    \item \textbf{Aucun algorithme universel} : le choix optimal dépend
+    de l'espace d'actions, du budget de calcul et de la maturité de
+    l'implémentation — bien plus que d'un score de tuning isolé
+    \item La rareté du signal de récompense \textbf{peut être surmontée}
+    par la combinaison du \emph{reward shaping} et du
+    \emph{curriculum learning}...
+    \item ...\textbf{à condition de rester vigilant} face au risque de
+    \emph{reward hacking} qu'elle introduit
+\end{itemize}
+
+\vspace{0.5cm}
+
+\begin{beamerboxesrounded}[upper=block head,lower=block body]{En résumé}
+    De LunarLander à Rocket League : une démarche progressive et
+    empirique, validée à chaque étape par l'observation directe des
+    comportements de l'agent.
+\end{beamerboxesrounded}
+
 \end{frame}
 
 
@@ -439,7 +468,10 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
     \frametitle{Annexes}
     \begin{itemize}
         \item \href{https://wandb.ai/master-is-heg/rl-lunarlander-eval/reports/Rapport-de-RL-sur-Lunar-Lander--VmlldzoxNjg0MTQxNw}{Rapport WandB sur LunarLander}
+        \item \href{https://youtu.be/ah2MeKAFLnw}{Vidéos de comparaison des agents DQN, PPO et SAC sur LunarLander}
         \item \href{https://ballchasing.com/group/beep-boop-v2-10b-tdfuhcyooj}{Replays des parties de l'agent PPO sur Rocket League}
+        \item \href{https://simple.wikipedia.org/wiki/Pitch,_yaw,_and_roll}{Explication de pitch, yaw et roll}
+        
     \end{itemize}
 \end{frame}
 

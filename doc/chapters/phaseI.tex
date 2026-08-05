@@ -93,7 +93,7 @@ L'optimisation des hyperparamètres est réalisée avec le framework
 utilisant le sampler \textit{Tree-structured Parzen Estimator} (TPE). TPE est un algorithme bayésien qui modélise séparément la distribution des bons et des mauvais hyperparamètres, et dirige la recherche vers les régions prometteuses de l'espace de configuration \parencite{bergstraAlgorithmsHyperparameterOptimization2011}. Chaque configuration est évaluée sur \textbf{250\,000 pas de temps} d'entraînement, suivie d'une évaluation
 déterministe sur \textbf{20 épisodes}. La métrique optimisée est la récompense moyenne obtenue lors de cette évaluation finale.
 
-Ce budget de 250 000 steps, inférieur aux 500 000 steps retenus pour l'évaluation finale (Section 8.4.1), résulte d'un compromis pragmatique : avec une cible de 150 essais par combinaison algorithme/environnement, un budget de tuning plus élevé aurait rendu la campagne d'optimisation computationnellement prohibitive. Ce choix n'est cependant pas neutre : il repose sur l'hypothèse implicite que les hyperparamètres optimaux à 250 000 steps restent valides à 500 000 steps.
+Ce budget de 250 000 steps, inférieur aux 500 000 steps retenus pour l'évaluation finale (Section \ref{sec:eval_finale}), résulte d'un compromis pragmatique : avec une cible de 150 essais par combinaison algorithme/environnement, un budget de tuning plus élevé aurait rendu la campagne d'optimisation computationnellement prohibitive. Ce choix n'est cependant pas neutre : il repose sur l'hypothèse implicite que les hyperparamètres optimaux à 250 000 steps restent valides à 500 000 steps.
 
 \subsubsection{Élagage des essais non concluants}
 
@@ -606,6 +606,7 @@ permet une exploration plus cohérente que le bruit gaussien indépendant de l'�
 
 % -----------------------------------------------------------------------------
 \subsubsection{Protocole d'évaluation finale}
+
 % -----------------------------------------------------------------------------
 
 Une fois les hyperparamètres optimaux identifiés pour chaque combinaison

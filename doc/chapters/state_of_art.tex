@@ -216,7 +216,7 @@ En pratique, on utilise une fonction de décroissance de $\epsilon$ (\textit{sch
 
 \subsubsection{SARSA}
 
-L'algorithme \textbf{SARSA} \parencite{suttonReinforcementLearningIntroduction2018} est une méthode d'optimisation \textbf{On-Policy}. Il met à jour la fonction $Q$ en utilisant la récompense immédiate et l'évaluation de l'action suivante ($A'$) effectivement choisie par la politique actuelle de l'agent. Son nom illustre d'ailleurs la séquence $(S, A, R, S', A')$ utilisée pour la mise à jour :
+L'algorithme \textbf{SARSA} \parencite{suttonReinforcementLearningIntroduction2018} est une méthode d'optimisation \textbf{on-Policy}. Il met à jour la fonction $Q$ en utilisant la récompense immédiate et l'évaluation de l'action suivante ($A'$) effectivement choisie par la politique actuelle de l'agent. Son nom illustre d'ailleurs la séquence $(S, A, R, S', A')$ utilisée pour la mise à jour :
 \begin{equation}
 Q(S,A) \leftarrow Q(S,A) + \alpha \big( R + \gamma Q(S',A') - Q(S,A) \big)
 \end{equation}
@@ -225,7 +225,7 @@ Parce qu'il inclut l'action réelle $A'$ de l'agent (et donc les erreurs potenti
 
 \subsubsection{Q-Learning}
 
-À l'inverse, le Q-Learning \parencite{watkinsQlearning1992} est une méthode d'optimisation \textbf{Off-Policy}. Il s'affranchit de l'action réellement choisie par l'agent pour la mise à jour en utilisant l'opérateur \textit{maximum}. Il optimise directement la valeur de la politique optimale, indépendamment du comportement exploratoire :
+À l'inverse, le Q-Learning \parencite{watkinsQlearning1992} est une méthode d'optimisation \textbf{off-Policy}. Il s'affranchit de l'action réellement choisie par l'agent pour la mise à jour en utilisant l'opérateur \textit{maximum}. Il optimise directement la valeur de la politique optimale, indépendamment du comportement exploratoire :
 \begin{equation}
 Q(S,A) \leftarrow Q(S,A) + \alpha \big( R + \gamma \max_{a'} Q(S',a') - Q(S,A) \big)
 \end{equation}
@@ -245,7 +245,7 @@ Le \textit{Deep Reinforcement Learning} (DRL) exploite la puissance des réseaux
 \begin{itemize}
     \item \textbf{L'approximation de fonction} (utilisation de réseaux de neurones) ;
     \item \textbf{Le \textit{bootstrapping}} (mise à jour d'estimations basées sur d'autres estimations) ;
-    \item \textbf{L'apprentissage Off-Policy} (utilisation de données issues de politiques antérieures).
+    \item \textbf{L'apprentissage off-Policy} (utilisation de données issues de politiques antérieures).
 \end{itemize}
 
 Sous ces conditions, la convergence des algorithmes est menacée par une forte corrélation temporelle des données et une cible de calcul mouvante (le réseau tente de rattraper une valeur qu'il modifie lui-même).
@@ -494,4 +494,4 @@ la stratégie d'exploration.
 \end{flushleft}
 
 
-\noindent Cette diversité de paradigmes permet une comparaison expérimentale riche : DQN sert de référence tabulaire profonde, PPO représente l'approche On-Policy de l'état de l'art, et SAC incarne l'efficacité Off-Policy avec exploration intrinsèque. Leur confrontation sur des environnements Gymnasium standardisés, puis sur un environnement complexe avec \textit{reward shaping}, constituera le cœur de l'analyse empirique de ce mémoire.
+\noindent Cette diversité de paradigmes permet une comparaison expérimentale riche : DQN sert de référence tabulaire profonde, PPO représente l'approche on-Policy de l'état de l'art, et SAC incarne l'efficacité off-Policy avec exploration intrinsèque. Leur confrontation sur des environnements Gymnasium standardisés, puis sur un environnement complexe avec \textit{reward shaping}, constituera le cœur de l'analyse empirique de ce mémoire.
