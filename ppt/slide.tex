@@ -1,4 +1,3 @@
-% Beamer presentation
 \documentclass{beamer}
 \usepackage[T1]{fontenc}
 \usepackage[french]{babel}
@@ -11,8 +10,18 @@
 \usetikzlibrary{arrows.meta,shapes,positioning,calc}
 \usepackage{booktabs}
 \usepackage{multicol}
+\setbeamertemplate{navigation symbols}{}
 
 \newcommand{\dateofpresentation}{\DTMdate{2026-08-21}}
+
+\AtBeginSection[]{
+  \begin{frame}
+    \vfill
+    \centering
+    \usebeamerfont{title}\insertsectionhead\par
+    \vfill
+  \end{frame}
+}
 
 \usetheme{Madrid}
 \usecolortheme{beaver}
@@ -23,7 +32,27 @@
 
 \begin{document}
 
-\frame{\titlepage}
+% --- PREMIÈRE SLIDE ---
+{
+\begin{frame}[plain] % 'plain' masque les entêtes/pieds de page habituels
+  % Logo Haut Gauche
+  \begin{tikzpicture}[remember picture, overlay]
+    \node[anchor=north west, xshift=0.5cm, yshift=-0.5cm] 
+      at (current page.north west) 
+      {\includegraphics[width=2.5cm]{img/logo_heg-ge.png}};
+  \end{tikzpicture}
+
+  % Logo Bas Droite
+  \begin{tikzpicture}[remember picture, overlay]
+    \node[anchor=south east, xshift=-0.5cm, yshift=0.5cm] 
+      at (current page.south east) 
+      {\includegraphics[width=2.5cm]{img/logo_hes-so.png}}; % <-- Ajustez le nom du fichier
+  \end{tikzpicture}
+
+  % Affichage du titre, auteur, date
+  \titlepage
+\end{frame}
+}
 
 \begin{frame}
 \frametitle{Plan de la présentation}
@@ -54,6 +83,8 @@ Rocket League : un jeu de football avec des voitures.
 
 \vspace{0.2cm}
 
+\pause
+
 \begin{beamerboxesrounded}[upper=block head,lower=block body]{Question}
     Quelle est la probabilité qu'un agent agissant aléatoirement
     parvienne à marquer un but dans ce jeu ?
@@ -61,24 +92,33 @@ Rocket League : un jeu de football avec des voitures.
 
 \vspace{0.2cm}
 
+\pause
+
 \centering \textbf{Quasi nulle.}
 
 \end{frame}
 
 \subsection{Problématique}
 \begin{frame}
+
+    \vfill
+
 \frametitle{Le problème du \emph{sparse reward}}
 
 Ce phénomène porte un nom : le \textbf{sparse reward} \nocite{narvekarCurriculumLearningReinforcement2020}
 
 \vspace{0.3cm}
 
+\pause
+
 \begin{itemize}
     \item Quand l'objectif final n'est atteint que rarement (voire jamais
-    au début), l'agent ne reçoit presque aucun signal exploitable.
+    au début), l'agent ne reçoit presque aucun signal exploitable. \pause
     \item Résultat : \textbf{absence totale d'apprentissage observable},
     même après des millions de pas d'entraînement.
 \end{itemize}
+
+\vfill
 
 \end{frame}
 
@@ -96,10 +136,12 @@ Ce phénomène porte un nom : le \textbf{sparse reward} \nocite{narvekarCurricul
 
 \textbf{Deux axes complémentaires :}
 
+\pause
+
 \begin{enumerate}
     \item \textbf{Sélection et optimisation des modèles} : quel
     algorithme choisir (DQN, PPO, SAC) selon l'environnement, et
-    comment régler ses hyperparamètres ?
+    comment régler ses hyperparamètres ? \pause
     \item \textbf{Construction du signal de récompense} : comment
     densifier un signal rare sans dénaturer la tâche — et quel risque
     cela introduit ?
@@ -110,14 +152,18 @@ Ce phénomène porte un nom : le \textbf{sparse reward} \nocite{narvekarCurricul
 \begin{frame}
 \frametitle{Démarche en deux phases}
 
+\vfill
+
 \begin{enumerate}
-    \item \textbf{Phase I} — Validation méthodologique sur
+    \item \textbf{Phase I} \pause — Validation méthodologique sur
     un environnement plus simple \emph{LunarLander} : comparaison DQN / PPO / SAC, optimisation
-    Optuna, robustesse multi-seeds.
-    \item \textbf{Phase II} — Retour à \textbf{Rocket League} :
+    Optuna, robustesse multi-seeds. \pause
+    \item \textbf{Phase II} \pause — Retour à \textbf{Rocket League} :
     reward shaping et curriculum learning pour surmonter la rareté
     structurelle du signal.
 \end{enumerate}
+
+\vfill
 
 \end{frame}
 
@@ -199,7 +245,10 @@ Sample efficiency & Moyenne & Faible & Élevée \\
 \section{Phase I}
 \subsection{Méthodologie}
 \begin{frame}
+
     \frametitle{Méthodologie}
+
+    \vfill
 
     \begin{itemize}
         \item \textbf{Environnement :} LunarLander \nocite{GymnasiumDocumentationLunarLander}
@@ -207,6 +256,8 @@ Sample efficiency & Moyenne & Faible & Élevée \\
         \item \textbf{Optimisation :} Optuna pour le tuning des hyperparamètres \nocite{akibaOptunaNextgenerationHyperparameter2019}
         \item \textbf{Évaluation :} Multi-seeds pour la robustesse
     \end{itemize}
+
+    \vfill
 \end{frame}
 
 \subsection{Robustesse des configurations}
@@ -227,6 +278,8 @@ SAC continu & 284.05 & 233.44 & 4/5 \\
 \end{center}
 
 \vspace{0.5cm}
+
+\pause
 
 \begin{beamerboxesrounded}[upper=block head,lower=block body]{Enseignement clé}
     Le score de tuning n'est \textbf{pas un prédicteur fiable} de la
@@ -255,6 +308,8 @@ SAC continu & 284.05 & 233.44 & 4/5 \\
 
 \vspace{0.5cm}
 
+\pause
+
 \begin{beamerboxesrounded}[upper=block head,lower=block body]{Rappel}
     Le seul signal naturel — marquer un but — est \textbf{extrêmement rare} :
     aucun apprentissage observable en RL pur.
@@ -280,6 +335,8 @@ III & Perfectionnement mécanique (boost, aérien, kickoff) \\
 
 \vspace{0.5cm}
 
+\pause
+
 \begin{itemize}
     \item \textbf{Reward shaping} : densifier le signal rare avec des
     signaux intermédiaires (contact, vitesse vers la balle...)
@@ -288,6 +345,8 @@ III & Perfectionnement mécanique (boost, aérien, kickoff) \\
 \end{itemize}
 
 \vspace{0.3cm}
+
+\pause
 
 \centering\footnotesize{Une introduction simultanée de tous les signaux
 converge plus lentement.}
@@ -318,6 +377,8 @@ converge plus lentement.}
 
 \vspace{0.3cm}
 
+\pause
+
 \textbf{Correction :} reformulation en récompense \emph{zero-sum} —
 le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarkovGamesFramework1994}
 
@@ -335,19 +396,18 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
 
 \vspace{0.5cm}
 
-\textbf{Deux facteurs explicatifs :}
+\textbf{Deux facteurs explicatifs :} \pause
 \begin{enumerate}
     \item Limites d'implémentation de \texttt{rlgym-sac} (pas de
-    gradient clipping, cible d'entropie fixe)
+    gradient clipping, cible d'entropie fixe) \pause
     \item Espace d'actions \textbf{continu brut} (8 dimensions) contre
     l'espace \textbf{discret curaté} (90 actions) de PPO
 \end{enumerate}
 
 \vspace{0.5cm}
-
-\begin{beamerboxesrounded}[upper=block head,lower=block body]{Conclusion}
-    Résultat non tranché : impossible de conclure à une infériorité
-    intrinsèque de SAC sur cet environnement.
+\pause
+\begin{beamerboxesrounded}[upper=block head,lower=block body]{Résultat}
+    Impossible de conclure à une infériorité intrinsèque de SAC sur cet environnement.
 \end{beamerboxesrounded}
 
 \end{frame}
@@ -358,9 +418,9 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
 
 
 \begin{itemize}
-    \item Victoires \textbf{3-0} contre Element (finaliste RLBot 2022)
+    \item Victoires \textbf{3-0} contre Element (finaliste RLBot 2022) \pause
     \item Victoires \textbf{3-0} contre Necto (vainqueur RLBot 2022,
-    entraîné sur 3 modes de jeu et un budget supérieur)
+    entraîné sur 3 modes de jeu et un budget supérieur) \pause
     \item \textbf{6 victoires sur 9} contre des joueurs humains
     (Or à Champion)
 \end{itemize}
@@ -369,9 +429,11 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
 
 \vspace{0.5cm}
 
+\pause
+
 \textbf{Comportements émergents non récompensés explicitement :}
 \begin{itemize}
-    \item Gestion du boost plus économe qu'un joueur humain
+    \item Gestion du boost plus économe qu'un joueur humain \pause
     \item Utilisation systématique et précoce du \emph{powerslide}
 \end{itemize}
 
@@ -385,14 +447,15 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
 
 \begin{itemize}
     \item \textbf{Phase I :} seulement \textbf{5 seeds} $\rightarrow$
-    écarts-types élevés (45 à 52 points), estimations encore bruitées
+    écarts-types élevés (45 à 52 points), estimations encore bruitées \pause
     \item \textbf{Phase II :} aucun tuning systématique des
-    hyperparamètres (coût computationnel prohibitif à cette échelle + complexité avec le curriculum)
+    hyperparamètres (coût computationnel prohibitif à cette échelle + complexité avec le curriculum) \pause
     \item \textbf{Comparaison PPO/SAC sur Rocket League :} non
     tranchée — limites d'implémentation vs limites intrinsèques de
     l'algorithme
 \end{itemize}
 
+\pause
 \vspace{0.5cm}
 
 \begin{beamerboxesrounded}[upper=block head,lower=block body]{À retenir}
@@ -407,17 +470,21 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
 \begin{frame}
 \frametitle{Perspectives}
 
+\vfill
+
 \begin{enumerate}
     \item \textbf{Corriger l'implémentation SAC} : gradient clipping,
     standardisation effective des retours $\rightarrow$ trancher
-    réellement la comparaison avec PPO
+    réellement la comparaison avec PPO \pause
     \item \textbf{Apprentissage par imitation} (Video PreTraining) :
     initialiser l'agent à partir de replays humains plutôt que d'une
-    politique aléatoire \nocite{bakerVideoPreTrainingVPT2022}
+    politique aléatoire \nocite{bakerVideoPreTrainingVPT2022} \pause
     \item \textbf{Entraînement multi-agent} : généraliser au 2v2/3v3
     et diversifier les partenaires d'entraînement (\emph{league
     training})
 \end{enumerate}
+
+\vfill
 
 \end{frame}
 
@@ -434,25 +501,41 @@ environnement avancé.}
 
 \vspace{0.5cm}
 
+\pause
+
 \begin{itemize}
-    \item \textbf{Aucun algorithme universel} : le choix optimal dépend
-    de l'espace d'actions, du budget de calcul et de la maturité de
-    l'implémentation — bien plus que d'un score de tuning isolé
+    \item \textbf{Aucun algorithme universel} : dépend de l'espace d'actions, du budget de calcul et de l'environnement — bien plus que d'un score de tuning isolé \pause
     \item La rareté du signal de récompense \textbf{peut être surmontée}
     par la combinaison du \emph{reward shaping} et du
-    \emph{curriculum learning}...
+    \emph{curriculum learning}... \pause
     \item ...\textbf{à condition de rester vigilant} face au risque de
     \emph{reward hacking} qu'elle introduit
 \end{itemize}
 
 \vspace{0.5cm}
 
+\end{frame}
+
+\begin{frame}
+    \frametitle{Conclusion (suite)}
+
+    \vfill
+
 \begin{beamerboxesrounded}[upper=block head,lower=block body]{En résumé}
-    De LunarLander à Rocket League : une démarche progressive et
-    empirique, validée à chaque étape par l'observation directe des
-    comportements de l'agent.
+    Du hasard d'un agent qui ne marque jamais, à un agent qui bat des joueurs de niveau Champion : la démonstration qu'un signal de récompense bien conçu peut faire toute la différence.
 \end{beamerboxesrounded}
 
+\vfill
+
+\end{frame}
+
+\begin{frame}[plain]
+    \vfill
+    \centering
+    \usebeamerfont{title}
+    \fontsize{44}{54}\selectfont
+    Merci !
+    \vfill
 \end{frame}
 
 
