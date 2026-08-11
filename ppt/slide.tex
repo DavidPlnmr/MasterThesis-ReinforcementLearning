@@ -141,7 +141,7 @@ Ce phénomène porte un nom : le \textbf{sparse reward} \nocite{narvekarCurricul
 \begin{enumerate}
     \item \textbf{Sélection et optimisation des modèles} : quel
     algorithme choisir (DQN, PPO, SAC) selon l'environnement, et
-    comment régler ses hyperparamètres ? \pause
+    comment régler ses hyperparamètres ? 
     \item \textbf{Construction du signal de récompense} : comment
     densifier un signal rare sans dénaturer la tâche — et quel risque
     cela introduit ?
@@ -155,10 +155,10 @@ Ce phénomène porte un nom : le \textbf{sparse reward} \nocite{narvekarCurricul
 \vfill
 
 \begin{enumerate}
-    \item \textbf{Phase I} \pause — Validation méthodologique sur
+    \item \textbf{Phase I} — Validation méthodologique sur
     un environnement plus simple \emph{LunarLander} : comparaison DQN / PPO / SAC, optimisation
     Optuna, robustesse multi-seeds. \pause
-    \item \textbf{Phase II} \pause — Retour à \textbf{Rocket League} :
+    \item \textbf{Phase II} — Retour à \textbf{Rocket League} :
     reward shaping et curriculum learning pour surmonter la rareté
     structurelle du signal.
 \end{enumerate}
@@ -335,8 +335,6 @@ III & Perfectionnement mécanique (boost, aérien, kickoff) \\
 
 \vspace{0.5cm}
 
-\pause
-
 \begin{itemize}
     \item \textbf{Reward shaping} : densifier le signal rare avec des
     signaux intermédiaires (contact, vitesse vers la balle...)
@@ -418,9 +416,9 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
 
 
 \begin{itemize}
-    \item Victoires \textbf{3-0} contre Element (finaliste RLBot 2022) \pause
+    \item Victoires \textbf{3-0} contre Element (finaliste RLBot 2022)
     \item Victoires \textbf{3-0} contre Necto (vainqueur RLBot 2022,
-    entraîné sur 3 modes de jeu et un budget supérieur) \pause
+    entraîné sur 3 modes de jeu et un budget supérieur)
     \item \textbf{6 victoires sur 9} contre des joueurs humains
     (Or à Champion)
 \end{itemize}
@@ -433,7 +431,7 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
 
 \textbf{Comportements émergents non récompensés explicitement :}
 \begin{itemize}
-    \item Gestion du boost plus économe qu'un joueur humain \pause
+    \item Gestion du boost plus économe qu'un joueur humain
     \item Utilisation systématique et précoce du \emph{powerslide}
 \end{itemize}
 
@@ -447,9 +445,9 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
 
 \begin{itemize}
     \item \textbf{Phase I :} seulement \textbf{5 seeds} $\rightarrow$
-    écarts-types élevés (45 à 52 points), estimations encore bruitées \pause
+    écarts-types élevés (45 à 52 points), estimations encore bruitées
     \item \textbf{Phase II :} aucun tuning systématique des
-    hyperparamètres (coût computationnel prohibitif à cette échelle + complexité avec le curriculum) \pause
+    hyperparamètres (coût computationnel prohibitif à cette échelle + complexité avec le curriculum)
     \item \textbf{Comparaison PPO/SAC sur Rocket League :} non
     tranchée — limites d'implémentation vs limites intrinsèques de
     l'algorithme
@@ -475,10 +473,10 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
 \begin{enumerate}
     \item \textbf{Corriger l'implémentation SAC} : gradient clipping,
     standardisation effective des retours $\rightarrow$ trancher
-    réellement la comparaison avec PPO \pause
+    réellement la comparaison avec PPO
     \item \textbf{Apprentissage par imitation} (Video PreTraining) :
     initialiser l'agent à partir de replays humains plutôt que d'une
-    politique aléatoire \nocite{bakerVideoPreTrainingVPT2022} \pause
+    politique aléatoire \nocite{bakerVideoPreTrainingVPT2022}
     \item \textbf{Entraînement multi-agent} : généraliser au 2v2/3v3
     et diversifier les partenaires d'entraînement (\emph{league
     training})
