@@ -27,6 +27,7 @@
 \usecolortheme{beaver}
 
 \title{Soutenance de mémoire - Master IS}
+\subtitle{\textit{Exploration des concepts et des techniques d'apprentissage par renforcement : De la théorie à la pratique}}
 \author{David Paulino}
 \date{\dateofpresentation}
 
@@ -365,12 +366,14 @@ converge plus lentement.}
 
 \begin{frame}
 \frametitle{Reward hacking (suite)}
+
 \vspace{0.3cm}
 
-\begin{beamerboxesrounded}[upper=block head,lower=block body]{Comportement observé}
-    Les deux agents collaborent pour faire osciller la balle entre les
-    deux buts, maximisant leur récompense individuelle sans jamais
-    chercher à marquer.
+
+
+\begin{beamerboxesrounded}[upper=block head,lower=block body]{Observation}
+    Collaboration $\rightarrow$ oscillation de la balle entre les
+    deux buts, maximisant leur récompense individuelle sans jamais marquer.
 \end{beamerboxesrounded}
 
 \vspace{0.3cm}
@@ -379,6 +382,14 @@ converge plus lentement.}
 
 \textbf{Correction :} reformulation en récompense \emph{zero-sum} —
 le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarkovGamesFramework1994}
+
+\vspace{1cm}
+
+\pause
+
+
+\centering\footnotesize{Grande importance à la visualisation ponctuelle de l'agent pour éviter ce genre de dérives.}
+
 
 \end{frame}
 
@@ -420,7 +431,7 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
     \item Victoires \textbf{3-0} contre Necto (vainqueur RLBot 2022,
     entraîné sur 3 modes de jeu et un budget supérieur)
     \item \textbf{6 victoires sur 9} contre des joueurs humains
-    (Or à Champion)
+    (Or à Champion). \\ \textbf{79 buts marqués} contre \textbf{51 encaissés.}
 \end{itemize}
 
 \nocite{RLBotChampionship2022}
