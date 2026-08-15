@@ -251,12 +251,19 @@ Sample efficiency & Moyenne & Faible & Élevée \\
 
     \vfill
 
-    \begin{itemize}
-        \item \textbf{Environnement :} LunarLander \nocite{GymnasiumDocumentationLunarLander}
-        \item \textbf{Algorithmes :} DQN, PPO, SAC \nocite{mnihHumanlevelControlDeep2015, schulmanProximalPolicyOptimization2017, haarnojaSoftActorCriticOffPolicy2018}
-        \item \textbf{Optimisation :} Optuna pour le tuning des hyperparamètres \nocite{akibaOptunaNextgenerationHyperparameter2019}
-        \item \textbf{Évaluation :} Multi-seeds pour la robustesse
-    \end{itemize}
+    \begin{columns}[T]
+        \column{0.5\textwidth}
+        \begin{itemize}
+            \item \textbf{Environnement :} LunarLander \nocite{GymnasiumDocumentationLunarLander}
+            \item \textbf{Algorithmes :} DQN, PPO, SAC \nocite{mnihHumanlevelControlDeep2015, schulmanProximalPolicyOptimization2017, haarnojaSoftActorCriticOffPolicy2018}
+            \item \textbf{Optimisation :} Optuna pour le tuning des hyperparamètres \nocite{akibaOptunaNextgenerationHyperparameter2019}
+            \item \textbf{Évaluation :} Multi-seeds pour la robustesse
+        \end{itemize}
+
+        \column{0.5\textwidth}
+        \centering
+        \includegraphics[width=0.9\columnwidth]{img/lunar_lander.png}
+    \end{columns}
 
     \vfill
 \end{frame}
