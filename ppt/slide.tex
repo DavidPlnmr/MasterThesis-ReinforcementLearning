@@ -23,6 +23,8 @@
   \end{frame}
 }
 
+\beamerboxesdeclarecolorscheme{madrid}{red}{red!20}
+
 \usetheme{Madrid}
 \usecolortheme{beaver}
 
@@ -35,22 +37,19 @@
 
 % --- PREMIÈRE SLIDE ---
 {
-\begin{frame}[plain] % 'plain' masque les entêtes/pieds de page habituels
-  % Logo Haut Gauche
+\begin{frame}[plain]
   \begin{tikzpicture}[remember picture, overlay]
-    \node[anchor=north west, xshift=0.5cm, yshift=-0.5cm] 
-      at (current page.north west) 
+    \node[anchor=north west, xshift=0.5cm, yshift=-0.5cm]
+      at (current page.north west)
       {\includegraphics[width=2.5cm]{img/logo_heg-ge.png}};
   \end{tikzpicture}
 
-  % Logo Bas Droite
   \begin{tikzpicture}[remember picture, overlay]
-    \node[anchor=south east, xshift=-0.5cm, yshift=0.5cm] 
-      at (current page.south east) 
-      {\includegraphics[width=2.5cm]{img/logo_hes-so.png}}; % <-- Ajustez le nom du fichier
+    \node[anchor=south east, xshift=-0.5cm, yshift=0.5cm]
+      at (current page.south east)
+      {\includegraphics[width=2.5cm]{img/logo_hes-so.png}};
   \end{tikzpicture}
 
-  % Affichage du titre, auteur, date
   \titlepage
 \end{frame}
 }
@@ -72,24 +71,16 @@ Rocket League : un jeu de football avec des voitures.
 
 \vspace{0.2cm}
 
-% Option A : vidéo intégrée (nécessite Adobe Acrobat Reader pour fonctionner)
 \begin{center}
-% 
 \href{https://youtu.be/irfLQ0a7Zpk}{\includegraphics[width=6cm]{img/miniature_agent_not_trained.png}}
-
 \end{center}
-
-% Option B (plus sûre) : lien externe à cliquer, ou lancement manuel via VLC
-% \href{run:chemin/vers/agent_non_entraine.mp4}{\textbf{Cliquer pour lancer le clip}}
 
 \vspace{0.2cm}
 
 \pause
 
-\begin{beamerboxesrounded}[upper=block head,lower=block body]{Question}
-    Quelle est la probabilité qu'un agent agissant aléatoirement
-    parvienne à marquer un but dans ce jeu ?
-\end{beamerboxesrounded}
+\textit{Quelle est la probabilité qu'un agent agissant aléatoirement
+parvienne à marquer un but dans ce jeu ?}
 
 \vspace{0.2cm}
 
@@ -101,9 +92,6 @@ Rocket League : un jeu de football avec des voitures.
 
 \subsection{Problématique}
 \begin{frame}
-
-    \vfill
-
 \frametitle{Le problème du \emph{sparse reward}}
 
 Ce phénomène porte un nom : le \textbf{sparse reward} \nocite{narvekarCurriculumLearningReinforcement2020}
@@ -113,39 +101,35 @@ Ce phénomène porte un nom : le \textbf{sparse reward} \nocite{narvekarCurricul
 \pause
 
 \begin{itemize}
-    \item Quand l'objectif final n'est atteint que rarement (voire jamais
-    au début), l'agent ne reçoit presque aucun signal exploitable. \pause
-    \item Résultat : \textbf{absence totale d'apprentissage observable},
-    même après des millions de pas d'entraînement.
+    \item Objectif atteint rarement (voire jamais au début) $\rightarrow$
+    presque aucun signal exploitable
+    \item Résultat : aucun apprentissage observable, même après des
+    millions de pas d'entraînement
 \end{itemize}
-
-\vfill
 
 \end{frame}
 
 \begin{frame}
 \frametitle{Problématique}
 
-\begin{beamerboxesrounded}[upper=block head,lower=block body]{Problématique}
-    Comment mener à bien l'apprentissage par renforcement dans un
-    environnement à récompense rare, de la sélection et du réglage
-    d'algorithmes standards jusqu'à la conception d'un signal de
-    récompense pour un environnement avancé ?
+
+
+\begin{beamerboxesrounded}[scheme=madrid]{Problématique}
+Comment mener l'apprentissage par renforcement dans un environnement
+à récompense rare, de la sélection d'algorithmes standards jusqu'à la
+conception d'un signal de récompense pour un environnement avancé ?    
 \end{beamerboxesrounded}
 
-\vspace{0.5cm}
 
-\textbf{Deux axes complémentaires :}
+\vspace{0.5cm}
 
 \pause
 
 \begin{enumerate}
     \item \textbf{Sélection et optimisation des modèles} : quel
-    algorithme choisir (DQN, PPO, SAC) selon l'environnement, et
-    comment régler ses hyperparamètres ? 
+    algorithme, quels hyperparamètres ?
     \item \textbf{Construction du signal de récompense} : comment
-    densifier un signal rare sans dénaturer la tâche — et quel risque
-    cela introduit ?
+    densifier un signal rare sans dénaturer la tâche ?
 \end{enumerate}
 
 \end{frame}
@@ -153,18 +137,12 @@ Ce phénomène porte un nom : le \textbf{sparse reward} \nocite{narvekarCurricul
 \begin{frame}
 \frametitle{Démarche en deux phases}
 
-\vfill
-
 \begin{enumerate}
     \item \textbf{Phase I} — Validation méthodologique sur
-    un environnement plus simple \emph{LunarLander} : comparaison DQN / PPO / SAC, optimisation
-    Optuna, robustesse multi-seeds. \pause
+    \emph{LunarLander} : DQN / PPO / SAC, Optuna, multi-seeds. \pause
     \item \textbf{Phase II} — Retour à \textbf{Rocket League} :
-    reward shaping et curriculum learning pour surmonter la rareté
-    structurelle du signal.
+    reward shaping et curriculum learning.
 \end{enumerate}
-
-\vfill
 
 \end{frame}
 
@@ -173,8 +151,6 @@ Ce phénomène porte un nom : le \textbf{sparse reward} \nocite{narvekarCurricul
 \subsection{Boucle agent-environnement}
 \begin{frame}
 \frametitle{Boucle agent-environnement}
-
-% Via tikz. Essayez de montrer la boucle agent-environnement avec un diagramme simple.
 
 \begin{center}
 \begin{tikzpicture}[
@@ -185,29 +161,20 @@ agent/.style={block, ellipse},
 env/.style={block, rounded corners=2mm}
 ]
 
-% --- Nœuds ---
 \node[agent] (agent) {Agent};
 \node[env, below=of agent] (env) {Environnement};
 
-% --- Flèche Action (Droite) ---
 \draw[->, thick] (agent.east) -- ++(1.5,0) |- (env.east)
 node[pos=0.5, right, align=left] {action \\ $A_t$};
 
-% --- Flèches de retour (Gauche) ---
-
-% 1. OBSERVATION (Boucle extérieure)
 \draw[->, thick] ([yshift=-0.3cm]env.west) -- ++(-3.5,0) |- ([yshift=0.2cm]agent.west);
-% Label Observation (toujours à gauche de sa ligne)
 \node[left, align=center] at ($(agent.west)+(-3.5, -2.2)$) {observation \\ $O_t$};
 \node[below] at ($(env.west)+(-1, -0.3)$) {$O_{t+1}$};
 
-% 2. REWARD (Boucle intérieure)
 \draw[->, thick] ([yshift=0.3cm]env.west) -- ++(-3,0) |- ([yshift=-0.2cm]agent.west);
-% Label REWARD déplacé à DROITE de sa ligne verticale
 \node[right, align=center] at ($(agent.west)+(-3, -2.2)$) {récompense \\ $R_t$};
 \node[above] at ($(env.west)+(-1, 0.3)$) {$R_{t+1}$};
 
-% --- Ligne pointillée de transition ---
 \draw[dotted, thick] ($(env.west)+(-1.5, 0.8)$) -- ($(env.west)+(-1.5, -0.8)$);
 
 \end{tikzpicture}
@@ -219,83 +186,41 @@ node[pos=0.5, right, align=left] {action \\ $A_t$};
 \begin{frame}
 \frametitle{Comparaison des algorithmes}
 
-Tableau comparatif des caractéristiques principales de DQN, PPO et SAC.
 \begin{center}
 \begin{tabular}{|l|ccc|}
 \hline
 \textbf{Caractéristique} & \textbf{DQN} & \textbf{PPO} & \textbf{SAC} \\
 \hline
 Paradigme & Off-policy & On-policy & Off-policy \\
-
 Espace d'actions & Discret & Les deux & Continu \\
-
 Sample efficiency & Moyenne & Faible & Élevée \\
 \hline
 \end{tabular}
 \end{center}
 
-\vspace{1cm}
-
-% \begin{beamerboxesrounded}{Note}
-%     \footnotesize{
-%     PPO par sa nature on-policy est moins sample-efficient car il nécessite de collecter de nouvelles données à chaque mise à jour, tandis que DQN et SAC peuvent réutiliser les expériences passées grâce à leur nature off-policy.}    
-% \end{beamerboxesrounded}
-
 \end{frame}
 
-\section{Phase I}
-\subsection{Méthodologie}
+\subsection{Un enseignement avant la Phase II}
 \begin{frame}
+\frametitle{Un enseignement clé avant la Phase II}
 
-    \frametitle{Méthodologie}
+Sur \textbf{LunarLander} : DQN, PPO, SAC, optimisation Optuna, évaluation
+multi-seeds.
 
-    \vfill
-
-    \begin{columns}[T]
-        \column{0.5\textwidth}
-        \begin{itemize}
-            \item \textbf{Environnement :} LunarLander \nocite{GymnasiumDocumentationLunarLander}
-            \item \textbf{Algorithmes :} DQN, PPO, SAC \nocite{mnihHumanlevelControlDeep2015, schulmanProximalPolicyOptimization2017, haarnojaSoftActorCriticOffPolicy2018}
-            \item \textbf{Optimisation :} Optuna pour le tuning des hyperparamètres \nocite{akibaOptunaNextgenerationHyperparameter2019}
-            \item \textbf{Évaluation :} Multi-seeds pour la robustesse
-        \end{itemize}
-
-        \column{0.5\textwidth}
-        \centering
-        \includegraphics[width=0.9\columnwidth]{img/lunar_lander.png}
-    \end{columns}
-
-    \vfill
-\end{frame}
-
-\subsection{Robustesse des configurations}
-\begin{frame}
-\frametitle{Score de tuning vs robustesse réelle}
-
-\begin{center}
-\begin{tabular}{|l|c|c|c|}
-\hline
-\textbf{Combinaison} & \textbf{Score Optuna} & \textbf{Éval. finale (moy.)} & \textbf{Seeds résolues} \\
-\hline
-DQN discret & 275.14 & \textbf{145.19} & 1/5 \\
-PPO discret & 278.76 & 218.58 & 3/5 \\
-PPO continu & 280.42 & 208.67 & 2/5 \\
-SAC continu & 284.05 & 233.44 & 4/5 \\
-\hline
-\end{tabular}
-\end{center}
-
-\vspace{0.5cm}
+\vspace{0.3cm}
 
 \pause
 
-\begin{beamerboxesrounded}[upper=block head,lower=block body]{Enseignement clé}
-    Le score de tuning n'est \textbf{pas un prédicteur fiable} de la
-    robustesse : DQN a un très bon score, mais
-    la pire performance finale.
-\end{beamerboxesrounded}
+Score de tuning élevé $\neq$ robustesse : DQN, malgré un excellent score
+Optuna (275), s'effondre en évaluation finale (145, 1 seed sur 5
+résolue).
+
+\vspace{0.3cm}
+
+\centering \textbf{PPO retenu pour sa polyvalence et sa stabilité.}
 
 \end{frame}
+
 
 \section{Phase II}
 
@@ -304,24 +229,15 @@ SAC continu & 284.05 & 233.44 & 4/5 \\
 \frametitle{L'environnement Rocket League}
 
 \begin{itemize}
-    \item Simulation via \textbf{RocketSim} + \textbf{RLGym} : physique fidèle,
-    entraînement \emph{headless} (sans rendu graphique) \nocite{ZealanLRocketSim2022,RLGymRLGym2020}
-    \item Mode \textbf{1v1} : un agent affronte une copie de lui-même
-    (\emph{self-play})
-    \item Espace d'actions réduit par discrétisation :
-    $1944 \rightarrow \textbf{90}$ actions pertinentes
-    \item Fréquence de décision ramenée de 120~Hz à \textbf{15~Hz}
-    (\emph{action repeat})
+    \item \textbf{RocketSim} + \textbf{RLGym} : physique fidèle,
+    entraînement \emph{headless} \nocite{ZealanLRocketSim2022,RLGymRLGym2020}
+    \item Mode \textbf{1v1}, \emph{self-play}
+    \item Espace d'actions réduit : $1944 \rightarrow \textbf{90}$
+    actions
+    \item Décision ramenée de 120~Hz à \textbf{15~Hz}
 \end{itemize}
 
 \vspace{0.5cm}
-
-\pause
-
-\begin{beamerboxesrounded}[upper=block head,lower=block body]{Rappel}
-    Le seul signal naturel — marquer un but — est \textbf{extrêmement rare} :
-    aucun apprentissage observable en RL pur.
-\end{beamerboxesrounded}
 
 \end{frame}
 
@@ -335,8 +251,8 @@ SAC continu & 284.05 & 233.44 & 4/5 \\
 \textbf{Palier} & \textbf{Objectif} \\
 \hline
 I & Contrôle de base et contact avec la balle \\
-II & Apprentissage du score (introduction du but) \\
-III & Perfectionnement mécanique (boost, aérien, kickoff) \\
+II & Apprentissage du score \\
+III & Perfectionnement mécanique \\
 \hline
 \end{tabular}
 \end{center}
@@ -344,18 +260,11 @@ III & Perfectionnement mécanique (boost, aérien, kickoff) \\
 \vspace{0.5cm}
 
 \begin{itemize}
-    \item \textbf{Reward shaping} : densifier le signal rare avec des
-    signaux intermédiaires (contact, vitesse vers la balle...)
-    \item \textbf{Curriculum learning} : introduire ces signaux
-    progressivement, sans dégrader les acquis des paliers précédents
+    \item \textbf{Reward shaping} : signaux intermédiaires (contact,
+    vitesse vers la balle...)
+    \item \textbf{Curriculum learning} : introduction progressive, sans
+    dégrader les acquis
 \end{itemize}
-
-\vspace{0.3cm}
-
-\pause
-
-\centering\footnotesize{Une introduction simultanée de tous les signaux
-converge plus lentement.}
 
 \end{frame}
 
@@ -364,7 +273,6 @@ converge plus lentement.}
 \frametitle{Reward hacking}
 
 \begin{center}
-% Remplacer par l'image/clip correspondant, ex. balle qui oscille entre les deux buts
 \href{https://www.youtube.com/watch?v=hdgCqtCQtPc}{%
         \includegraphics[width=0.7\textwidth]{img/miniature_reward_hacking.png}%
     }
@@ -374,29 +282,19 @@ converge plus lentement.}
 \begin{frame}
 \frametitle{Reward hacking (suite)}
 
-\vspace{0.3cm}
-
-
-
-\begin{beamerboxesrounded}[upper=block head,lower=block body]{Observation}
-    Collaboration $\rightarrow$ oscillation de la balle entre les
-    deux buts, maximisant leur récompense individuelle sans jamais marquer.
+\begin{beamerboxesrounded}[scheme=madrid]{Problématique}
+Collaboration $\rightarrow$ oscillation de la balle entre les deux
+buts, sans jamais marquer.
 \end{beamerboxesrounded}
 
 \vspace{0.3cm}
 
 \pause
 
-\textbf{Correction :} reformulation en récompense \emph{zero-sum} —
-le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarkovGamesFramework1994}
+\textbf{Correction :} récompense \emph{zero-sum} — le gain de l'un
+devient la perte de l'autre \nocite{littmanMarkovGamesFramework1994}
 
-\vspace{1cm}
-
-\pause
-
-
-\centering\footnotesize{Grande importance à la visualisation ponctuelle de l'agent pour éviter ce genre de dérives.}
-
+% Grande importance à la visualisation de l'agent dans l'environnement pour détecter ce type de dérives
 
 \end{frame}
 
@@ -405,26 +303,18 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
 \frametitle{PPO vs SAC : une divergence marquée}
 
 \begin{itemize}
-    \item \textbf{PPO} : progresse de manière cohérente à travers tout
-    le curriculum
+    \item \textbf{PPO} : progresse à travers tout le curriculum
     \item \textbf{SAC} : stagne dès le Palier I, entraînement interrompu
 \end{itemize}
 
 \vspace{0.5cm}
 
-\textbf{Deux facteurs explicatifs :} \pause
+\textbf{Deux facteurs explicatifs :}
 \begin{enumerate}
-    \item Limites d'implémentation de \texttt{rlgym-sac} (pas de
-    gradient clipping, cible d'entropie fixe) \pause
-    \item Espace d'actions \textbf{continu brut} (8 dimensions) contre
-    l'espace \textbf{discret curaté} (90 actions) de PPO
+    \item Limites d'implémentation de \texttt{rlgym-sac}
+    \item Espace continu brut (8 dim.) contre espace discret curaté
+    (90 actions) pour PPO
 \end{enumerate}
-
-\vspace{0.5cm}
-\pause
-\begin{beamerboxesrounded}[upper=block head,lower=block body]{Résultat}
-    Impossible de conclure à une infériorité intrinsèque de SAC sur cet environnement.
-\end{beamerboxesrounded}
 
 \end{frame}
 
@@ -432,13 +322,12 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
 \begin{frame}
 \frametitle{Résultats de l'agent PPO}
 
-
 \begin{itemize}
-    \item Victoires \textbf{3-0} contre Element (finaliste RLBot 2022)
-    \item Victoires \textbf{3-0} contre Necto (vainqueur RLBot 2022,
-    entraîné sur 3 modes de jeu et un budget supérieur)
+    \item \textbf{3-0} contre Element (finaliste RLBot 2022)
+    \item \textbf{3-0} contre Necto (vainqueur RLBot 2022, budget
+    supérieur)
     \item \textbf{6 victoires sur 9} contre des joueurs humains
-    (Or à Champion). \\ \textbf{79 buts marqués} contre \textbf{51 encaissés.}
+    (Or à Champion) — 79 buts marqués, 51 encaissés
 \end{itemize}
 
 \nocite{RLBotChampionship2022}
@@ -447,10 +336,10 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
 
 \pause
 
-\textbf{Comportements émergents non récompensés explicitement :}
+\textbf{Comportements émergents non récompensés :}
 \begin{itemize}
     \item Gestion du boost plus économe qu'un joueur humain
-    \item Utilisation systématique et précoce du \emph{powerslide}
+    \item Usage systématique et précoce du \emph{powerslide}
 \end{itemize}
 
 \end{frame}
@@ -462,23 +351,12 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
 \frametitle{Limites}
 
 \begin{itemize}
-    \item \textbf{Phase I :} seulement \textbf{5 seeds} $\rightarrow$
-    écarts-types élevés (45 à 52 points), estimations encore bruitées
+    \item \textbf{Phase I :} 5 seeds seulement $\rightarrow$
+    écarts-types élevés, estimations bruitées
     \item \textbf{Phase II :} aucun tuning systématique des
-    hyperparamètres (coût computationnel prohibitif à cette échelle + complexité avec le curriculum)
-    \item \textbf{Comparaison PPO/SAC sur Rocket League :} non
-    tranchée — limites d'implémentation vs limites intrinsèques de
-    l'algorithme
+    hyperparamètres (coût prohibitif à cette échelle)
+    \item \textbf{PPO vs SAC :} comparaison non tranchée
 \end{itemize}
-
-\pause
-\vspace{0.5cm}
-
-\begin{beamerboxesrounded}[upper=block head,lower=block body]{À retenir}
-    Un score d'optimisation ou un résultat isolé ne suffit jamais à
-    conclure seul — la validation multi-seeds et la prudence
-    d'interprétation restent essentielles.
-\end{beamerboxesrounded}
 
 \end{frame}
 
@@ -486,21 +364,14 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
 \begin{frame}
 \frametitle{Perspectives}
 
-\vfill
-
 \begin{enumerate}
-    \item \textbf{Corriger l'implémentation SAC} : gradient clipping,
-    standardisation effective des retours $\rightarrow$ trancher
-    réellement la comparaison avec PPO
-    \item \textbf{Apprentissage par imitation} (Video PreTraining) :
-    initialiser l'agent à partir de replays humains plutôt que d'une
-    politique aléatoire \nocite{bakerVideoPreTrainingVPT2022}
-    \item \textbf{Entraînement multi-agent} : généraliser au 2v2/3v3
-    et diversifier les partenaires d'entraînement (\emph{league
-    training})
+    \item \textbf{Corriger l'implémentation SAC} pour trancher
+    réellement la comparaison
+    \item \textbf{Apprentissage par imitation} (Video PreTraining) à
+    partir de replays humains \nocite{bakerVideoPreTrainingVPT2022}
+    \item \textbf{Entraînement multi-agent} : 2v2/3v3, diversification
+    des partenaires (\emph{league training})
 \end{enumerate}
-
-\vfill
 
 \end{frame}
 
@@ -509,39 +380,20 @@ le gain de l'un devient nécessairement la perte de l'autre \nocite{littmanMarko
 \begin{frame}
 \frametitle{Conclusion}
 
-\begin{center}
-\emph{Explorer un domaine riche et vaste : de la sélection d'algorithmes
-standards à la conception d'un signal de récompense pour un
-environnement avancé.}
-\end{center}
+\begin{itemize}
+    \item \textbf{Aucun algorithme universel} : dépend de l'espace
+    d'actions, du budget de calcul et de l'environnement
+    \item La rareté du signal \textbf{peut être surmontée} par
+    reward shaping et curriculum learning, \textbf{à condition} de rester
+    vigilant face au reward hacking
+\end{itemize}
 
 \vspace{0.5cm}
 
 \pause
 
-\begin{itemize}
-    \item \textbf{Aucun algorithme universel} : dépend de l'espace d'actions, du budget de calcul et de l'environnement — bien plus que d'un score de tuning isolé \pause
-    \item La rareté du signal de récompense \textbf{peut être surmontée}
-    par la combinaison du \emph{reward shaping} et du
-    \emph{curriculum learning}... \pause
-    \item ...\textbf{à condition de rester vigilant} face au risque de
-    \emph{reward hacking} qu'elle introduit
-\end{itemize}
-
-\vspace{0.5cm}
-
-\end{frame}
-
-\begin{frame}
-    \frametitle{Conclusion (suite)}
-
-    \vfill
-
-\begin{beamerboxesrounded}[upper=block head,lower=block body]{En résumé}
-    Du hasard d'un agent qui ne marque jamais, à un agent qui bat des joueurs de niveau Champion : la démonstration qu'un signal de récompense bien conçu peut faire toute la différence.
-\end{beamerboxesrounded}
-
-\vfill
+\centering \textit{Du hasard d'un agent qui ne marque jamais, à un
+agent qui bat des joueurs de niveau Champion.}
 
 \end{frame}
 
@@ -549,8 +401,7 @@ environnement avancé.}
     \vfill
     \centering
     \usebeamerfont{title}
-    \fontsize{44}{54}\selectfont
-    Merci !
+    \Huge Merci !
     \vfill
 \end{frame}
 
@@ -570,10 +421,7 @@ environnement avancé.}
         \item \href{https://youtu.be/ah2MeKAFLnw}{Vidéos de comparaison des agents DQN, PPO et SAC sur LunarLander}
         \item \href{https://ballchasing.com/group/beep-boop-v2-10b-tdfuhcyooj}{Replays des parties de l'agent PPO sur Rocket League}
         \item \href{https://simple.wikipedia.org/wiki/Pitch,_yaw,_and_roll}{Explication de pitch, yaw et roll}
-        
     \end{itemize}
 \end{frame}
-
-
 
 \end{document}
