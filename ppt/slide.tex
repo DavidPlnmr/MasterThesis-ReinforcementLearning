@@ -215,9 +215,6 @@ Score de tuning élevé $\neq$ robustesse : DQN, malgré un excellent score
 Optuna (275), s'effondre en évaluation finale (145, 1 seed sur 5
 résolue).
 
-\vspace{0.5cm}
-
-\centering \textbf{PPO retenu pour sa polyvalence et sa stabilité.}
 
 \end{frame}
 
@@ -231,13 +228,16 @@ résolue).
 \begin{itemize}
     \item \textbf{RocketSim} + \textbf{RLGym} : physique fidèle,
     entraînement \emph{headless} \nocite{ZealanLRocketSim2022,RLGymRLGym2020}
+    \item \texttt{rlgym-ppo} et \texttt{rlgym-sac} : forks vectorisés,
+    conçus pour l'entraînement à grande échelle (milliards de steps)
+    \nocite{AllenRlgymppo2023,McSwainRlgymsac2026}
+    \item Pas d'équivalent vectorisé pour DQN $\rightarrow$ écarté pour
+    la Phase II
     \item Mode \textbf{1v1}, \emph{self-play}
     \item Espace d'actions réduit : $1944 \rightarrow \textbf{90}$
-    actions
+    actions (PPO)
     \item Décision ramenée de 120~Hz à \textbf{15~Hz}
 \end{itemize}
-
-\vspace{0.5cm}
 
 \end{frame}
 
@@ -271,6 +271,19 @@ III & Perfectionnement mécanique \\
 \subsection{Reward hacking}
 \begin{frame}
 \frametitle{Reward hacking}
+
+\begin{beamerboxesrounded}[scheme=madrid]{Contexte}
+\vspace{0.3cm}
+\centering
+$R = \text{toucher la balle} + v_{\text{balle} \rightarrow \text{but adverse}}$     
+\vspace{0.3cm} \\
+\footnotesize (Récompense individuelle)
+\vspace{0.1cm}
+\end{beamerboxesrounded}
+
+
+
+\vspace{0.3cm}
 
 \begin{center}
 \href{https://www.youtube.com/watch?v=hdgCqtCQtPc}{%
@@ -402,7 +415,7 @@ agent qui bat des joueurs de niveau Champion.}
     \vfill
     \centering
     \usebeamerfont{title}
-    \Huge Merci !
+    \Huge Merci pour votre attention !
     \vfill
 \end{frame}
 
